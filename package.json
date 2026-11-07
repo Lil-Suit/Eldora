@@ -1,0 +1,37 @@
+{
+  "name": "eldoria-o-mundo-sem-limites",
+  "version": "0.9.3",
+  "private": true,
+  "type": "module",
+  "description": "ELDORIA: O Mundo Sem Limites — RPG de ação 3D no navegador (Three.js)",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "test": "node --test test/*.test.mjs",
+    "e2e": "node tools/e2e.mjs",
+    "export-glb": "node tools/export-glb.mjs",
+    "icons": "node tools/icons.mjs",
+    "aimtest": "node tools/aimtest.mjs",
+    "visual": "node tools/visual.mjs 882 393",
+    "mptest": "node tools/mptest.mjs",
+    "markettest": "node tools/markettest.mjs",
+    "wildtest": "node tools/wildtest.mjs",
+    "fxshot": "node tools/fxshot.mjs",
+    "teamtest": "node tools/teamtest.mjs",
+    "plaintest": "node tools/plaintest.mjs",
+    "ermostest": "node tools/ermostest.mjs",
+    "bossai": "node tools/bossai.mjs",
+    "mobshot": "node tools/mobshot.mjs",
+    "specialtest": "node tools/specialtest.mjs",
+    "eventtest": "node tools/eventtest.mjs",
+    "bosslootest": "node tools/bosslootest.mjs",
+    "econtest": "node tools/econtest.mjs",
+    "horsetest": "node tools/horsetest.mjs",
+    "mobportrait": "node tools/mobportrait.mjs",
+    "trophyshot": "node tools/trophyshot.mjs"
+  },
+  "license": "SEE LICENSE IN README.md",
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "playwright": "^1.50.0"
+  }
+}
