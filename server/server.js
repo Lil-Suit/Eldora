@@ -11,7 +11,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.16'; // (a variável é só para testes)
+const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.18'; // (a variável é só para testes)
 
 // ---------- contas e personagens salvos (antes em store.js; agora tudo neste arquivo) ----------
 // Contas e personagens salvos no servidor.
@@ -82,8 +82,9 @@ function checkPass(pass, salt, hash) {
 const newToken = () => crypto.randomBytes(24).toString('hex');
 
 const REPO = path.resolve(HERE, '..');
-// o jogo pode estar em docs/ (projeto completo) ou na raiz (só os arquivos do site)
-const ROOT = [path.join(REPO, 'docs'), REPO].find((d) => fs.existsSync(path.join(d, 'index.html'))) || REPO;
+// o jogo pode estar na raiz (só os arquivos do site, o jeito normal) ou em docs/ (projeto completo).
+// A raiz vem primeiro: assim uma pasta docs/ esquecida no repositório não esconde a versão nova.
+const ROOT = [REPO, path.join(REPO, 'docs')].find((d) => fs.existsSync(path.join(d, 'index.html'))) || REPO;
 const PORT = +process.env.PORT || 10000;
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.css': 'text/css' };
@@ -91,6 +92,9 @@ const BLOCK = /(^|\/)(\.|server\/|src\/|tools\/|test\/|node_modules\/|package)/;
 const store = await openStore();
 
 // ---------------- contas e saves (HTTP /api) ----------------
+// Montarias especiais por conta (apelido em minúsculas). Mude sem mexer no código com a variável
+// de ambiente MONTARIAS no Render, ex.: "lil:cavalo,pedrocas:lobo"
+const MONTARIAS = Object.fromEntries(String(process.env.MONTARIAS || 'lil:cavalo,pedrocas:lobo').split(',').map((x) => x.trim().toLowerCase().split(':')).filter((x) => x.length === 2 && ['cavalo', 'lobo'].includes(x[1])));
 const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/;
 const NAME_RE = /^[\p{L}\p{N}_.-]{3,20}$/u;
 const DOC_RE = /^[A-Za-z0-9_-]{1,64}$/;
@@ -156,7 +160,7 @@ async function api(req, res, p) {
         if (!u || !checkPass(pass, u.salt, u.hash)) return json(res, 401, { error: 'Apelido ou senha da conta antiga incorretos.' });
         if (u.email) return json(res, 409, { error: 'Essa conta já está ligada a outro e-mail.' });
         await store.setEmail(name, email);
-        return json(res, 200, { token: u.token, user: u.nick || u.name });
+        return json(res, 200, { token: u.token, user: u.nick || u.name, montaria: MONTARIAS[u.name] || null });
       }
       return json(res, 400, { error: 'pedido inválido' });
     }
@@ -182,12 +186,12 @@ async function api(req, res, p) {
       // entrar: pode usar o e-mail OU o apelido
       const u = login.includes('@') ? await store.userByEmail(login) : await store.getUser(login);
       if (!u || !checkPass(pass, u.salt, u.hash)) return json(res, 401, { error: 'E-mail/apelido ou senha incorretos.' });
-      return json(res, 200, { token: u.token, user: u.nick || u.name, email: u.email || null });
+      return json(res, 200, { token: u.token, user: u.nick || u.name, email: u.email || null, montaria: MONTARIAS[u.name] || null });
     }
     const auth = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
     const owner = auth ? await store.userByToken(auth) : null;
     if (!owner) return json(res, 401, { error: 'Entre na sua conta de novo.' });
-    if (p === '/api/me') { const u = await store.getUser(owner); return json(res, 200, { user: u?.nick || owner, email: u?.email || null, store: store.kind }); }
+    if (p === '/api/me') { const u = await store.getUser(owner); return json(res, 200, { user: u?.nick || owner, email: u?.email || null, store: store.kind, montaria: MONTARIAS[String(owner).toLowerCase()] || null }); }
     // contas antigas (só apelido) podem cadastrar um e-mail
     if (p === '/api/email' && req.method === 'POST') {
       const b = await readBody(req, 2048), email = String(b.email || '').trim().toLowerCase(), u = await store.getUser(owner);
