@@ -11,7 +11,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VERSION = '0.9.14';
+const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.16'; // (a variável é só para testes)
 
 // ---------- contas e personagens salvos (antes em store.js; agora tudo neste arquivo) ----------
 // Contas e personagens salvos no servidor.
@@ -91,6 +91,7 @@ const BLOCK = /(^|\/)(\.|server\/|src\/|tools\/|test\/|node_modules\/|package)/;
 const store = await openStore();
 
 // ---------------- contas e saves (HTTP /api) ----------------
+const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/;
 const NAME_RE = /^[\p{L}\p{N}_.-]{3,20}$/u;
 const DOC_RE = /^[A-Za-z0-9_-]{1,64}$/;
 const tries = new Map(); // limite de tentativas de login por IP
@@ -166,23 +167,37 @@ async function api(req, res, p) {
       if (++t.n > 30) { tries.set(ip, t); return json(res, 429, { error: 'Muitas tentativas. Espere alguns minutos.' }); }
       tries.set(ip, t);
       const b = await readBody(req, 4096);
-      const name = String(b.user || '').trim().toLowerCase(), pass = String(b.pass || '');
-      if (!NAME_RE.test(name)) return json(res, 400, { error: 'Nome de usuário: 3 a 20 letras, números, ponto, traço ou _.' });
+      const login = String(b.user || '').trim().toLowerCase(), pass = String(b.pass || '');
       if (pass.length < 4 || pass.length > 100) return json(res, 400, { error: 'A senha precisa ter pelo menos 4 caracteres.' });
-      const u = await store.getUser(name);
       if (p === '/api/register') {
-        if (u) return json(res, 409, { error: 'Esse nome de usuário já existe. Escolha outro ou entre com ele.' });
+        const name = login, email = String(b.email || '').trim().toLowerCase();
+        if (!NAME_RE.test(name)) return json(res, 400, { error: 'Apelido: 3 a 20 letras, números, ponto, traço ou _.' });
+        if (!EMAIL_RE.test(email)) return json(res, 400, { error: 'Digite um e-mail válido.' });
+        if (await store.getUser(name)) return json(res, 409, { error: 'Esse apelido já está em uso. Escolha outro.' });
+        if (await store.userByEmail(email)) return json(res, 409, { error: 'Esse e-mail já tem uma conta. Entre com ele.' });
         const { salt, hash } = hashPass(pass), token = newToken();
-        await store.addUser({ name, salt, hash, token });
-        return json(res, 200, { token, user: name });
+        await store.addUser({ name, nick: String(b.user || '').trim(), salt, hash, token, email });
+        return json(res, 200, { token, user: String(b.user || '').trim(), email });
       }
-      if (!u || !checkPass(pass, u.salt, u.hash)) return json(res, 401, { error: 'Usuário ou senha incorretos.' });
-      return json(res, 200, { token: u.token, user: name });
+      // entrar: pode usar o e-mail OU o apelido
+      const u = login.includes('@') ? await store.userByEmail(login) : await store.getUser(login);
+      if (!u || !checkPass(pass, u.salt, u.hash)) return json(res, 401, { error: 'E-mail/apelido ou senha incorretos.' });
+      return json(res, 200, { token: u.token, user: u.nick || u.name, email: u.email || null });
     }
     const auth = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
     const owner = auth ? await store.userByToken(auth) : null;
     if (!owner) return json(res, 401, { error: 'Entre na sua conta de novo.' });
-    if (p === '/api/me') { const u = await store.getUser(owner); return json(res, 200, { user: u?.nick || owner, store: store.kind }); }
+    if (p === '/api/me') { const u = await store.getUser(owner); return json(res, 200, { user: u?.nick || owner, email: u?.email || null, store: store.kind }); }
+    // contas antigas (só apelido) podem cadastrar um e-mail
+    if (p === '/api/email' && req.method === 'POST') {
+      const b = await readBody(req, 2048), email = String(b.email || '').trim().toLowerCase(), u = await store.getUser(owner);
+      if (!EMAIL_RE.test(email)) return json(res, 400, { error: 'Digite um e-mail válido.' });
+      if (!u || !checkPass(String(b.pass || ''), u.salt, u.hash)) return json(res, 401, { error: 'Senha incorreta.' });
+      const other = await store.userByEmail(email);
+      if (other && other.name !== owner) return json(res, 409, { error: 'Esse e-mail já está em outra conta.' });
+      await store.setEmail(owner, email);
+      return json(res, 200, { ok: true, email });
+    }
     if (p === '/api/docs' && req.method === 'GET') return json(res, 200, { docs: await store.listDocs(owner) });
     const m = p.match(/^\/api\/docs\/([^/]+)$/);
     if (m && DOC_RE.test(m[1])) {
@@ -230,7 +245,8 @@ server.on('upgrade', (req, sock) => {
   sock.write(`HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ${accept}\r\n\r\n`);
   sock.setNoDelay(true);
   const id = 'p' + (++seq).toString(36) + crypto.randomBytes(3).toString('hex');
-  const peer = { id, sock, presence: {}, updatedAt: Date.now(), buf: Buffer.alloc(0), alive: true, rate: { t: Date.now(), n: 0 } };
+  const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || sock.remoteAddress || '?';
+  const peer = { id, ip, sock, presence: {}, updatedAt: Date.now(), buf: Buffer.alloc(0), alive: true, rate: { t: Date.now(), n: 0 } };
   peers.set(id, peer);
   send(peer, { t: 'hello', peer: id });
   peersChanged();
@@ -279,6 +295,53 @@ function onData(peer, chunk) {
 }
 
 const TOPICS = new Set(['chat', 'fx', 'mob']);
+
+// ---- filtro +18 do chat (cópia de src/core/chatfilter.js) e bloqueio de 30 min ----
+const EXACT = ['sexo', 'sex', 'sexy', 'sexual', 'sexuais', 'transa', 'transar', 'transando', 'transou', 'transei', 'foder', 'fode', 'fodendo', 'fodida', 'fodido',
+  'buceta', 'boceta', 'bct', 'xoxota', 'xota', 'xereca', 'xana', 'piroca', 'punheta', 'siririca', 'gozar', 'gozei', 'gozou', 'gozando', 'gozada', 'gozo',
+  'porno', 'putaria', 'puta', 'putinha', 'prostituta', 'vagina', 'penis', 'boquete', 'mamada', 'tesao', 'tesuda', 'tesudo', 'nude', 'nudes', 'pelada', 'pelado', 'peladinha',
+  'estupro', 'estuprar', 'estuprador', 'pedofilo', 'pedofilia', 'orgia', 'orgasmo', 'erecao', 'masturbar', 'masturbacao', 'anal', 'cu', 'cuzinho', 'hentai',
+  'xvideos', 'pornhub', 'onlyfans', 'porn', 'fuck', 'fucking', 'dick', 'pussy', 'cock', 'boobs', 'tits', 'nsfw', 'xxx'];
+const STEMS = ['bucet', 'bocet', 'xoxot', 'xerec', 'piroc', 'punhet', 'siriric', 'putari', 'masturb', 'pedofil', 'estupr', 'porn', 'orgasm', 'hentai', 'onlyfan', 'xvideo', 'tesud'];
+const LEET = { 0: 'o', 1: 'i', 3: 'e', 4: 'a', 5: 's', 7: 't', '@': 'a', $: 's' };
+const squeeze = (w) => w.replace(/(.)\1+/g, '$1');
+const SET = new Set([...EXACT, ...EXACT.map(squeeze)]);
+const STEMS_SQ = [...new Set([...STEMS, ...STEMS.map(squeeze)])];
+
+function tokens(text) {
+  const t = String(text || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[013457@$]/g, (c) => LEET[c] || c).replace(/[^a-z]+/g, ' ').trim();
+  const raw = t ? t.split(' ') : [];
+  // letras soltas em sequência viram uma palavra só: "s e x o" -> "sexo"
+  const out = [];
+  let run = '';
+  for (const w of raw) {
+    if (w.length === 1) { run += w; continue; }
+    if (run.length > 1) out.push(run);
+    else if (run) out.push(run);
+    run = '';
+    out.push(w);
+  }
+  if (run) out.push(run);
+  return out;
+}
+
+function isAdult(text) {
+  for (const w of tokens(text)) {
+    const s = squeeze(w);
+    if (SET.has(w) || SET.has(s)) return true;
+    if (STEMS_SQ.some((st) => s.startsWith(st) || w.startsWith(st))) return true;
+  }
+  return false;
+}
+
+const CHAT_BAN_MS = 30 * 60 * 1000;
+const chatBans = new Map(); // ip ou apelido -> até quando
+function banLeft(peer) {
+  const now = Date.now(), n = String(peer.presence?.n || '').toLowerCase();
+  return Math.max(0, (chatBans.get('ip:' + peer.ip) || 0) - now, (n ? chatBans.get('n:' + n) || 0 : 0) - now);
+}
+
 function onMessage(peer, text) {
   peer.alive = true;
   const now = Date.now();
@@ -291,6 +354,23 @@ function onMessage(peer, text) {
     return peersChanged();
   }
   if (m.t === 'emit' && TOPICS.has(m.topic)) {
+    const d = m.data && typeof m.data === 'object' ? m.data : null;
+    // bate-papo e privado: palavras +18 bloqueiam o chat por 30 minutos
+    if (d && (m.topic === 'chat' || d.type === 's_dm')) {
+      let left = banLeft(peer);
+      if (!left && isAdult(d.text)) {
+        const until = now + CHAT_BAN_MS, n = String(peer.presence?.n || '').toLowerCase();
+        chatBans.set('ip:' + peer.ip, until); if (n) chatBans.set('n:' + n, until);
+        left = CHAT_BAN_MS;
+      }
+      if (left) return send(peer, { t: 'msg', topic: 'fx', peer: 'server', data: { type: 's_ban', until: now + left } });
+    }
+    // mensagem para uma pessoa só (convite, troca, privado): vai só para ela
+    if (d && typeof d.to === 'string') {
+      const target = peers.get(d.to);
+      if (target) send(target, { t: 'msg', topic: m.topic, peer: peer.id, data: d });
+      return;
+    }
     broadcast({ t: 'msg', topic: m.topic, peer: peer.id, data: m.data ?? null });
   }
   if (m.t === 'ping') send(peer, { t: 'pong', at: m.at });
@@ -306,6 +386,20 @@ function peersChanged() {
     broadcast({ t: 'peers', peers: list });
   }, 33);
 }
+
+// limpa bloqueios vencidos
+setInterval(() => { const now = Date.now(); for (const [k, t] of chatBans) if (t < now) chatBans.delete(k); }, 60000);
+
+// Deploy no Render: o servidor antigo recebe SIGTERM. Avisa todo mundo ("Em atualização / manutenção")
+// e fecha em seguida; as páginas esperam o servidor novo e recarregam sozinhas.
+let closing = false;
+function shutdown() {
+  if (closing) return; closing = true;
+  broadcast({ t: 'maint' });
+  setTimeout(() => process.exit(0), 2500);
+}
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
 
 // derruba conexões mortas
 setInterval(() => {
