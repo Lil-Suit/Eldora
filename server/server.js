@@ -11,7 +11,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.20'; // (a variável é só para testes)
+const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.31'; // (a variável é só para testes)
 
 // ---------- contas e personagens salvos (antes em store.js; agora tudo neste arquivo) ----------
 // Contas e personagens salvos no servidor.
@@ -93,8 +93,10 @@ const store = await openStore();
 
 // ---------------- contas e saves (HTTP /api) ----------------
 // Montarias especiais por conta (apelido em minúsculas). Mude sem mexer no código com a variável
-// de ambiente MONTARIAS no Render, ex.: "lil:cavalo,pedrocas:lobo"
-const MONTARIAS = Object.fromEntries(String(process.env.MONTARIAS || 'lil:cavalo,pedrocas:lobo').split(',').map((x) => x.trim().toLowerCase().split(':')).filter((x) => x.length === 2 && ['cavalo', 'lobo'].includes(x[1])));
+// de ambiente MONTARIAS no Render, ex.: "lil:cavalo,pedrocas:lobo" (padrão: só o lil, com o cavalo)
+// GMs (nome com "GM" dourado para todos): variável GMS, ex.: "lil,pedrocas" (padrão: lil). Só o servidor decide quem é GM.
+const GMS = new Set(String(process.env.GMS || 'lil').split(',').map((x) => x.trim().toLowerCase()).filter(Boolean));
+const MONTARIAS = Object.fromEntries(String(process.env.MONTARIAS || 'lil:cavalo').split(',').map((x) => x.trim().toLowerCase().split(':')).filter((x) => x.length === 2 && ['cavalo', 'lobo'].includes(x[1])));
 const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/;
 const NAME_RE = /^[\p{L}\p{N}_.-]{3,20}$/u;
 const DOC_RE = /^[A-Za-z0-9_-]{1,64}$/;
@@ -160,7 +162,7 @@ async function api(req, res, p) {
         if (!u || !checkPass(pass, u.salt, u.hash)) return json(res, 401, { error: 'Apelido ou senha da conta antiga incorretos.' });
         if (u.email) return json(res, 409, { error: 'Essa conta já está ligada a outro e-mail.' });
         await store.setEmail(name, email);
-        return json(res, 200, { token: u.token, user: u.nick || u.name, montaria: MONTARIAS[u.name] || null });
+        return json(res, 200, { token: u.token, user: u.nick || u.name, montaria: MONTARIAS[u.name] || null, gm: GMS.has(u.name) });
       }
       return json(res, 400, { error: 'pedido inválido' });
     }
@@ -186,12 +188,12 @@ async function api(req, res, p) {
       // entrar: pode usar o e-mail OU o apelido
       const u = login.includes('@') ? await store.userByEmail(login) : await store.getUser(login);
       if (!u || !checkPass(pass, u.salt, u.hash)) return json(res, 401, { error: 'E-mail/apelido ou senha incorretos.' });
-      return json(res, 200, { token: u.token, user: u.nick || u.name, email: u.email || null, montaria: MONTARIAS[u.name] || null });
+      return json(res, 200, { token: u.token, user: u.nick || u.name, email: u.email || null, montaria: MONTARIAS[u.name] || null, gm: GMS.has(u.name) });
     }
     const auth = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
     const owner = auth ? await store.userByToken(auth) : null;
     if (!owner) return json(res, 401, { error: 'Entre na sua conta de novo.' });
-    if (p === '/api/me') { const u = await store.getUser(owner); return json(res, 200, { user: u?.nick || owner, email: u?.email || null, store: store.kind, montaria: MONTARIAS[String(owner).toLowerCase()] || null }); }
+    if (p === '/api/me') { const u = await store.getUser(owner); return json(res, 200, { user: u?.nick || owner, email: u?.email || null, store: store.kind, montaria: MONTARIAS[String(owner).toLowerCase()] || null, gm: GMS.has(String(owner).toLowerCase()) }); }
     // contas antigas (só apelido) podem cadastrar um e-mail
     if (p === '/api/email' && req.method === 'POST') {
       const b = await readBody(req, 2048), email = String(b.email || '').trim().toLowerCase(), u = await store.getUser(owner);
@@ -202,6 +204,8 @@ async function api(req, res, p) {
       await store.setEmail(owner, email);
       return json(res, 200, { ok: true, email });
     }
+    // ---- Mercado dos Viajantes (no próprio servidor): anúncios de todos os jogadores ----
+    if (p.startsWith('/api/market')) return market(req, res, p, owner);
     if (p === '/api/docs' && req.method === 'GET') return json(res, 200, { docs: await store.listDocs(owner) });
     const m = p.match(/^\/api\/docs\/([^/]+)$/);
     if (m && DOC_RE.test(m[1])) {
@@ -221,6 +225,57 @@ async function api(req, res, p) {
   } catch (e) {
     return json(res, 500, { error: 'Erro no servidor: ' + (e?.message || e) });
   }
+}
+
+// Mercado: cada anúncio é um documento do dono especial "~market". O servidor decide quem compra
+// (uma operação por vez), então nunca vende o mesmo item duas vezes.
+const MKT = '~market', MKT_MAX = 10, MKT_DAYS = 3, MKT_FEE = 5;
+let mktQueue = Promise.resolve();
+const mktLock = (fn) => { const r = mktQueue.then(fn, fn); mktQueue = r.catch(() => {}); return r; };
+async function market(req, res, p, owner) {
+  const all = async () => (await store.listDocs(MKT)).map((d) => ({ id: d.id, ...d.data }));
+  if (p === '/api/market' && req.method === 'GET') {
+    const L = (await all()).filter((l) => l.status === 'open' || l.seller === owner).sort((a, b) => b.t - a.t).slice(0, 300);
+    return json(res, 200, { listings: L });
+  }
+  if (req.method !== 'POST') return json(res, 404, { error: 'não encontrado' });
+  const b = await readBody(req, 16384);
+  return mktLock(async () => {
+    if (p === '/api/market/list') {
+      const price = Math.floor(+b.price), item = String(b.item || '');
+      if (!(price >= 1 && price <= 9999999)) return json(res, 400, { error: 'Preço entre 1 e 9.999.999.' });
+      if (!item || item.length > 6000) return json(res, 400, { error: 'Item inválido.' });
+      try { const it = JSON.parse(item); if (!it || !['equip', 'material', 'consumable'].includes(it.kind)) throw 0; } catch { return json(res, 400, { error: 'Item inválido.' }); }
+      const L = await all();
+      if (L.filter((l) => l.seller === owner && l.status === 'open').length >= MKT_MAX) return json(res, 400, { error: `No máximo ${MKT_MAX} anúncios por jogador.` });
+      if (L.length >= 2000) return json(res, 400, { error: 'O mercado está cheio agora. Tente mais tarde.' });
+      const id = 'm' + Date.now().toString(36) + crypto.randomBytes(4).toString('hex');
+      const data = { item, name: String(b.name || '').slice(0, 60), price, seller: owner, sellerName: String(b.sellerName || owner).slice(0, 20), t: Date.now(), status: 'open' };
+      await store.setDoc(MKT, id, data);
+      return json(res, 200, { listing: { id, ...data } });
+    }
+    const id = String(b.id || '');
+    if (p === '/api/market/buy' || p === '/api/market/cancel') {
+      const l = id && await store.getDoc(MKT, id);
+      if (!l || l.status !== 'open') return json(res, 409, { error: p.endsWith('buy') ? 'Este item acabou de ser vendido.' : 'Este item já foi vendido.' });
+      if (p.endsWith('cancel')) {
+        if (l.seller !== owner) return json(res, 403, { error: 'Esse anúncio não é seu.' });
+        await store.delDoc(MKT, id);
+        return json(res, 200, { item: l.item });
+      }
+      if (l.seller === owner) return json(res, 400, { error: 'Você não pode comprar o próprio item.' });
+      if (Date.now() - (l.t || 0) > MKT_DAYS * 864e5) return json(res, 409, { error: 'Este anúncio expirou.' });
+      await store.setDoc(MKT, id, { ...l, status: 'sold', buyer: owner, buyerName: String(b.buyerName || owner).slice(0, 20), soldAt: Date.now() });
+      return json(res, 200, { item: l.item, price: l.price });
+    }
+    if (p === '/api/market/collect') {
+      // ouro das vendas: entrega uma vez só e apaga os anúncios vendidos
+      let total = 0, n = 0;
+      for (const l of await all()) if (l.seller === owner && l.status === 'sold') { await store.delDoc(MKT, l.id); total += Math.floor(l.price * (1 - MKT_FEE / 100)); n++; }
+      return json(res, 200, { total, n });
+    }
+    return json(res, 404, { error: 'não encontrado' });
+  });
 }
 
 const server = http.createServer((req, res) => {
@@ -353,6 +408,11 @@ function onMessage(peer, text) {
   if (++peer.rate.n > 120) return; // limite de mensagens por segundo
   let m; try { m = JSON.parse(text); } catch { return; }
   if (!m || typeof m !== 'object') return;
+  // a conta da conexão (o jogo manda o token logo depois de entrar): só assim o servidor sabe quem é GM
+  if (m.t === 'auth' && typeof m.token === 'string' && m.token.length < 200) {
+    store.userByToken(m.token).then((name) => { peer.account = name || null; peer.gm = !!name && GMS.has(String(name).toLowerCase()); peersChanged(); }).catch(() => {});
+    return;
+  }
   if (m.t === 'pres' && m.p && typeof m.p === 'object') {
     // o mesmo personagem conectou de novo (saiu e entrou, recarregou a página): a conexão antiga cai na hora (sem "clone" parado)
     const cid = typeof m.p.id === 'string' && m.p.id ? m.p.id : null;
@@ -378,6 +438,8 @@ function onMessage(peer, text) {
       if (target) send(target, { t: 'msg', topic: m.topic, peer: peer.id, data: d });
       return;
     }
+    // selo de GM: quem decide é o servidor (o que o jogador mandar é ignorado)
+    if (d && m.topic === 'chat') d.gm = peer.gm ? 1 : 0;
     broadcast({ t: 'msg', topic: m.topic, peer: peer.id, data: m.data ?? null });
   }
   if (m.t === 'ping') send(peer, { t: 'pong', at: m.at });
@@ -389,7 +451,7 @@ function peersChanged() {
   if (pending) return;
   pending = setTimeout(() => {
     pending = null;
-    const list = [...peers.values()].map((p) => ({ peer: p.id, presence: p.presence, updatedAt: p.updatedAt }));
+    const list = [...peers.values()].map((p) => ({ peer: p.id, presence: { ...p.presence, gm: p.gm ? 1 : 0 }, updatedAt: p.updatedAt }));
     broadcast({ t: 'peers', peers: list });
   }, 33);
 }
