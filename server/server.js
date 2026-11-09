@@ -11,7 +11,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.18'; // (a variável é só para testes)
+const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.19'; // (a variável é só para testes)
 
 // ---------- contas e personagens salvos (antes em store.js; agora tudo neste arquivo) ----------
 // Contas e personagens salvos no servidor.
@@ -354,6 +354,9 @@ function onMessage(peer, text) {
   let m; try { m = JSON.parse(text); } catch { return; }
   if (!m || typeof m !== 'object') return;
   if (m.t === 'pres' && m.p && typeof m.p === 'object') {
+    // o mesmo personagem conectou de novo (saiu e entrou, recarregou a página): a conexão antiga cai na hora (sem "clone" parado)
+    const cid = typeof m.p.id === 'string' && m.p.id ? m.p.id : null;
+    if (cid && peer.presence?.id !== cid) for (const o of peers.values()) if (o !== peer && o.presence?.id === cid) { send(o, { t: 'kicked' }); setTimeout(() => drop(o), 50); }
     peer.presence = m.p; peer.updatedAt = now;
     return peersChanged();
   }
@@ -412,6 +415,6 @@ setInterval(() => {
     p.alive = false;
     try { p.sock.write(Buffer.from([0x89, 0])); } catch { drop(p); }
   }
-}, 25000);
+}, 10000);
 
 server.listen(PORT, () => console.log(`ELDORIA ${VERSION} online na porta ${PORT} · servindo ${ROOT} · saves: ${store.kind}`));
