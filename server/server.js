@@ -11,7 +11,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.47'; // (a variável é só para testes)
+const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.48'; // (a variável é só para testes)
 
 // ---------- contas e personagens salvos (antes em store.js; agora tudo neste arquivo) ----------
 // Contas e personagens salvos no servidor.
@@ -364,9 +364,9 @@ server.on('upgrade', (req, sock) => {
   sock.setNoDelay(true);
   const id = 'p' + (++seq).toString(36) + crypto.randomBytes(3).toString('hex');
   const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || sock.remoteAddress || '?';
-  const peer = { id, ip, sock, presence: {}, updatedAt: Date.now(), buf: Buffer.alloc(0), alive: true, rate: { t: Date.now(), n: 0 } };
+  const peer = { id, ip, sock, presence: {}, joined: Date.now(), updatedAt: Date.now(), buf: Buffer.alloc(0), alive: true, rate: { t: Date.now(), n: 0 } };
   peers.set(id, peer);
-  send(peer, { t: 'hello', peer: id });
+  send(peer, { t: 'hello', peer: id, now: Date.now() });
   peersChanged();
   sock.on('data', (chunk) => onData(peer, chunk));
   sock.on('close', () => drop(peer));
@@ -510,6 +510,20 @@ function onMessage(peer, text) {
   if (m.t === 'ping') send(peer, { t: 'pong', at: m.at });
 }
 
+// ANFITRIÃO ÚNICO (quem simula os monstros, o dia/noite e os eventos para todos): o servidor escolhe
+// e avisa todo mundo, então nunca há dois mundos diferentes. É quem está há mais tempo conectado
+// ENTRE os que estão jogando de verdade (personagem em jogo, tela aberta e mandando sinal nos últimos 8 s).
+let lastHost = null;
+function pickHost() {
+  const now = Date.now(); let best = null;
+  for (const p of peers.values()) {
+    if (p.old || !p.presence?.c || p.presence.v === 0 || now - p.updatedAt > 8000) continue;
+    if (!best || p.joined < best.joined) best = p;
+  }
+  return best ? best.id : null;
+}
+setInterval(() => { if (pickHost() !== lastHost) peersChanged(); }, 2000);
+
 // lista de jogadores: enviada no máximo a cada 50 ms (posições chegam quase em tempo real)
 let pending = null;
 function peersChanged() {
@@ -517,7 +531,8 @@ function peersChanged() {
   pending = setTimeout(() => {
     pending = null;
     const list = [...peers.values()].filter((p) => !p.old).map((p) => ({ peer: p.id, presence: { ...p.presence, gm: p.gm ? 1 : 0 }, updatedAt: p.updatedAt }));
-    broadcast({ t: 'peers', peers: list });
+    lastHost = pickHost();
+    broadcast({ t: 'peers', peers: list, host: lastHost, now: Date.now() });
   }, 33);
 }
 
