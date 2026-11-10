@@ -11,7 +11,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.36'; // (a variável é só para testes)
+const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.37'; // (a variável é só para testes)
 
 // ---------- contas e personagens salvos (antes em store.js; agora tudo neste arquivo) ----------
 // Contas e personagens salvos no servidor.
@@ -40,6 +40,7 @@ async function openStore() {
         async addUser(u) { await pool.query('INSERT INTO eldoria_users (name, salt, hash, token, created, email, nick) VALUES ($1,$2,$3,$4,$5,$6,$7)', [u.name, u.salt, u.hash, u.token, Date.now(), u.email || null, u.nick || u.name]); },
         async userByEmail(email) { const r = await pool.query('SELECT * FROM eldoria_users WHERE email=$1', [email]); return r.rows[0] || null; },
         async setEmail(name, email) { await pool.query('UPDATE eldoria_users SET email=$2 WHERE name=$1', [name, email]); },
+        async setPass(name, salt, hash, token) { await pool.query('UPDATE eldoria_users SET salt=$2, hash=$3, token=$4 WHERE name=$1', [name, salt, hash, token]); },
         async listDocs(owner) { const r = await pool.query('SELECT id, data FROM eldoria_docs WHERE owner=$1', [owner]); return r.rows.map((x) => ({ id: x.id, data: JSON.parse(x.data) })); },
         async getDoc(owner, id) { const r = await pool.query('SELECT data FROM eldoria_docs WHERE owner=$1 AND id=$2', [owner, id]); return r.rows[0] ? JSON.parse(r.rows[0].data) : null; },
         async setDoc(owner, id, data) { await pool.query('INSERT INTO eldoria_docs (owner, id, data, updated) VALUES ($1,$2,$3,$4) ON CONFLICT (owner, id) DO UPDATE SET data=EXCLUDED.data, updated=EXCLUDED.updated', [owner, id, JSON.stringify(data), Date.now()]); },
@@ -63,6 +64,7 @@ async function openStore() {
     async addUser(u) { db.users[u.name] = { ...u, created: Date.now() }; flush(); },
     async userByEmail(email) { return Object.values(db.users).find((u) => u.email === email) || null; },
     async setEmail(name, email) { if (db.users[name]) { db.users[name].email = email; flush(); } },
+    async setPass(name, salt, hash, token) { if (db.users[name]) { Object.assign(db.users[name], { salt, hash, token }); flush(); } },
     async listDocs(owner) { return Object.entries(db.docs[owner] || {}).map(([id, data]) => ({ id, data })); },
     async getDoc(owner, id) { return db.docs[owner]?.[id] || null; },
     async setDoc(owner, id, data) { (db.docs[owner] ||= {})[id] = data; flush(); },
@@ -216,6 +218,25 @@ async function api(req, res, p) {
     }
     // ---- Mercado dos Viajantes (no próprio servidor): anúncios de todos os jogadores ----
     if (p.startsWith('/api/market')) return market(req, res, p, owner);
+    if (p.startsWith('/api/name/') && req.method === 'POST') return nameApi(req, res, p, owner);
+    // ---- ferramentas de GM (só contas da lista GMS): ver uma conta e trocar a senha de quem esqueceu ----
+    if (p.startsWith('/api/gm/') && req.method === 'POST') {
+      if (!GMS.has(String(owner).toLowerCase())) return json(res, 403, { error: 'Só GM.' });
+      const b = (await readBody(req, 4096)) || {}, who = String(b.user || '').trim().toLowerCase();
+      const u = who.includes('@') ? await store.userByEmail(who) : await store.getUser(who);
+      if (!u) return json(res, 404, { error: `Não existe conta "${b.user}" neste servidor${store.kind === 'arquivo' ? ' (ATENÇÃO: servidor SEM banco de dados — as contas somem a cada atualização)' : ''}.` });
+      const mask = (e) => (e ? e.replace(/^(.).*(@.*)$/, '$1***$2') : 'sem e-mail');
+      if (p === '/api/gm/conta') return json(res, 200, { ok: true, info: `Conta "${u.nick || u.name}" existe · e-mail ${mask(u.email)} · criada em ${new Date(+u.created || 0).toLocaleDateString('pt-BR')} · banco: ${store.kind}` });
+      if (p === '/api/gm/senha') {
+        const np = String(b.pass || '');
+        if (np.length < 4 || np.length > 100) return json(res, 400, { error: 'A senha nova precisa ter pelo menos 4 caracteres.' });
+        const { salt, hash } = hashPass(np);
+        await store.setPass(u.name, salt, hash, newToken()); // derruba as sessões antigas
+        tries.clear();
+        return json(res, 200, { ok: true, info: `Senha da conta "${u.nick || u.name}" trocada. Ela já pode entrar com a senha nova.` });
+      }
+      return json(res, 404, { error: 'não encontrado' });
+    }
     if (p === '/api/docs' && req.method === 'GET') return json(res, 200, { docs: await store.listDocs(owner) });
     const m = p.match(/^\/api\/docs\/([^/]+)$/);
     if (m && DOC_RE.test(m[1])) {
@@ -235,6 +256,34 @@ async function api(req, res, p) {
   } catch (e) {
     return json(res, 500, { error: 'Erro no servidor: ' + (e?.message || e) });
   }
+}
+
+// ---------- Nomes de personagem ÚNICOS no servidor inteiro ----------
+// "Lil" e "lil" (e "Líl") contam como o mesmo nome. O nome de conta de outra pessoa também não pode
+// ser usado (ninguém se passa pelo criador). Cada nome fica guardado no dono especial "~names".
+const NAMES = '~names';
+const nameKey = (n) => String(n || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+let nameQueue = Promise.resolve();
+const nameLock = (fn) => { const r = nameQueue.then(fn, fn); nameQueue = r.catch(() => {}); return r; };
+async function nameApi(req, res, p, owner) {
+  const b = (await readBody(req)) || {};
+  const name = String(b.name || '').replace(/\s+/g, ' ').trim(), key = nameKey(name);
+  const cid = typeof b.charId === 'string' && b.charId ? b.charId.slice(0, 40) : null;
+  if (p === '/api/name/release') {
+    return nameLock(async () => { const d = await store.getDoc(NAMES, key); if (d && d.owner === owner && (!cid || !d.charId || d.charId === cid)) await store.delDoc(NAMES, key); return json(res, 200, { ok: true }); });
+  }
+  if (p !== '/api/name/reserve' && p !== '/api/name/check') return json(res, 404, { error: 'não encontrado' });
+  if (name.length < 3 || name.length > 16 || !/^[\p{L}\p{N}][\p{L}\p{N} _-]*$/u.test(name)) return json(res, 400, { error: 'Nome inválido: use de 3 a 16 letras ou números.' });
+  return nameLock(async () => {
+    const taken = () => json(res, 409, { error: `O nome "${name}" já está em uso. Escolha outro.` });
+    if (key !== owner && (await store.getUser(key))) return taken(); // nome da conta de outra pessoa
+    const d = await store.getDoc(NAMES, key);
+    if (d && d.owner !== owner) return taken();
+    if (d && d.charId && cid && d.charId !== cid && (await store.getDoc(owner, 'rift_char_' + d.charId))) return json(res, 409, { error: `Você já tem um personagem chamado "${d.name}".` });
+    if (p === '/api/name/check') return json(res, 200, { ok: true });
+    await store.setDoc(NAMES, key, { owner, charId: cid || d?.charId || null, name, at: Date.now() });
+    return json(res, 200, { ok: true, name });
+  });
 }
 
 // Mercado: cada anúncio é um documento do dono especial "~market". O servidor decide quem compra
