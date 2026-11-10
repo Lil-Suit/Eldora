@@ -11,7 +11,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.39'; // (a variável é só para testes)
+const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.42'; // (a variável é só para testes)
 
 // ---------- contas e personagens salvos (antes em store.js; agora tudo neste arquivo) ----------
 // Contas e personagens salvos no servidor.
