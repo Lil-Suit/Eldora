@@ -11,7 +11,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.35'; // (a variável é só para testes)
+const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.36'; // (a variável é só para testes)
 
 // ---------- contas e personagens salvos (antes em store.js; agora tudo neste arquivo) ----------
 // Contas e personagens salvos no servidor.
@@ -84,7 +84,17 @@ const newToken = () => crypto.randomBytes(24).toString('hex');
 const REPO = path.resolve(HERE, '..');
 // o jogo pode estar na raiz (só os arquivos do site, o jeito normal) ou em docs/ (projeto completo).
 // A raiz vem primeiro: assim uma pasta docs/ esquecida no repositório não esconde a versão nova.
-const ROOT = [REPO, path.join(REPO, 'docs')].find((d) => fs.existsSync(path.join(d, 'index.html'))) || REPO;
+// qual cópia do jogo servir: a que tem a MESMA versão deste servidor (se sobrou um index.html velho
+// solto na raiz do repositório, ele é ignorado). Sem nenhuma igual, a mais nova pelo número da versão.
+const ROOT = (() => {
+  const dirs = [path.join(REPO, 'docs'), REPO].filter((d) => fs.existsSync(path.join(d, 'index.html')));
+  const verOf = (d) => { try { const h = fs.readFileSync(path.join(d, 'index.html'), 'utf8'); return (h.match(/"(\d+\.\d+\.\d+)"/) || [])[1] || '0.0.0'; } catch { return '0.0.0'; } };
+  const num = (v) => v.split('.').reduce((a, x) => a * 1000 + +x, 0);
+  const same = dirs.find((d) => verOf(d) === VERSION);
+  const pick = same || dirs.sort((a, b) => num(verOf(b)) - num(verOf(a)))[0] || REPO;
+  console.log('[eldoria] servindo o jogo de', path.relative(REPO, pick) || '.', 'versão', verOf(pick), same ? '(igual ao servidor)' : '(ATENÇÃO: diferente do servidor ' + VERSION + ')');
+  return pick;
+})();
 const PORT = +process.env.PORT || 10000;
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.css': 'text/css' };
@@ -418,9 +428,15 @@ function onMessage(peer, text) {
     const cid = typeof m.p.id === 'string' && m.p.id ? m.p.id : null;
     if (cid && peer.presence?.id !== cid) for (const o of peers.values()) if (o !== peer && o.presence?.id === cid) { send(o, { t: 'kicked' }); setTimeout(() => drop(o), 50); }
     peer.presence = m.p; peer.updatedAt = now;
+    // jogo aberto numa versão antiga (aba velha, cópia velha em cache): fica isolado e recebe "atualizar"
+    // — assim uma aba velha não vira anfitriã e não bagunça os monstros de quem está na versão nova
+    const old = !!m.p.n && m.p.vv !== VERSION;
+    if (old && !peer.oldSent) { peer.oldSent = true; send(peer, { t: 'maint' }); }
+    if (old !== !!peer.old) { peer.old = old; }
     return peersChanged();
   }
   if (m.t === 'emit' && TOPICS.has(m.topic)) {
+    if (peer.old) return; // versão antiga: não fala com os outros
     const d = m.data && typeof m.data === 'object' ? m.data : null;
     // bate-papo e privado: palavras +18 bloqueiam o chat por 30 minutos
     if (d && (m.topic === 'chat' || d.type === 's_dm')) {
@@ -451,7 +467,7 @@ function peersChanged() {
   if (pending) return;
   pending = setTimeout(() => {
     pending = null;
-    const list = [...peers.values()].map((p) => ({ peer: p.id, presence: { ...p.presence, gm: p.gm ? 1 : 0 }, updatedAt: p.updatedAt }));
+    const list = [...peers.values()].filter((p) => !p.old).map((p) => ({ peer: p.id, presence: { ...p.presence, gm: p.gm ? 1 : 0 }, updatedAt: p.updatedAt }));
     broadcast({ t: 'peers', peers: list });
   }, 33);
 }
