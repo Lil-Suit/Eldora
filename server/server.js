@@ -11,7 +11,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.37'; // (a variável é só para testes)
+const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.38'; // (a variável é só para testes)
 
 // ---------- contas e personagens salvos (antes em store.js; agora tudo neste arquivo) ----------
 // Contas e personagens salvos no servidor.
@@ -107,8 +107,8 @@ const store = await openStore();
 // Montarias especiais por conta (apelido em minúsculas). Mude sem mexer no código com a variável
 // de ambiente MONTARIAS no Render, ex.: "lil:cavalo,pedrocas:lobo" (padrão: só o lil, com o cavalo)
 // GMs (nome com "GM" dourado para todos): variável GMS, ex.: "lil,pedrocas" (padrão: lil). Só o servidor decide quem é GM.
-const GMS = new Set(String(process.env.GMS || 'lil').split(',').map((x) => x.trim().toLowerCase()).filter(Boolean));
-const MONTARIAS = Object.fromEntries(String(process.env.MONTARIAS || 'lil:cavalo').split(',').map((x) => x.trim().toLowerCase().split(':')).filter((x) => x.length === 2 && ['cavalo', 'lobo'].includes(x[1])));
+const GMS = new Set(String(process.env.GMS || 'lil,pedrocas').split(',').map((x) => x.trim().toLowerCase()).filter(Boolean));
+const MONTARIAS = Object.fromEntries(String(process.env.MONTARIAS || 'lil:cavalo,pedrocas:lobo').split(',').map((x) => x.trim().toLowerCase().split(':')).filter((x) => x.length === 2 && ['cavalo', 'lobo'].includes(x[1])));
 const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/;
 const NAME_RE = /^[\p{L}\p{N}_.-]{3,20}$/u;
 const DOC_RE = /^[A-Za-z0-9_-]{1,64}$/;
