@@ -11,7 +11,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.48'; // (a variável é só para testes)
+const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.49'; // (a variável é só para testes)
 
 // ---------- contas e personagens salvos (antes em store.js; agora tudo neste arquivo) ----------
 // Contas e personagens salvos no servidor.
@@ -373,10 +373,36 @@ server.on('upgrade', (req, sock) => {
   sock.on('error', () => drop(peer));
 });
 
-function drop(peer) {
+// PvP: quem bateu em alguém fica com "block" por um tempo. Se sair do jogo (fechar a página) durante o block,
+// o personagem CONTINUA no mundo até o block acabar — e pode ser derrotado (a morte vale quando ele voltar).
+const pendingPvp = new Map(); // id do personagem -> { sk, by } (morreu enquanto estava desconectado)
+function drop(peer, force = false) {
   if (!peers.has(peer.id)) return;
+  if (peer.linger && !force) return; // já está parado no mundo esperando o block acabar
+  try { peer.sock?.destroy(); } catch { /* já fechado */ }
+  const bl = +peer.presence?.bl || 0;
+  if (!force && !peer.old && !peer.linger && peer.presence?.c && !peer.presence.d && bl > Date.now()) {
+    peer.linger = true; peer.sock = null;
+    peer.lingerT = setTimeout(() => drop(peer, true), Math.min(10 * 60000, bl - Date.now() + 500));
+    peersChanged();
+    return;
+  }
+  clearTimeout(peer.lingerT);
   peers.delete(peer.id);
-  try { peer.sock.destroy(); } catch { /* já fechado */ }
+  peersChanged();
+}
+// golpe PvP num personagem que ficou no mundo (dono desconectado): o servidor aplica o dano
+function lingerHit(from, target, d) {
+  const P = target.presence; if (!P || P.d) return;
+  const mh = Math.max(50, +P.mh || 500), dmg = Math.max(0, Math.min(1e7, +d.dmg || 0)) * 0.45;
+  P.hp = Math.max(0, (+P.hp || 100) - (dmg / mh) * 100);
+  target.updatedAt = Date.now();
+  if (P.hp <= 0) {
+    P.d = 1; P.hp = 0;
+    if (P.id) pendingPvp.set(P.id, { sk: +P.pk || 0, by: String(from.presence?.n || '').slice(0, 16) });
+    send(from, { t: 'msg', topic: 'fx', peer: target.id, data: { type: 'v_kill', to: from.id, sk: +P.pk || 0, id: P.id || null, n: P.n } });
+    setTimeout(() => drop(target, true), 3000);
+  }
   peersChanged();
 }
 
@@ -386,8 +412,8 @@ function frame(text, op = 1) {
   const head = n < 126 ? Buffer.from([0x80 | op, n]) : n < 65536 ? Buffer.from([0x80 | op, 126, n >> 8, n & 255]) : Buffer.concat([Buffer.from([0x80 | op, 127, 0, 0, 0, 0]), Buffer.from([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255])]);
   return Buffer.concat([head, data]);
 }
-function send(peer, obj) { try { if (!peer.sock.destroyed) peer.sock.write(frame(JSON.stringify(obj))); } catch { /* ignora */ } }
-function broadcast(obj) { const f = frame(JSON.stringify(obj)); for (const p of peers.values()) { try { if (!p.sock.destroyed) p.sock.write(f); } catch { /* ignora */ } } }
+function send(peer, obj) { try { if (peer.sock && !peer.sock.destroyed) peer.sock.write(frame(JSON.stringify(obj))); } catch { /* ignora */ } }
+function broadcast(obj) { const f = frame(JSON.stringify(obj)); for (const p of peers.values()) { try { if (p.sock && !p.sock.destroyed) p.sock.write(f); } catch { /* ignora */ } } }
 
 function onData(peer, chunk) {
   peer.buf = Buffer.concat([peer.buf, chunk]);
@@ -475,8 +501,10 @@ function onMessage(peer, text) {
   if (m.t === 'pres' && m.p && typeof m.p === 'object') {
     // o mesmo personagem conectou de novo (saiu e entrou, recarregou a página): a conexão antiga cai na hora (sem "clone" parado)
     const cid = typeof m.p.id === 'string' && m.p.id ? m.p.id : null;
-    if (cid && peer.presence?.id !== cid) for (const o of peers.values()) if (o !== peer && o.presence?.id === cid) { send(o, { t: 'kicked' }); setTimeout(() => drop(o), 50); }
+    if (cid && peer.presence?.id !== cid) for (const o of peers.values()) if (o !== peer && o.presence?.id === cid) { send(o, { t: 'kicked' }); setTimeout(() => drop(o, !!o.linger), 50); }
     peer.presence = m.p; peer.updatedAt = now;
+    // morreu no PvP enquanto estava fora (personagem ficou no mundo por causa do block): avisa ao voltar
+    if (cid && pendingPvp.has(cid)) { send(peer, { t: 'pvpdead', ...pendingPvp.get(cid) }); pendingPvp.delete(cid); }
     // jogo aberto numa versão antiga (aba velha, cópia velha em cache): fica isolado e recebe "atualizar"
     // — assim uma aba velha não vira anfitriã e não bagunça os monstros de quem está na versão nova
     const old = !!m.p.n && m.p.vv !== VERSION;
@@ -500,6 +528,7 @@ function onMessage(peer, text) {
     // mensagem para uma pessoa só (convite, troca, privado): vai só para ela
     if (d && typeof d.to === 'string') {
       const target = peers.get(d.to);
+      if (target?.linger) { if (d.type === 'v_hit') lingerHit(peer, target, d); return; }
       if (target) send(target, { t: 'msg', topic: m.topic, peer: peer.id, data: d });
       return;
     }
@@ -517,7 +546,7 @@ let lastHost = null;
 function pickHost() {
   const now = Date.now(); let best = null;
   for (const p of peers.values()) {
-    if (p.old || !p.presence?.c || p.presence.v === 0 || now - p.updatedAt > 8000) continue;
+    if (p.old || p.linger || !p.presence?.c || p.presence.v === 0 || now - p.updatedAt > 8000) continue;
     if (!best || p.joined < best.joined) best = p;
   }
   return best ? best.id : null;
@@ -530,7 +559,7 @@ function peersChanged() {
   if (pending) return;
   pending = setTimeout(() => {
     pending = null;
-    const list = [...peers.values()].filter((p) => !p.old).map((p) => ({ peer: p.id, presence: { ...p.presence, gm: p.gm ? 1 : 0 }, updatedAt: p.updatedAt }));
+    const list = [...peers.values()].filter((p) => !p.old).map((p) => ({ peer: p.id, presence: { ...p.presence, gm: p.gm ? 1 : 0, lg: p.linger ? 1 : 0 }, updatedAt: p.updatedAt }));
     lastHost = pickHost();
     broadcast({ t: 'peers', peers: list, host: lastHost, now: Date.now() });
   }, 33);
@@ -553,6 +582,7 @@ process.on('SIGINT', shutdown);
 // derruba conexões mortas
 setInterval(() => {
   for (const p of peers.values()) {
+    if (p.linger) continue; // personagem parado no mundo (block do PvP): sai sozinho quando o block acaba
     if (!p.alive) { drop(p); continue; }
     p.alive = false;
     try { p.sock.write(Buffer.from([0x89, 0])); } catch { drop(p); }
