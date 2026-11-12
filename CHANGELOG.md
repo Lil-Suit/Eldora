@@ -1,5 +1,8 @@
 # Histórico de versões
 
+## v0.9.65 — Bolha da barreira por 3 segundos
+- **Muralha de Ferro:** a bolha dourada aparece só nos **3 primeiros segundos** e some suavemente. A barreira (a vida extra) **continua** até quebrar, e a faixa dourada na barra de vida mostra quanto ainda resta.
+
 ## v0.9.64 — Mochilas de 2 em 2 e armas mais raras
 - **Mochilas sobem de 2 em 2 a cada fundo** e continuam no set seguinte (cada monstro acima é um set):
   - set do Slime: Comum 10 · Verde 12 · Azul 14 · Roxo 16 · Vermelho 18 · Branco 20;
