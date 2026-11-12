@@ -1,5 +1,8 @@
 # Histórico de versões
 
+## v0.9.58 — Visuais liberados para os GMs
+- As contas **GM** têm **todos os visuais** liberados (trajes, efeitos de arma e auras, inclusive os premium e os de conquista), sem gastar diamantes. Só para os GMs: os outros jogadores continuam desbloqueando normalmente.
+
 ## v0.9.57 — Itens antigos com a nova aparência
 - Os itens que **já estavam na bolsa ou equipados** (de antes da aparência por monstro) agora também ganham o visual de um monstro **do mesmo nível do item**: cores, detalhes no ícone e na arma/escudo 3D, e o nome no estilo novo (ex.: "Capacete Goblin").
 - Vale também para itens antigos que chegam por **troca, mercado ou correio**, e para os itens de **baús e missões**.
