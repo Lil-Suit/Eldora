@@ -11,7 +11,29 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.52'; // (a variável é só para testes)
+const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.53'; // (a variável é só para testes)
+
+// ---------- Erros do servidor → Sentry (só no Render; sem dados pessoais) ----------
+const SENTRY_DSN = process.env.SENTRY_DSN || 'https://8ffc505d8bfbef96c829cace57608900@o4512419115499520.ingest.us.sentry.io/4512419158622208';
+const SENTRY_ON = !!process.env.RENDER && !/^(0|off|false)$/i.test(process.env.SENTRY || '');
+let sentrySent = 0; const sentrySeen = new Map();
+function reportError(err, where) {
+  try {
+    if (!SENTRY_ON) return;
+    const m = /^https:\/\/([^@]+)@([^/]+)\/(\d+)$/.exec(SENTRY_DSN); if (!m) return;
+    const msg = String(err?.message || err), sig = msg + '|' + where, now = Date.now();
+    if (now - (sentrySeen.get(sig) || 0) < 60000 || sentrySent > 200) return;
+    sentrySeen.set(sig, now); sentrySent++;
+    const frames = String(err?.stack || '').split('\n').map((l) => /at (?:(.+?) \()?(.*?):(\d+):(\d+)\)?$/.exec(l.trim())).filter(Boolean)
+      .map((f) => ({ function: f[1] || '?', filename: (f[2] || '').replace(/^.*\//, ''), abs_path: f[2], lineno: +f[3], colno: +f[4], in_app: !/node_modules|node:/.test(f[2] || '') })).reverse();
+    const ev = { event_id: crypto.randomBytes(16).toString('hex'), timestamp: now / 1000, platform: 'node', level: 'error', release: 'eldoria@' + VERSION, environment: 'servidor', server_name: 'render',
+      exception: { values: [{ type: err?.name || 'Error', value: msg.slice(0, 500), stacktrace: { frames } }] }, tags: { onde: where, runtime: 'servidor' }, extra: { jogadores: (() => { try { return peers.size; } catch { return 0; } })() } };
+    const body = JSON.stringify({ event_id: ev.event_id, sent_at: new Date().toISOString() }) + '\n' + JSON.stringify({ type: 'event' }) + '\n' + JSON.stringify(ev);
+    fetch(`https://${m[2]}/api/${m[3]}/envelope/?sentry_key=${m[1]}&sentry_version=7&sentry_client=eldoria-server%2F${VERSION}`, { method: 'POST', body, headers: { 'content-type': 'text/plain' } }).catch(() => {});
+  } catch { /* nunca derruba o servidor */ }
+}
+process.on('unhandledRejection', (e) => { console.error('Promessa rejeitada:', e?.message || e); reportError(e instanceof Error ? e : new Error(String(e)), 'unhandledRejection'); });
+process.on('uncaughtException', (e) => { console.error('Erro não tratado:', e?.stack || e); reportError(e, 'uncaughtException'); setTimeout(() => process.exit(1), 1500); });
 
 // ---------- contas e personagens salvos (antes em store.js; agora tudo neste arquivo) ----------
 // Contas e personagens salvos no servidor.
@@ -254,6 +276,7 @@ async function api(req, res, p) {
     }
     return json(res, 404, { error: 'não encontrado' });
   } catch (e) {
+    reportError(e, 'api ' + req.method + ' ' + p.replace(/\/[^/]{16,}$/, '/:id'));
     return json(res, 500, { error: 'Erro no servidor: ' + (e?.message || e) });
   }
 }

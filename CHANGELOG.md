@@ -1,5 +1,430 @@
 # Histórico de versões
 
+## v0.9.53 — Telas de carregamento, animações e erros automáticos
+**Telas de carregamento**
+- Toda viagem entre mapas (Cripta, Ermos, Confins, pergaminho de volta, entrar no jogo) mostra uma **cena do próprio jogo** com o nome do destino, uma **dica** e uma barrinha, em vez da tela preta.
+- 7 cenas: Vila ao pôr do sol, Ponte de pedra, Ruínas da planície, Portão dos Golens, Cripta, Ermos e a Tundra com os yetis.
+
+**Animações**
+- Parado à toa, o personagem faz **gestos**: o guerreiro apoia a arma no ombro ou examina a lâmina, o mago gira o cajado ou acende a palma da mão (com faíscas), o arqueiro testa a corda ou vigia o horizonte; todos se alongam de vez em quando.
+- **Tranco ao apanhar** mais forte, para um lado ou para o outro.
+- **Morte** com duas quedas: para trás ou de cara no chão, cambaleando antes e com um quique ao bater (jogadores e monstros).
+
+**Erros e servidor**
+- O jogo agora **avisa sozinho** quando dá erro no celular ou no PC (Sentry): versão, aparelho, classe e o que estava acontecendo — sem nome, e-mail ou conta.
+- O servidor também registra os próprios erros.
+- Backup do banco de dados feito antes da atualização.
+
+## v0.9.52 — A grande atualização (lista de 29 itens + extras)
+**Equilíbrio e progressão**
+- Ponto de atributo **−50% de novo** (1,5 por nível) e subir de nível **5% mais fácil**. Todos os pontos de atributo foram **devolvidos** para você redistribuir (aviso ao entrar).
+- Itens com números fixos e sensatos: **2 de ataque** e **4 de defesa** por ponto (ataque ≈ nível do item). Item de defesa **não dá vida**. Atributos extras **só em mítico e lendário**. Só escudo **épico ou lendário** atrai monstros.
+- Ordem das raridades: sem fundo (comum) → verde → azul → roxo → **vermelho (mítico)** → **branco (lendário)**.
+- **Conjuntos por bioma**: cada monstro tem mais chance de soltar certas peças do conjunto (ex.: Yeti → capacete; Homem de Gelo → peitoral/calça). Nomes simples: "Capacete Slime", "Botas Lobo"…
+- Ícones dos itens com o desenho do monstro **bem mais visível** (gotas no slime, presas no lobo, chamas no fogo, cristais no gelo, ossos no esqueleto…).
+- Mais armas caindo.
+
+**Chefes e loot**
+- Vida dos chefes maior e proporcional ao nível. Chefes da chave (Vigia) voltam em 1 min, mas **depois da 1ª vitória não dão XP, chave, saque nem ouro**.
+- Chefes só soltam itens **com fundo**: no máximo **1 por pessoa** (2 com chance bem pequena), 1 a 3 no total e no máximo 1 muito raro. Chefes de raid **nunca** soltam lendário.
+- **Os mesmos itens no chão para todos** (online): o anfitrião sorteia uma vez só. Mobs de raid não soltam nada (só o chefe). Pegar item do chão não aparece no chat; só o saque direto de chefe (em **laranja**). Avisos de fenda em **roxo**.
+- Chaves e itens únicos (ex.: Anel) **não podem** ser vendidos, largados, trocados ou postos na loja.
+
+**Fendas e raids**
+- O portal **não gira** mais; os monstros **saem do portal aos poucos**.
+
+**Hunts (novo!)**
+- 15 **Hunts** para farmar: muitos monstros espalhados que voltam rápido (15–60 s), mesmo com você no meio. Placa vermelha "⚔ HUNT" no chão e marcadas no mapa (⚔) com o nível. 5 no Vale, 4 nos Ermos e 6 nos Confins.
+
+**Lojas, banco e poções**
+- **Fornecedora Lia** (nova barraca na vila): poções de vida e de mana em **3 tamanhos** — Pequena cura **100–200**, Média **200–400**, Grande **400–900** (o mesmo para a mana) — em pacotes de 1/10/50/100/250, **flechas** (25 a 500) e pergaminhos de retorno à cidade. Toque no item → perfil e preço.
+- **Flechas agora acabam**: cada tiro gasta 1 (o arqueiro novo começa com 300; quem já era arqueiro ganhou 300). Contador no botão de ataque.
+- Usar poção escolhe sozinha o tamanho certo (a maior que não desperdiça).
+- **Mercador** sem rolar a tela: abas **Equipamentos** | **Poções e materiais**, toque no item → perfil com o botão **Vender** ao lado (saíram os botões de "vender tudo").
+- **Banco** com visual novo e **cofre de itens** (40 espaços, dá para aumentar até 120), sem rolar.
+- Na loja, tocar no item mostra o **perfil** e o preço.
+- Barracas da vila maiores e caprichadas.
+
+**Visual**
+- **Arqueiro**: arco recurvo de verdade (antes parecia um X), a corda **puxa** e a flecha aparece encaixada; flechas **retas** e bonitas (ponta de aço, penas coloridas, brilho). O mortal para trás virou **Agilidade do Vento**: 5 s com +10% de velocidade para andar e atirar.
+- **Mago**: magias com vida (núcleo claro, aura e faíscas girando). O **Meteoro** agora é uma **bola de magia que despenca do céu** e explode em cima do inimigo (segue o alvo).
+- **Guerreiro**: golpes viraram uma **meia-lua de lâmina** que varre o ar, na diagonal, com faíscas.
+- **Trajes de verdade** nos visuais da loja/conquistas (não é mais só cor): elmo com pluma, capuz de folhas, tiara de sol, capuz com olhos brilhando, coroa de rubis, coroa de gelo, auréola de estrelas, chapéu de palha, elmo de dragão com chifres e asinhas…
+- **Efeitos de arma** saem da arma **inteira** (não só da ponta) e a arma brilha na cor; **auras bem mais fortes**.
+- Armaduras **não mudam mais** o visual padrão do personagem.
+- Todos os monstros: sombra macia no chão, olhos brilhando, cores mais vivas; lobos com pelagem, garras e cauda cheia; goblins com dentes, sobrancelhas e pintura de guerra; esqueletos com a alma brilhando nas costelas.
+- **Yeti** arranca uma **bola de neve** do chão e arremessa de vez em quando (deixa lento).
+- **Ponte de pedra** do Vale 2× mais larga, em arco, com parapeito, braseiros e lampiões.
+- **Portão dos Golens** no lugar da barreira do Planalto: com a Chave do Selo a **fechadura mágica explode em purpurina**, as portas afundam e os golens se curvam.
+- **Entrada da Cripta** (toca dos lobos) caprichada: arco de pedra, escadaria, muralhas em ruínas, dois **lobos de pedra** de guarda, raízes, ossos e braseiros.
+- **HUD do celular limpo**: barra do chefe fina numa linha só, alvo compacto (some quando é o próprio chefe), chat menor, painel e barra de XP menores.
+
+**Correções**
+- Câmera olha para cima. Mouse que não travava em alguns PCs e Caps Lock.
+- Monstros fortes (mapa 3) não nascem mais em "grupinhos".
+- A borda da montanha não deixa mais subir para a Planície do Guardião (só pelo Planalto).
+- Modo time conferido com 2 jogadores (convite, mesmo time, XP dividido, sair).
+- GM não vê mais o botão da espada do PvP.
+
+## v0.9.51 — Itens com a cara do monstro
+- Todo equipamento que cai de um monstro agora tem a **estética dele**: as cores do metal, da madeira e do couro viram as do monstro e aparece um **detalhe** típico dele — no ícone da bolsa e na arma/escudo/elmo/armadura 3D (você e os outros jogadores veem).
+  - Golem de Pedra: cinza com **pedrinhas** · Brasa/Magma: vermelho com **chamas** · Yeti/Gelo e Cristal: branco-azulado com **cristais** · Esqueletos: cor de osso com **espinhos** · Gosmas: verde com **gotas** · Goblins: couro e **remendos** · Lobos e feras: **presas** · Deserto: areia com **âmbar** · Brejo: **musgo** · Bosque: **folhas** · Cérebros: rosa com **bolhas** · Fenda/Astral e Sombras: **runas** brilhando · e mais.
+  - Dois monstros do mesmo tipo ainda ficam um pouco diferentes (cada um puxa a própria cor).
+- A raridade (o fundo) continua aparecendo: na moldura e na gema do item.
+- No detalhe do item: "Feito de Golem de Pedra · estilo Pedra".
+
+## v0.9.50 — Itens com atributos FIXOS (estilo Rucoy)
+- Acabou a sorte nos números: **o mesmo item, com o mesmo fundo (raridade), do mesmo monstro é sempre igual** — ataque, defesa e afixos.
+- Cada monstro mais forte é um "patamar" acima (slime → goblin → … → os dos Confins). Ataque da arma = **2 por ponto**:
+  - primeiro monstro: comum **2** · verde **4** · azul **6** · roxo **8** · amarelo **10** · rosa **12**;
+  - a **amarela (lendária)** de um monstro tem o mesmo ataque da **comum do monstro seguinte** (ex.: amarela do slime = comum do goblin = 10).
+- Armaduras seguem os mesmos pontos (peitoral 1 por ponto; elmo, escudo, calça, luvas e botas proporcionais). Afixos fixos para cada peça e raridade (e sem atributo principal de outra classe).
+- Itens com nome (lendários especiais) seguem a mesma regra no ataque/defesa e mantêm o efeito especial.
+- Os itens que você já tem foram ajustados para a regra nova automaticamente; itens trocados/comprados também.
+
+## v0.9.49 — PvP da espada (Rucoy), vila 5× maior e Cripta no canto do mapa
+- **PvP novo, pelo botão da espada ⚔** (embaixo do ouro; libera no **nível 30**). Não precisa mais clicar em ninguém:
+  - 1 toque → **amarela**: você pode apanhar de quem está de espada vermelha, mas não ataca ninguém;
+  - 2 toques → **vermelha**: seus golpes normais acertam jogadores (amarelos, vermelhos e com caveira) e você também apanha;
+  - 3º toque apaga (só sem block).
+  - Para a espada vermelha tirar dano é preciso ter **ouro na bolsa** (nível × 100). Sem o ouro, o golpe não faz nada.
+  - Bateu em alguém → **caveira vermelha** ☠ na frente do nome (3 min): qualquer um de espada vermelha pode te bater, mesmo se você apagar a espada.
+  - Matou → caveira **branca**; 5 abates → **roxa**; 10+ → **preta**. Os abates somem aos poucos (1 a cada 20 min).
+  - **Block** (60 s, renova a cada golpe dado): não entra em área segura, não monta, não sai da conta/título — e se fechar o jogo, **o personagem continua no mundo** até o block acabar (pode ser derrotado; a morte vale quando você voltar).
+  - Morrer para jogador: −10% do XP do nível; com caveira cai 1 item da bolsa (caveira preta: 2).
+  - **Mural de Procurados** na vila (ao norte da praça): cartazes dos caveiras-pretas online com **nível e caveira, sem o nome**. Aceite a caçada, o procurado aparece com 🎯 para você; derrotá-lo dá ouro (nível × 150).
+  - Conquistas novas: Primeiro Sangue, Caveira Preta, Caçador de Recompensas, Justiceiro.
+  - O botão "Atacar" da ficha saiu; time não se ataca; GMs ficam de fora; na cidade ninguém luta.
+- **Vila de Eldoria 5× maior:** cerca nova bem maior (para o norte), 16 casas novas, ruas e lampiões; a praça com as NPCs continua no mesmo lugar, perto do portão da ponte. A área segura cresceu junto.
+- **Cripta do Vigia** mais longe, no canto direito do mapa; a estrada até ela foi refeita e as árvores ficaram mais afastadas do caminho.
+
+## v0.9.48 — Mundo igual para todos, sem regeneração e perfil no canto
+- **Um mundo só para todos:** o servidor agora escolhe UM anfitrião (quem simula monstros, eventos e chefes) e avisa todo mundo — antes cada aparelho podia se achar o anfitrião e aí cada um via monstros diferentes. Aba congelada/tela apagada há mais de 8 s passa a vez.
+- **Um relógio só:** o dia/noite segue a hora do servidor — todo mundo vê a mesma hora.
+- **Nenhum monstro regenera vida:** nem quando evade e volta para casa, nem curado por conjurador, nem o Guardião.
+- **Renascimento pela força:** monstro morto demora mais para voltar quanto mais forte (slime ~45 s, goblin ~50 s, nível 50 ~2 min, nível 100+ ~3–5 min).
+- **Perfil no canto (estilo Rucoy):** tocar/clicar num jogador só o seleciona; aparece no canto direito "Nome · Nv · [Perfil] [✕]". A ficha (time, amigo, mensagem, PvP, troca) abre pelo botão Perfil.
+- **Convite de time não abre mais o painel sozinho** (aparece aviso e mensagem no chat; responda em Time no menu).
+- Janelas sem o desfoque do fundo (a tela não fica mais embaçada atrás dos painéis; mais leve no celular).
+- Os outros jogadores agora veem sua **armadura** (elmo, peitoral, escudo, calça, botas, luvas, mochila), não só a arma.
+
+## v0.9.47 — Monstros perseguem mais antes de "evadir"
+- A distância que o monstro persegue antes de desistir ficou **~1,8× maior**, e agora é medida a partir do **centro do grupo** (mais o tamanho da área do grupo), não do ponto exato onde ele nasceu. Antes, um monstro que nascia na beirada do grupo (ou patrulhava para o outro lado, como os esqueletos) evadia depois de poucos passos.
+- Ex.: goblins e esqueletos agora só desistem a ~60 m do grupo (antes ~26–28 m do ponto onde nasceram).
+
+## v0.9.46 — Ruínas de Vel'Thar maiores e com o meio livre
+- Área dos esqueletos do início ficou bem maior (anel de colunas com o dobro do raio, ~4× a área) e com mais esqueletos (5 grupos).
+- Os muros, colunas e escombros que ficavam no meio foram para a borda: o miolo das ruínas ficou livre para as batalhas. As entradas pelas estradas continuam abertas.
+
+## v0.9.45 — Chefes mais raros e Acampamento Goblin 5× maior
+- **Chefes raros de verdade:** depois de morto, um chefe descansa no mínimo 20 min (mais para os fortes, até 90 min) e só então começa a sorte de nascer, agora bem menor. Em média: Rei Slime ≈ 1 h, Lorde dos Ossos ≈ 1 h 15; os campeões dos Confins, várias horas. O descanso fica salvo (recarregar o jogo não faz o chefe voltar).
+- **Acampamento Goblin 5× maior:** paliçada nova bem mais larga, 10 tendas, 3 fogueiras, torres de vigia no portão, mais goblins espalhados.
+- **Rei Slime** agora nasce **dentro do Acampamento Goblin** (não mais no Prado) e tem **10% menos vida**.
+
+## v0.9.44 — Menu do celular cabe na tela
+- O menu do celular abria para baixo e os últimos botões (incluindo o do GM) ficavam fora da tela. Agora abre em grade ao lado do botão, no topo, e cabe inteiro.
+- O botão **Painel GM** (♛) fica em primeiro no menu para os GMs.
+
+## v0.9.43 — Painel do GM e PvP estilo Rucoy
+- **Painel do GM** (botão de coroa ♛ no menu, só para GMs — lil e pedrocas): aba **Chefes** com todos os 18 chefes do jogo (toque = nasce perto de você) e aba **Raids** com todas as raids separadas por estrelas, mais botões "★ aleatória" … "★★★★★ aleatória". Os comandos `/boss` e `/raid` agora valem para os dois GMs.
+- **PvP estilo Rucoy:**
+  - fora das cidades/acampamentos, jogadores de **nível 10+** podem se atacar: toque no jogador → **⚔ Atacar**;
+  - atacar um inocente dá **caveira branca ☠** (3 min); **matar** um inocente dá **caveira vermelha ☠** (20 min) — todos veem a caveira ao lado do nome;
+  - quem tem caveira pode ser atacado sem castigo; quem te atacou pode levar o troco (quem começou a briga não ganha "defesa");
+  - morrer para jogador: perde **10% do XP do nível** (não desce de nível); com caveira vermelha, ainda **cai 1 item da bolsa**;
+  - na cidade ninguém se machuca; time não se ataca; GMs ficam de fora do PvP; o dano entre jogadores é reduzido (45%) para a luta durar.
+
+## v0.9.42 — GM Lil abre raids
+- **`/raid` (só o GM Lil):** abre na hora uma raid (fenda/evento) perto dele, de **qualquer número de estrelas**:
+  - `/raid` lista as raids do mapa com as estrelas;
+  - `/raid 1` … `/raid 5` abre uma raid com essas estrelas (deste lugar; se o mapa não tiver, usa uma de outro mapa — ex.: 5★ no Vale = Fúria do Titã);
+  - `/raid nome` abre pelo nome (ex.: `/raid goblin`, `/raid colosso`, `/raid titã`).
+  Fecha a raid que estiver aberta antes. Funciona quando ele é o anfitrião.
+
+## v0.9.41 — Chefes nascendo de verdade no online
+- **Por que nenhum chefe nascia online:** o sorteio rodava no aparelho do "anfitrião" (quem controla os monstros) e recomeçava do zero toda vez que o anfitrião mudava — alguém entrar, sair ou trocar de app no celular. Na prática a espera nunca terminava.
+- Agora o sorteio é **preso ao relógio de verdade**: cada minuto tem um número da sorte fixo para cada chefe, igual em todos os aparelhos. Trocar de anfitrião, recarregar ou sair não zera nada; quem assume vê o chefe que nasceu nos últimos minutos. Continua sendo sorte (sem horário fixo). Teste: 6 horas simuladas com troca de anfitrião a cada 3 min — Rei Slime e Lorde dos Ossos nasceram em todas.
+- **GM: `/boss nome`** no chat chama um chefe na hora, perto de você (ex.: `/boss rei slime`, `/boss lorde`, `/boss minotauro`, `/boss guardiao`). Funciona quando você é o anfitrião.
+
+## v0.9.40 — Poção infinita dos GMs
+- **GMs (lil e pedrocas): poção de vida infinita.** Não gasta e não precisa ter na bolsa (o botão mostra ∞). Continua com o tempo de recarga normal. Jogador comum gasta normalmente.
+
+## v0.9.39 — Fendas aleatórias e poderes de GM
+- **Fendas (eventos) abrem em lugares aleatórios** do mapa: a 30–110 m de quem está jogando, sempre em chão aberto, fora da cidade e nunca atrás da Barreira fechada (antes eram 3 lugares fixos no Vale). O nome do lugar aparece no aviso.
+- **GMs (lil e pedrocas), só eles:** personagem vai para o **nível 1000**, ganha **+500 pontos de atributo** e as **melhores armaduras do jogo, míticas, nível 1000** (elmo, cota, grevas, manoplas, botas, escudo-torre, anel e mochila). Acontece uma vez por personagem; o equipamento antigo vai para a bolsa.
+- Nível máximo do jogo: 1000.
+
+## v0.9.38 — Sair da conta de verdade, Pedrocas GM e mapas liberados
+- **Sair da conta:** os personagens da conta saem deste navegador (continuam salvos na conta) — nada mais fica aparecendo atrás da tela de entrar. Cada personagem do navegador agora fica marcado com a conta dona: outra conta que entrar no mesmo navegador não vê nem "puxa" os personagens dela (era assim que apareciam personagens repetidos em contas diferentes).
+- **Pedrocas é GM** e tem o **lobo**; **lil** tem o **cavalo**. Mais ninguém tem montaria.
+- O selo vem **na frente** do nome: **GM Lil**, **GM Pedrocas**.
+- **Mapas 2 e 3 sem exigência de nível:** os portais dos Ermos e dos Confins deixam qualquer um passar (só avisam o nível recomendado). A Barreira do Selo não pede mais nível (continua pedindo a Chave do Selo).
+
+## v0.9.37 — Nomes únicos e ferramentas de GM
+- **Nomes de personagem únicos no jogo inteiro:** o servidor confere ANTES de criar o personagem. "Lil", "lil" e "Líl" contam como o mesmo nome; o nome da conta de outra pessoa também não pode ser usado (ninguém se passa pelo GM). Ao apagar um personagem, o nome fica livre de novo.
+- Personagens antigos com nome repetido: ao entrar, quem não é o dono do nome escolhe um nome novo (não dá para pular).
+- **Ferramentas de GM no chat** (só contas GM): `/conta usuario` (ou e-mail) mostra se a conta existe, o e-mail escondido e se o servidor está com banco de dados; `/senha usuario senhanova` troca a senha de quem esqueceu.
+
+## v0.9.36 — Site sempre na versão certa, sem atualizar sozinho
+- **Causa do "atualiza do nada", dos monstros misturados e de nenhum chefe:** o repositório tinha um `index.html` antigo (0.9.20) solto na raiz, e o servidor abria ele em vez do `docs/index.html` novo. O jogo velho via que o servidor era mais novo e ficava tentando atualizar; e como era o código antigo, misturava monstros dos biomas e não tinha os chefes novos.
+- O servidor agora escolhe sozinho a cópia do jogo com a **mesma versão** dele (e avisa no log qual está servindo).
+- Abas/aparelhos com versão antiga ficam **isolados** (não viram anfitriões, não mandam monstros nem chat para os outros) e recebem o aviso para atualizar.
+- Chefes: o sorteio não zera mais quando alguém entra/sai (o 1º sorteio sai logo) e a chance subiu um pouco (Rei Slime ≈ 9 min em média, Lorde ≈ 14 min, Guardião ≈ 19 min, chefes dos Confins ≈ 40 min a 1 h 15).
+
+## v0.9.35 — Aviso de atualização só quando precisa
+- O aviso "Em atualização / manutenção" aparecia várias vezes seguidas depois de atualizar: cada reinício do servidor (Auto-Deploy + Manual Deploy, servidor velho saindo depois do novo já estar no ar) mostrava o aviso de novo, mesmo para quem já estava na versão nova, e ele ficava até 90 s na tela.
+- Agora o aviso **só aparece** se existir **versão nova** (aí recarrega sozinho) ou se o servidor estiver **fora do ar** (some quando ele volta). Reinício com a mesma versão não mostra nada.
+
+## v0.9.34 — Chefes dos biomas dentro das megaestruturas
+- O chefe de cada bioma agora só nasce **dentro da megaestrutura do bioma** (continua por sorte, sem relógio): Rei Minotauro no salão do trono do Castelo Dourado, Titã de Gelo Furioso na Fortaleza do Inverno, Titã de Magma Furioso na arena da Caverna de Magma, Cérebro-Colmeia na Caverna de Cristal, Escorpião-Rainha em frente à Pirâmide, Lobisomem da Lua Cheia no Círculo dos Anciões e Rei Lagarto na Gruta do Brejo.
+- Aviso quando ele aparece: "Nome apareceu: Nome da estrutura!" (até 500 m de distância).
+
+## v0.9.33 — Megaestruturas nos Confins
+Sete estruturas gigantes (180–250 m, ~20× a primeira caverna), **sem teto**, com **passagens largas** (portões de 18–30 m) e paredes que ficam **transparentes quando você está dentro** — nada tapa a visão:
+- **Castelo Dourado** (Planícies): muralha com 4 portões, torres com telhado vermelho, estandartes, fortaleza central com salão do trono, colunas, fonte, braseiros e casinhas abertas.
+- **Fortaleza do Inverno Eterno** (Tundra): o castelo de gelo, com cristais nas torres.
+- **Caverna do Coração de Magma** (Terras de Magma) e **Grande Caverna de Cristal** (Picos): anéis de rochas de 26–44 m em volta de uma arena enorme, coluna central gigante, poças de lava/cristal, estalagmites e cristais brilhando.
+- **Gruta Afundada do Brejo** (Pântano): a caverna de raízes e névoa verde.
+- **Pirâmide de Âmbar** (Deserto): pirâmide de 6 degraus com rampa, avenida de obeliscos, estátuas de escorpião, espelhos d'água.
+- **Círculo dos Anciões** (Floresta): dois anéis de pedras gigantes com altar de cristal no meio.
+Cada uma tem chão plano, nome próprio ao entrar (+400 XP na descoberta), marcador no mapa, luzes e **guardas do bioma** lá dentro (14 monstros, com elites). Montadas só quando alguém chega perto (leves para o celular).
+
+## v0.9.32 — Chat estilo Rucoy e drops só seus
+- **Chat no canto, estilo Rucoy:** texto solto no canto de baixo (sem caixa), com contorno para ler em qualquer fundo; as linhas somem sozinhas depois de ~15 s. Agora aparece também no **celular** (antes ficava escondido), ao lado do joystick.
+- Cores: **geral** em branco (nome em azul; o seu em dourado; GM dourado), **privado** em rosa (`[PV] Fulano`), **sistema** em amarelo.
+- **Privado só para quem recebe** (o servidor manda só para a pessoa). Dá para mandar privado pelo próprio chat: `@Nome mensagem`.
+- Celular: novo botão de **conversar** (balão, embaixo do menu) abre o campo de digitar no topo da tela, com botão Enviar.
+- **Drops dos outros não aparecem mais:** o aviso "Fulano dropou: item" do chefe só aparece para quem ganhou.
+
+## v0.9.31 — Chefes gigantes e bem diferentes dos comuns
+- Chefes de bioma e de evento agora têm cerca de **2× o tamanho** do monstro comum (Titãs Furiosos 1,5×, porque já são enormes).
+- Visual mais forte: cor do corpo bem diferente (ex.: Comandante de Osso com ossos negros e fogo verde), **olhos brilhando**, **emblema brilhante no peito**, **espinhos nas costas**, **arma maior**, brilho leve no corpo, ombreiras maiores — além da coroa/chifres/auréola, capa, aura e orbes da 0.9.30.
+- Correção: a faixa dourada da coroa do Rei Slime e do Lorde dos Ossos não aparecia.
+
+## v0.9.30 — Chefes com visual próprio, montaria só do Lil e selo GM
+- **Chefes de bioma e de evento com cara de chefe:** cada um ganhou coroa real, chifres, coroa de cristais ou auréola; capa; ombreiras com espinhos; aura brilhante girando no chão; orbes flutuando; e cores próprias. Ficaram 15% maiores. (Rei Minotauro, Rei Lagarto, Escorpião-Rainha, Lobisomem da Lua Cheia, Titãs Furiosos, Cérebro-Colmeia, Gosma-Mãe, Comandante de Osso, Colosso Desperto, Lobo da Ruptura, Chefe Goblin, Cavaleiro dos Mortos.)
+- **Montaria:** acabou o lobo para todos. Só a conta **lil** tem montaria (o cavalo). Quem tinha o lobo perde o item e desmonta ao entrar.
+- **Selo GM:** a conta **lil** aparece como **Lil GM** (GM dourado) no topo da tela, em cima do personagem, no chat, no cartão do jogador e na lista de amigos. Quem decide é o servidor (pela conta), ninguém consegue fingir. Lista de GMs: variável `GMS` no Render (padrão `lil`).
+
+## v0.9.29 — Tela de dano à prova de erro
+- O brilho vermelho agora fica numa camada maior que a tela (passa um pouco de todas as bordas), fora de qualquer caixa do jogo. Mesmo que o navegador do celular meça a tela errado (barra do Android, tela cheia, recorte da câmera), não sobra faixa sem vermelho nem retângulo deslocado.
+
+## v0.9.28 — Correção da tela de dano
+- O brilho vermelho de dano media a tela só na primeira pancada; depois de girar o celular, entrar em tela cheia ou a barra do navegador sumir, ele ficava deslocado e menor que a tela. Agora cobre sempre a tela inteira e se ajusta a cada giro/redimensionamento.
+
+## v0.9.27 — Tela limpa
+- Nova opção em **Configurações → Interface → Tela limpa**: some com os nomes (monstros, NPCs, jogadores), os avisos comuns (moedas, missões, regiões, itens), os textos como "Fugindo!"/"Esquivou" e o quadro do alvo. Ficam só os **avisos de chefe** e a **vida dos chefes no topo**. Os números de dano seguem a opção "Números de dano".
+- A barra de vida no topo agora também aparece para os chefes menores (Rei Slime, Lorde dos Ossos, Vigia e campeões) enquanto você luta perto deles.
+
+## v0.9.26 — Chefes por sorte e correção do nado
+- **Chefes não ficam lá o tempo todo:** começam ausentes e, a cada minuto, cada chefe que não está no mapa tem uma **chance aleatória** de nascer (sem relógio). Quanto mais forte, menor a chance: Rei Slime ≈7,6% (≈13 min em média), Lorde dos Ossos ≈4,7% (≈21 min), Guardião da Fenda ≈3,6% (≈28 min), mini-chefes dos Confins de ≈1,6% até 1% (≈1 h a 1 h 40). Avisa quando um aparece perto de você.
+- O Guardião da Fenda fica no Trono até a **primeira vitória** (é a missão principal); depois disso também só volta por sorte. O Vigia da Cripta continua como antes (faz parte da história).
+- **Correção:** ao sair da água o personagem ficava travado numa pose, sem animação de andar nem de atacar. Agora a pose de nado solta de vez (também para os outros jogadores).
+
+## v0.9.25 — Nível fixo por monstro (estilo Rucoy)
+- Cada monstro tem **sempre o mesmo nível**, em qualquer lugar (tabela em `src/config/moblevels.js`). Os níveis se afastam cada vez mais: monstro novo entra no topo da lista.
+- **Vale:** Slime 1 · Goblin 5 · Goblin Atirador 6 · Lobo 8 · Lobo Alfa 10 · Esqueleto 12 · Gosma da Fenda 14 · Lobo da Fenda 16 · Guardião 18. Chefes: Rei Slime 1, Lorde dos Ossos 14 (continua com 18.000 de vida), Vigia 17, Guardião da Fenda 25.
+- **Ermos da Fenda:** 25 a 60 (portal no nível 22). **Confins:** 65 a 165 (portal no nível 62); cada bioma tem sua faixa e o mini-chefe fica 3 níveis acima do mais forte.
+- Nível máximo do jogador: 100 → 500. O Bestiário mostra o nível de cada monstro.
+- Eventos de onda continuam acompanhando o nível de quem está jogando.
+
+## v0.9.24 — Cérebros mais perigosos
+- **Rajada de 3 investidas:** Cérebro Pútrido e Cérebro Abissal avançam 3 vezes seguidas (tudo em 0,8 s), mirando de novo em você a cada uma. A última deixa lento.
+- Cérebros **maiores** (1,25× e 1,6×) e **mais fortes** (vida 230/290, dano 27/33). O Cérebro-Colmeia também faz a rajada.
+
+## v0.9.23 — Natação e chefes novos
+- **Natação (estilo Minecraft):** na água rasa você anda. Quando a água passa da metade do corpo, você **nada**:
+  - deita na água e dá braçadas (parado, fica boiando de pé);
+  - vai mais devagar, com respingos;
+  - dá para atravessar lagos e rios e sair pela margem;
+  - a montaria desmonta na água funda;
+  - os monstros não entram na água funda;
+  - os outros jogadores veem você nadando.
+- **Rei Slime (novo, primeiro chefe):** fica no Prado das Gosmas, com **10.000 de vida** e dano baixo. É passivo: só luta se for atacado.
+  - **Super salto:** agacha, sobe bem alto e cai no círculo marcado.
+  - **Chuva de gosma:** bolas caem nos círculos verdes e deixam lento.
+  - Em 66% e 33% de vida **se divide** em slimes e fica mais rápido.
+  - Volta 10 min depois de derrotado.
+- **Lorde dos Ossos (novo):** fica nas Ruínas de Vel'Thar, no nível 8, com **18.000 de vida**. Tem coroa, capa vermelha e espadona.
+  - Combo de 3 golpes.
+  - **Espada giratória:** arremessa a espada, que vai e volta e acerta nas duas vezes.
+  - **Mãos do Túmulo:** ossos brotam embaixo de você e prendem.
+  - **Investida de escudo:** corre em linha reta e derruba. Se bater numa parede, fica atordoado.
+  - Em 66% e 33% de vida levanta esqueletos.
+- **Guardião da Fenda:** **30.000 de vida** (eram 13.680) e cerca de 20% a mais de dano.
+
+## v0.9.22 — Cada região com seus monstros
+- **Confins:** cada região só tem os monstros dela. Antes, qualquer monstro de nível parecido podia aparecer em qualquer lugar (yeti no magma, cérebro no gelo).
+- Monstros por região:
+  - **Planícies:** minotauro, goblin, touro rochoso, gosma de mel, javali dourado. Elites: golem de pedra e Javali-Rei.
+  - **Pântano:** homem-lagarto, cérebro podre, gosma do pântano, goblin do lodo, lobo do brejo. Elite: golem de musgo.
+  - **Deserto:** **escorpião de âmbar** (o mais comum), chacal faminto, feiticeiro das dunas, gosma de âmbar. Elite: colosso de areia.
+  - **Floresta:** lobisomem, caçador goblin, lobo esmeralda, cervo espinhoso, gosma esmeralda. Elite: ente ancião.
+  - **Tundra:** yeti, lobo branco, urso polar, gosma de gelo, sentinela congelada. Elites: titã e colosso de gelo.
+  - **Magma:** cérbero, piromante, salamandra, cão de brasa, gosma de magma, cavaleiro de cinzas. Elites: titã e colosso de magma.
+  - **Picos:** cavaleiro da fenda, cérebro abissal, oráculo, lobo e gosma astrais. Elites: titã e colosso astrais.
+- **Mini-chefe de cada região:** aparece raramente e volta 10 min depois de derrotado. São eles: Rei Minotauro, **Rei Lagarto do Pântano** (novo), **Escorpião-Rainha de Âmbar**, Lobisomem da Lua Cheia, Titã de Gelo Furioso, Titã de Magma Furioso e Cérebro-Colmeia.
+- O nível dos monstros segue a distância da entrada, dentro da faixa de cada região.
+- **Titã de Magma (nível 40), ataques novos:**
+  - **Giro da espadona** por 3 s, com fogo em volta, andando atrás de você. No fim ele fica exausto (BRECHA).
+  - **Bola de fogo**, que explode onde cai e queima.
+  - **Espinhos pretos** saindo do chão embaixo dos jogadores (marcados antes), que prendem por um instante.
+  - **Fúria:** com menos de 35% de vida, fica mais rápido.
+- **Yeti, ataques novos:**
+  - **Arranca uma bola de gelo gigante do chão** (ela cresce acima da cabeça) e arremessa. Deixa lento e estilhaça em volta.
+  - **Salto carregado:** agacha, salta para a frente e cai esmagando, deixando lento.
+
+## v0.9.21 — Mercado funcionando no site
+- **Mercado dos Viajantes no site próprio:** os anúncios ficam no seu servidor (Render + Neon). Antes ele tentava usar o banco do Claude e mostrava "Não foi possível anunciar agora".
+- O servidor decide quem compra, uma compra por vez: o mesmo item nunca é vendido duas vezes.
+- O vendedor recebe o ouro, menos a taxa de 5%, quando abre o mercado.
+- **Vendas liberam no nível 10.** Antes disso dá para comprar, e o botão de vender avisa "libera no nível 10".
+
+## v0.9.20 — Lobo de montaria para todos
+- **Por enquanto, todo jogador ganha o Lobo de Montaria** (20× mais rápido). Ele aparece na bolsa uns segundos depois de entrar no jogo.
+- Monte com **H**, pelo botão da barra (PC) ou pelo botão da tela (celular).
+- A conta **lil** continua com o cavalo.
+- Para voltar a ser só de algumas contas, troque `mountForAll` para `null` em `src/config/balance.js`.
+
+## v0.9.19 — Sem clones e botão da montaria
+- **Fim do "clone" parado:** quando você sai e entra de novo, o servidor derruba na hora a conexão antiga do mesmo personagem. Os outros jogadores veem só um de você.
+- Jogador que fica sem sinal por mais de 12 s some da tela (conexão morta) e volta assim que o sinal volta.
+- Se o mesmo personagem for aberto em outra aba ou aparelho, a aba antiga avisa e fica offline, em vez de as duas ficarem se derrubando.
+- **Botão da montaria no PC:** aparece na barra de habilidades (tecla H), com o ícone do cavalo ou do lobo, e fica dourado quando você está montado. No celular o botão já existia.
+
+## v0.9.18 — Largar no chão e montarias da equipe
+- **"Descartar" virou "Largar no chão":** o item não some mais. Ele cai na sua frente e fica no chão por 5 minutos. Para pegar de volta, afaste-se e volte. Quem estiver online também vê o item e pode pegar; só uma pessoa leva, sem duplicar.
+- **Montarias por conta (20× mais rápido):**
+  - **lil:** Cavalo do Criador.
+  - **Pedrocas:** **Lobo do Braço Direito**, um lobo cinza gigante com sela, juba e olhos azuis.
+  - A montaria aparece na bolsa ao entrar no jogo. Aperte **H** ou o botão da montaria para montar.
+  - Os outros jogadores veem o lobo.
+  - Para mudar quem ganha qual montaria, use a variável `MONTARIAS` no Render (ex.: `lil:cavalo,pedrocas:lobo`).
+
+## v0.9.17 — O Vigia de verdade
+- **Vigia Corrompido virou um chefe próprio**, não mais o golem: um carcereiro espectral com capuz, rosto de caveira, coroa de ferro, correntes, **lanterna de almas** e **alabarda**.
+- **Golpes:** combo de 3 golpes com a alabarda e, a cada 3 ataques, uma **varrida em círculo** (marcada no chão).
+- **Correntes:** marca uma linha no chão. Quem ficar nela é preso e **puxado** para perto do Vigia. Desvie para o lado.
+- **Olhar da Lanterna:** aviso de 2,6 s ("Esconda-se atrás de uma coluna!"). Acerta forte quem ele **enxerga**; atrás de uma coluna você fica protegido.
+- **Almas acorrentadas:** em 66% e 33% de vida ele prende almas pela sala. Enquanto elas existem, o Vigia quase não sofre dano. Destrua todas e ele fica **atordoado por 3,5 s** (BRECHA).
+- Os avisos do chefe aparecem para todos os jogadores da sala.
+- **Servidor:** o jogo da raiz do repositório vem antes de uma pasta `docs` esquecida, então a versão nova sempre aparece.
+
+## v0.9.16 — Fortaleza, chefes, amigos e atualização automática
+- **Mochila:** só tem **capacidade** (os espaços extras aparecem no ícone e no item). A capacidade é sorteada e cresce com o nível do item. A cor não decide: uma verde pode ter mais espaço que uma azul. Cada melhoria dá +1 espaço. Mochilas antigas continuam com o mesmo espaço.
+- **Escudo:** só **defesa**. Os épicos e lendários ganham **chance de atrair monstros** (8–22%, nunca mais que 25%).
+- **Armas:** não mostram mais velocidade de ataque. O dano foi ajustado para dar o mesmo resultado.
+- **Mais difícil:** todos os monstros têm +30% de vida e +20% de dano. O slime leva uns 5 golpes e bate bem mais forte (2–3 juntos derrubam quem bobear). Chefes ganham +80% de vida e só +8% de ataque.
+- **Saque de chefe:** 1 item sempre; 40% de chance de 2; 15% de chance de 3. Com 2 itens e 2 pessoas, sai 1 para cada. O item vai **direto para a bolsa**, e todos veem no chat "Fulano dropou: …". O item tem o **nível do chefe**: chefe fraco dá item fraco.
+- **Cripta do Vigia virou uma fortaleza** cerca de 6× maior: portão, pátio, quartel, arsenal, grande salão, catacumbas e trono. Tem muralhas com ameias, arcos, colunas, tapetes, estandartes e móveis. Também ficou mais clara.
+- **Ficha do jogador:** clique ou toque em alguém para ver nick, classe, nível, time, loja e conquistas. Dali dá para convidar para o time, adicionar como amigo, mandar mensagem ou trocar.
+- **Time:** só se forma quando o convidado **aceita**.
+- **Amigos:** botão novo no menu. Mostra quem está online ou offline, avisa quando um amigo entra ou sai, e tocar no nome abre a **mensagem privada**.
+- **Chat:** palavras +18 **bloqueiam o chat por 30 minutos**, no jogo e no servidor.
+- **Atualização automática:** quando o servidor é atualizado, aparece "Em atualização / manutenção", a página recarrega sozinha e você volta para o mesmo personagem.
+
+## v0.9.15 — Entrar com e-mail
+- **Criar conta** pede **apelido, e-mail e senha**, e a senha é digitada duas vezes.
+- **Cada e-mail só pode ter uma conta**, e cada apelido é único.
+- **Entrar:** use o **e-mail ou o apelido**, mais a senha.
+- **Contas antigas** (só apelido) recebem um aviso para cadastrar o e-mail, com a senha atual. O aviso pode ser adiado para outra vez.
+- `/api/status` mostra a versão 0.9.15.
+
+## v0.9.14 — Servidor num arquivo só
+- O servidor agora é **um único arquivo** (`server/server.js`): o antigo `store.js` foi juntado nele. Assim não tem como uma parte ficar velha e a outra nova.
+- `/api/status` mostra a **versão** do servidor (ex.: `"versao":"0.9.14"`), para conferir na hora se a atualização entrou.
+
+## v0.9.13 — Login com Google + senha
+- Com `GOOGLE_CLIENT_ID` configurado no servidor, a conta passa a ser **ligada ao e-mail do Google** e protegida por uma **senha** (mínimo 6 caracteres).
+- **Primeira vez:** "Continuar com o Google", escolher um **apelido** e a senha.
+- **Depois:** Google e a senha, em qualquer aparelho.
+- **Cada e-mail só pode ter uma conta**, e **cada apelido é único**; maiúsculas e minúsculas contam como o mesmo apelido.
+- Contas antigas (apelido e senha) podem ser **ligadas** ao Google uma vez.
+- O servidor confere o login direto com o Google, sem bibliotecas extras. Sem `GOOGLE_CLIENT_ID`, continua o login antigo por apelido e senha.
+
+## v0.9.12 — Mochilas com espaço e escudo para todas as classes
+- **Mochila aumenta a bolsa**, e quanto melhor, mais espaço:
+  - Comum +4, incomum +6, rara +9, épica +13, lendária +18.
+  - A Mochila de Viajante dá +2 extra, e cada 2 melhorias na forja dão +1.
+  - A bolsa base continua com 30 espaços.
+- Trocar ou tirar a mochila confere se tudo cabe. Se não couber, o jogo avisa quantos espaços liberar.
+- Com mais espaço, a grade da bolsa ganha colunas e continua cabendo sem rolar.
+- **Escudo para todas as classes** (novo espaço de equipamento):
+  - Todo personagem começa com o Escudo de Madeira; personagens antigos também ganham o seu.
+  - Escudos melhores caem como os outros itens: Broquel, Escudo de Ferro, Escudo Rúnico e Escudo-Torre.
+  - Guerreiro e mago levam o escudo na mão; o arqueiro leva nas costas.
+- Ouro aparece ao lado de "Bolsa", e o boneco de equipamentos ganhou o espaço do escudo.
+
+## v0.9.11 — Drops iguais para todas as classes
+- **A classe não influencia mais o que cai:**
+  - As armas que caem são sorteadas entre todas as classes, com a mesma chance.
+  - Nos chefes, o 1º item deixou de ser garantido da sua classe.
+  - O lendário extra dos chefes é sorteado entre os lendários de todas as classes.
+- Arma de outra classe continua útil para **vender, trocar ou pôr na Loja dos Jogadores**.
+- As recompensas fixas de missão continuam sendo da sua classe, porque são prêmios e não drops.
+
+## v0.9.10 — Equipar mais fácil
+- **Botão de equipar mostra o motivo** quando o item não serve: "Precisa nível 3" ou "Só para Arqueiro". Antes parecia que o item simplesmente não equipava.
+- **Tocar duas vezes** num item da bolsa equipa direto.
+- Armas de outra classe caem menos: 85% das armas que caem são da sua classe (antes 70%).
+
+## v0.9.9 — Conta e personagens salvos no servidor
+- **Login no servidor próprio (Render):** ao abrir o jogo fora do Claude aparece a tela "Entre na sua conta", com usuário e senha.
+  - As senhas são guardadas com hash (scrypt).
+  - Há limite de tentativas de login.
+- **Personagens salvos no servidor:** dá pra limpar o navegador ou trocar de aparelho sem perder nada.
+  - Personagens antigos que estavam só no navegador sobem para a conta no primeiro login.
+  - Salva no servidor a cada ~15 s e em cada momento importante (nível, missão, saque).
+- **Jogar sem conta** continua possível, mas salva só no navegador.
+- **Botão "Sair da conta"** na tela de título.
+- **Banco de dados:** com a variável `DATABASE_URL` (Postgres, ex.: Neon grátis) os saves ficam guardados para sempre.
+  - Sem ela, o servidor usa um arquivo temporário, que o Render grátis apaga ao reiniciar.
+  - Build Command no Render: `npm install --omit=dev` (instala só o `pg`).
+
+## v0.9.8 — Monstros mais espertos e efeitos de morte/drop
+- **Cerco:** em bando, cada monstro corpo a corpo vem por um lado diferente do herói. Enquanto espera o próximo golpe, anda de lado.
+- **Atiradores, arqueiros e magos:** andam de lado entre um tiro e outro, então ficam mais difíceis de acertar. Continuam fugindo quando você chega perto.
+- **Fuga:** goblins, lobos e gosmas fogem com pouca vida (15%) e voltam chamando ajuda.
+- **Conjuradores curam:** a cada ~9 s curam 20% da vida do aliado mais ferido por perto, com efeito verde.
+- **Morte com efeito:**
+  - Partículas na cor do monstro e um anel no chão.
+  - Uma "alma" sobe e o corpo vira fumaça ao sumir.
+  - Elites e chefes fazem onda de choque e tremem a tela.
+- **Drops:** soltam poeira ao cair no chão. Itens raros ou melhores fazem um anel na cor da raridade.
+
+## v0.9.7 — Correr
+- **Correr:** 60% mais rápido.
+  - No PC, segure **Shift**; a tecla pode ser trocada nas configurações.
+  - No celular há um botão **»**, separado do analógico, que liga e desliga a corrida. Ele fica verde quando está ligado.
+- Atacar ou usar habilidade interrompe a corrida durante o golpe.
+- Os outros jogadores veem a passada mais rápida.
+
+## v0.9.6 — Online mais rápido e chefes com fases
+- **Menos atraso no online (servidor próprio):**
+  - Os monstros são enviados 15 vezes por segundo (antes eram 10) e o dano dos clientes chega a cada 33 ms.
+  - A lista de jogadores sai a cada 33 ms.
+- **Previsão de movimento:** os outros jogadores e os monstros andam um pouco à frente na direção em que estão indo, então não ficam "atrasados" na tela.
+- **Ping (ms)** aparece ao lado de "X no vale" quando joga pelo servidor próprio.
+- **Chefes com fases** (campeões de evento, chefes de Fenda e mini-chefes):
+  - Em 66% e 33% de vida entram em fúria: ficam mais rápidos, soltam onda de choque e chamam 2–3 ajudantes.
+  - Durante a luta marcam o chão embaixo dos jogadores e explodem; na fase final marcam 3 pontos.
+  - Tudo aparece igual para todos os jogadores.
+
+## v0.9.5 — Os outros jogadores veem seus golpes
+- Cada golpe, habilidade, esquiva e investida é avisado na hora aos outros jogadores. Seu personagem faz a animação certa na tela deles: duração, combo e variação de cada golpe.
+- **Efeitos das habilidades aparecem para todos:** cortes, círculos, rachaduras, explosões, chuva de flechas e escudos.
+- Flechas e magias que você lança também aparecem para os outros, só como efeito visual (o dano continua sendo de quem atacou).
+
+## v0.9.4 — Mouse preso na câmera (PC)
+- Clique no jogo para **prender o mouse**: mexer o mouse gira a visão e o clique ataca para onde você olha, com ajuda para acertar o inimigo nessa direção.
+- **Caps Lock** solta o mouse (e prende de novo).
+- O mouse se solta sozinho quando abre inventário, diálogo ou menu.
+- **Servidor próprio de multiplayer** (`server/server.js`, sem dependências): serve o jogo e uma sala em tempo real por WebSocket.
+  - Quem abre o mesmo endereço (ex.: Render) entra no mesmo mundo e vê os outros, com chat, monstros compartilhados, grupo e troca.
+  - Fora do Claude, a posição é enviada a cada 50 ms.
+  - Comando: `npm start` (ou `node server/server.js`).
+  - Limite: os jogadores do link do Claude e os do servidor próprio ficam em salas separadas, porque o Claude não deixa a página falar com outros servidores.
+
 ## v0.9.3 — Equipamentos novos, dano estilo Rucoy e mapas sem regiões
 - **Drops:** no chão aparece só a arte do item (sem os anéis coloridos); brilho de feixe só para épico ou melhor.
 - **Bem menos drops**, com raridades muito mais difíceis: azul (raro) é cerca de 1 em 50 itens de monstro comum, e itens já caem pouco.
