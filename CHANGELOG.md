@@ -1,5 +1,12 @@
 # Histórico de versões
 
+## v0.9.70 — Personalizar HUD
+- Novo botão **✥ Personalizar HUD** em Menu › Configurações › Controles (celular).
+- **Arraste** qualquer botão para onde quiser: ataque, as 4 habilidades, esquiva, poção, correr, montaria, interagir, menu, conversa e até o analógico.
+- **Toque num botão** para mudar o **tamanho** e a **transparência** dele.
+- A barra com os controles fica sempre do **lado oposto** ao botão que você está arrumando, some enquanto você arrasta e pode ser recolhida no ▾. Assim ela não atrapalha a visão.
+- O jogo fica **pausado** enquanto você arruma. Opções **Salvar**, **Cancelar** e **Restaurar padrão**. O HUD salvo continua igual depois de fechar o jogo.
+
 ## v0.9.69 — Analógico travado
 - **Celular:** o analógico agora fica **travado no lugar** (canto esquerdo de baixo). Tocar em qualquer ponto da área da esquerda move a partir dele.
 - Quem preferir o jeito antigo (o analógico aparece onde você toca) pode ligar em **Menu › Configurações › Controles › Analógico móvel**.
