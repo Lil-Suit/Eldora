@@ -1,5 +1,26 @@
 # Histórico de versões
 
+## v0.9.59 — Menos travadas, mapa com zoom, gestos e Titã de Gelo mais difícil
+**Desempenho (as "travadinhas")**
+- Os efeitos (golpes, anéis, explosões) não refazem mais o shader toda vez: antes, cada efeito que sumia jogava o shader fora e o próximo igual travava o celular para compilar de novo. Agora cada tipo compila **uma vez só**, e os principais já são preparados ao entrar no jogo.
+- Só os monstros **perto** fazem sombra (a sombra de cada monstro custava desenhar ele de novo). Nas Ruínas, isso cortou mais da metade do trabalho de desenho.
+- Monstros dentro da neblina não são desenhados nem têm os ossos recalculados.
+- A aura tem menos partículas e o anel no chão é mais leve.
+
+**Visual e uso**
+- **Aura:** parada, o que cai de cima cai pela metade. Andando, correndo ou atacando, as partículas saem das **costas** (como um rastro), inclusive as que saíam do chão. Outros jogadores mostram metade das partículas.
+- **Tela vermelha de dano** agora é desenhada dentro da imagem do jogo: cobre a tela inteira, de ponta a ponta, em qualquer celular.
+- **Castelos dos Confins:** as paredes não ficam mais meio invisíveis quando você chega perto. Elas continuam sólidas e só abrem um buraco redondo no pedaço que tapa o seu personagem.
+- **Gestos:** a janela ficou bonita (cartões com ícone) e agora funciona no celular. Antes o toque ia para o joystick por baixo dela. Tem também o botão **Parar**.
+- **Botão ≡ (celular):** abre direto o diário na última aba que você usou (Inventário na primeira vez), sem o menu no meio. Gestos, Menu e Painel GM viraram botões no topo do diário. As abas ficaram **maiores**.
+- **Mapa:** abre **ampliado na sua região**. Dá para arrastar, dar zoom com pinça, com a roda do mouse ou com os botões + e −, e ◎ volta para você. De longe, as Hunts mostram só o ⚔.
+- **Mural das Runas:** pedra entalhada nova, com os 3 medalhões, setas e a **charada explicada embaixo** (a ordem e onde fica cada Pedra-Runa).
+- **Leiloeira:** tocar num item abre uma janela no **meio da tela** só com ele, com preço e Comprar.
+
+**Titã de Gelo**
+- **Pedras de Gelo:** 5 pedras aparecem girando em volta dele e são lançadas em você, **uma atrás da outra**. Continue se mexendo!
+- **Cristais do chão:** ele bate no chão e cristais de gelo vão saindo **em linha** até você. O Furioso, na fúria, também faz um anel de cristais em volta de você.
+
 ## v0.9.58 — Visuais liberados para os GMs
 - As contas **GM** têm **todos os visuais** liberados (trajes, efeitos de arma e auras, inclusive os premium e os de conquista), sem gastar diamantes. Só para os GMs: os outros jogadores continuam desbloqueando normalmente.
 
