@@ -11,7 +11,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.55'; // (a variável é só para testes)
+const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.56'; // (a variável é só para testes)
 
 // ---------- Erros do servidor → Sentry (só no Render; sem dados pessoais) ----------
 const SENTRY_DSN = process.env.SENTRY_DSN || 'https://8ffc505d8bfbef96c829cace57608900@o4512419115499520.ingest.us.sentry.io/4512419158622208';
@@ -313,9 +313,9 @@ const DIA_OWNER = '__diamantes__';
 const DIA_PRICES = {
   skin_rubi: 120, skin_geada: 120, skin_abismo: 200, skin_jade: 150, skin_dragao: 220,
   fx_geada: 80, fx_ouro: 80, fx_trovao: 100, aura_petalas: 90, aura_vazio: 120,
-  tp1: 10, tp5: 40, tp10: 70, // Pergaminhos de Teleporte (pode comprar de novo)
+  tp3: 1, tp8: 2, // Pergaminhos de Teleporte: 3 por 💎1, 8 por 💎2 (pode comprar de novo)
 };
-const DIA_REPEAT = new Set(['tp1', 'tp5', 'tp10']);
+const DIA_REPEAT = new Set(['tp3', 'tp8']);
 async function diaGet(name) { const d = await store.getDoc(DIA_OWNER, String(name).toLowerCase()); return { total: Math.max(0, Math.floor(+d?.total || 0)), spent: Array.isArray(d?.spent) ? d.spent : [], log: Array.isArray(d?.log) ? d.log : [] }; }
 function diaBal(d) { return Math.max(0, d.total - d.spent.reduce((a, x) => a + (Math.max(0, Math.floor(+x.p)) || 0), 0)); }
 let diaQueue = Promise.resolve();

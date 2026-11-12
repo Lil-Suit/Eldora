@@ -1,11 +1,15 @@
 # Histórico de versões
 
+## v0.9.56 — Pergaminho de Teleporte na Fornecedora
+- O **Pergaminho de Teleporte** agora está à venda na **Fornecedora Lia**, ao lado do Pergaminho de Retorno.
+- Novo preço: **3 pergaminhos por 💎1** ou **8 por 💎2**. Também dá para comprar na Pedra de Teleporte e na Loja de Diamantes.
+
 ## v0.9.55 — Teleporte, lojas e barreira
 **Pedra de Teleporte**
 - Nova **Pedra de Teleporte** na Vila, no Acampamento dos Exilados (Ermos) e no Posto da Fronteira (Confins): escolha o **mundo** (1 Vale, 2 Ermos, 3 Confins) e a **região** — ex.: Mundo 3 → Deserto de Âmbar.
 - As regiões liberam quando você as **descobre** andando por elas. Mostra o nível de cada uma e avisa quando é perigosa para você.
 - Ir para as **zonas seguras é grátis**. As outras regiões gastam **1 Pergaminho de Teleporte**.
-- **Pergaminho de Teleporte** (novo): comprado com **diamantes 💎** — 1 por 💎10, 5 por 💎40, 10 por 💎70. Também dá para usar direto da bolsa, de qualquer lugar. É só conveniência (não dá força) e fica preso à conta (não vende nem troca).
+- **Pergaminho de Teleporte** (novo): comprado com **diamantes 💎**. Também dá para usar direto da bolsa, de qualquer lugar. É só conveniência (não dá força) e fica preso à conta (não vende nem troca).
 - O saldo de diamantes agora fica **só no servidor**: ninguém consegue se dar diamantes. O dono do jogo credita pelo **Painel do dono** (busca pelo nome).
 
 **Lojas**
