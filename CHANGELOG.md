@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## v0.9.57 — Itens antigos com a nova aparência
+- Os itens que **já estavam na bolsa ou equipados** (de antes da aparência por monstro) agora também ganham o visual de um monstro **do mesmo nível do item**: cores, detalhes no ícone e na arma/escudo 3D, e o nome no estilo novo (ex.: "Capacete Goblin").
+- Vale também para itens antigos que chegam por **troca, mercado ou correio**, e para os itens de **baús e missões**.
+- O equipamento inicial (comum, nível 1) continua simples. Os atributos dos itens **não mudam**, só a aparência e o nome.
+
 ## v0.9.56 — Pergaminho de Teleporte na Fornecedora
 - O **Pergaminho de Teleporte** agora está à venda na **Fornecedora Lia**, ao lado do Pergaminho de Retorno.
 - Novo preço: **3 pergaminhos por 💎1** ou **8 por 💎2**. Também dá para comprar na Pedra de Teleporte e na Loja de Diamantes.
