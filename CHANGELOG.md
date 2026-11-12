@@ -1,5 +1,13 @@
 # Histórico de versões
 
+## v0.9.64 — Mochilas de 2 em 2 e armas mais raras
+- **Mochilas sobem de 2 em 2 a cada fundo** e continuam no set seguinte (cada monstro acima é um set):
+  - set do Slime: Comum 10 · Verde 12 · Azul 14 · Roxo 16 · Vermelho 18 · Branco 20;
+  - set do Goblin: Comum 22 · Verde 24 · Azul 26 … e assim por diante;
+  - forjada na Fenda: +2;
+  - as mochilas que você já tem foram recalculadas, e nenhum item se perde.
+- **Armas são a peça mais difícil de cair**, de qualquer monstro e em qualquer sorteio, até nos monstros que soltam mais armas no conjunto deles.
+
 ## v0.9.63 — Raridade vale de verdade (ataque e defesa)
 - **A raridade agora multiplica o ataque e a defesa.** Antes ela só somava +1 ponto por degrau, então em nível alto um Mítico ficava só uns 6% acima de um Comum (ex.: Elmo Épico 264 × Mítico 268).
 - Agora cada degrau pesa de verdade. Defesa de uma peça no nível máximo:
