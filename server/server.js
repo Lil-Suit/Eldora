@@ -11,7 +11,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.54'; // (a variável é só para testes)
+const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.55'; // (a variável é só para testes)
 
 // ---------- Erros do servidor → Sentry (só no Render; sem dados pessoais) ----------
 const SENTRY_DSN = process.env.SENTRY_DSN || 'https://8ffc505d8bfbef96c829cace57608900@o4512419115499520.ingest.us.sentry.io/4512419158622208';
@@ -228,6 +228,33 @@ async function api(req, res, p) {
     const owner = auth ? await store.userByToken(auth) : null;
     if (!owner) return json(res, 401, { error: 'Entre na sua conta de novo.' });
     if (p === '/api/me') { const u = await store.getUser(owner); return json(res, 200, { user: u?.nick || owner, email: u?.email || null, store: store.kind, montaria: MONTARIAS[String(owner).toLowerCase()] || null, gm: GMS.has(String(owner).toLowerCase()) }); }
+    // ---- diamantes 💎: o saldo fica SÓ no servidor (o jogador não consegue escrever) ----
+    if (p === '/api/dia' && req.method === 'GET') { const d = await diaGet(owner); return json(res, 200, { total: d.total, spent: d.spent, balance: diaBal(d), gm: GMS.has(String(owner).toLowerCase()) }); }
+    if (p === '/api/dia/spend' && req.method === 'POST') {
+      const b = await readBody(req, 1024), sku = String(b.sku || ''), price = DIA_PRICES[sku];
+      if (!price) return json(res, 400, { error: 'Este item não está à venda.' });
+      return diaLock(async () => {
+        const d = await diaGet(owner);
+        if (!DIA_REPEAT.has(sku) && d.spent.some((x) => x.sku === sku)) return json(res, 200, { ok: true, owned: true, balance: diaBal(d), spent: d.spent });
+        if (diaBal(d) < price) return json(res, 400, { error: `Faltam ${price - diaBal(d)} 💎.` });
+        d.spent.push({ sku, p: price, t: Date.now() }); if (d.spent.length > 500) d.spent = d.spent.slice(-500);
+        await store.setDoc(DIA_OWNER, String(owner).toLowerCase(), d);
+        return json(res, 200, { ok: true, balance: diaBal(d), spent: d.spent });
+      });
+    }
+    if (p === '/api/dia/grant' && req.method === 'POST') {
+      if (!GMS.has(String(owner).toLowerCase())) return json(res, 403, { error: 'Só o dono do jogo pode creditar diamantes.' });
+      const b = await readBody(req, 1024), to = String(b.to || '').trim().toLowerCase(), n = Math.floor(+b.n);
+      if (!(n > 0) || n > 1000000) return json(res, 400, { error: 'Quantidade inválida.' });
+      const u = await store.getUser(to);
+      if (!u) return json(res, 404, { error: 'Conta não encontrada (use o apelido de login).' });
+      return diaLock(async () => {
+        const d = await diaGet(to);
+        d.total += n; d.log = (d.log || []).concat([{ n, t: Date.now(), by: String(owner) }]).slice(-40);
+        await store.setDoc(DIA_OWNER, to, d);
+        return json(res, 200, { ok: true, total: d.total, balance: diaBal(d), user: u.nick || u.name });
+      });
+    }
     // contas antigas (só apelido) podem cadastrar um e-mail
     if (p === '/api/email' && req.method === 'POST') {
       const b = await readBody(req, 2048), email = String(b.email || '').trim().toLowerCase(), u = await store.getUser(owner);
@@ -280,6 +307,19 @@ async function api(req, res, p) {
     return json(res, 500, { error: 'Erro no servidor: ' + (e?.message || e) });
   }
 }
+
+// ---------- Diamantes: preços (iguais aos do jogo, src/config/monetization.js) ----------
+const DIA_OWNER = '__diamantes__';
+const DIA_PRICES = {
+  skin_rubi: 120, skin_geada: 120, skin_abismo: 200, skin_jade: 150, skin_dragao: 220,
+  fx_geada: 80, fx_ouro: 80, fx_trovao: 100, aura_petalas: 90, aura_vazio: 120,
+  tp1: 10, tp5: 40, tp10: 70, // Pergaminhos de Teleporte (pode comprar de novo)
+};
+const DIA_REPEAT = new Set(['tp1', 'tp5', 'tp10']);
+async function diaGet(name) { const d = await store.getDoc(DIA_OWNER, String(name).toLowerCase()); return { total: Math.max(0, Math.floor(+d?.total || 0)), spent: Array.isArray(d?.spent) ? d.spent : [], log: Array.isArray(d?.log) ? d.log : [] }; }
+function diaBal(d) { return Math.max(0, d.total - d.spent.reduce((a, x) => a + (Math.max(0, Math.floor(+x.p)) || 0), 0)); }
+let diaQueue = Promise.resolve();
+const diaLock = (fn) => { const r = diaQueue.then(fn, fn); diaQueue = r.catch(() => {}); return r; };
 
 // ---------- Nomes de personagem ÚNICOS no servidor inteiro ----------
 // "Lil" e "lil" (e "Líl") contam como o mesmo nome. O nome de conta de outra pessoa também não pode

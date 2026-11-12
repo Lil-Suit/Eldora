@@ -1,5 +1,26 @@
 # Histórico de versões
 
+## v0.9.55 — Teleporte, lojas e barreira
+**Pedra de Teleporte**
+- Nova **Pedra de Teleporte** na Vila, no Acampamento dos Exilados (Ermos) e no Posto da Fronteira (Confins): escolha o **mundo** (1 Vale, 2 Ermos, 3 Confins) e a **região** — ex.: Mundo 3 → Deserto de Âmbar.
+- As regiões liberam quando você as **descobre** andando por elas. Mostra o nível de cada uma e avisa quando é perigosa para você.
+- Ir para as **zonas seguras é grátis**. As outras regiões gastam **1 Pergaminho de Teleporte**.
+- **Pergaminho de Teleporte** (novo): comprado com **diamantes 💎** — 1 por 💎10, 5 por 💎40, 10 por 💎70. Também dá para usar direto da bolsa, de qualquer lugar. É só conveniência (não dá força) e fica preso à conta (não vende nem troca).
+- O saldo de diamantes agora fica **só no servidor**: ninguém consegue se dar diamantes. O dono do jogo credita pelo **Painel do dono** (busca pelo nome).
+
+**Lojas**
+- **Mercador Tomas**: vende **equipamento inicial** da sua classe (arma, capuz, gibão, calça, luvas, botas, escudo e mochila) e compra os seus itens. Saiu dele o mercado de jogadores.
+- **Leiloeira Mara**: abre **direto na aba Comprar** (sem menu antes). Ela é o único lugar do mercado entre jogadores.
+
+**Combate e personagem**
+- **Muralha de Ferro** virou uma **barreira com vida própria** (35% da sua vida máxima + 3× a defesa) que absorve todo o dano até quebrar. Só dá para renovar quando ela cair para **metade ou menos**. Aparece como uma bolha dourada e uma faixa dourada na barra de vida.
+- **Agilidade** agora também dá um pouquinho de **velocidade de movimento** (+0,1% por ponto, até +12%).
+- **Poções** (e outros consumíveis) acumulam **300 por espaço** na bolsa.
+- **Celular:** segurando o botão de **ataque**, arrastar o dedo **gira a câmera** (como um analógico). A mira continua automática — só a visão muda.
+
+**Correções**
+- O **portal da Fenda** (evento) agora aparece para **todos** os jogadores, não só para quem o abriu.
+
 ## v0.9.54 — Convites com Aceitar na tela
 - **Convite de time** agora aparece no cantinho da tela (o mesmo lugar do perfil quando você toca em alguém), com **Aceitar** e **✕ Recusar** — não precisa mais abrir o menu do Time.
 - **Pedido de troca** usa o mesmo aviso. O aviso pisca em verde e some sozinho depois de 60 s.
