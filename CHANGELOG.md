@@ -1,5 +1,9 @@
 # Histórico de versões
 
+## v0.9.54 — Convites com Aceitar na tela
+- **Convite de time** agora aparece no cantinho da tela (o mesmo lugar do perfil quando você toca em alguém), com **Aceitar** e **✕ Recusar** — não precisa mais abrir o menu do Time.
+- **Pedido de troca** usa o mesmo aviso. O aviso pisca em verde e some sozinho depois de 60 s.
+
 ## v0.9.53 — Telas de carregamento, animações e erros automáticos
 **Telas de carregamento**
 - Toda viagem entre mapas (Cripta, Ermos, Confins, pergaminho de volta, entrar no jogo) mostra uma **cena do próprio jogo** com o nome do destino, uma **dica** e uma barrinha, em vez da tela preta.
