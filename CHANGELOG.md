@@ -1,5 +1,9 @@
 # Histórico de versões
 
+## v0.9.69 — Analógico travado
+- **Celular:** o analógico agora fica **travado no lugar** (canto esquerdo de baixo). Tocar em qualquer ponto da área da esquerda move a partir dele.
+- Quem preferir o jeito antigo (o analógico aparece onde você toca) pode ligar em **Menu › Configurações › Controles › Analógico móvel**.
+
 ## v0.9.68 — Muralha de Ferro: 10% da vida por 10 segundos
 - A barreira agora vale **10% da sua vida máxima** e dura **no máximo 10 segundos** (ou até quebrar antes). O ícone mostra a contagem.
 - Não dá para renovar enquanto ela estiver ativa. Recarga de 15 s.
