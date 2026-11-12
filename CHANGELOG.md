@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## v0.9.66 — Seta dupla e item no meio da tela
+- **Seta das páginas dividida ao meio:** em cima **›** vai para a próxima página e embaixo **‹** volta, com o número da página no meio. Vale para a bolsa, o cofre e as lojas.
+- **Bolsa maior:** saiu a coluna fixa de detalhes ao lado, então cabem mais itens por página.
+- **Tocar num item** abre ele **sozinho no meio da tela**, com as informações e os botões (Equipar, Usar, Largar, Desequipar). Fecha no ✕ ou tocando fora.
+
 ## v0.9.65 — Bolha da barreira por 3 segundos
 - **Muralha de Ferro:** a bolha dourada aparece só nos **3 primeiros segundos** e some suavemente. A barreira (a vida extra) **continua** até quebrar, e a faixa dourada na barra de vida mostra quanto ainda resta.
 
