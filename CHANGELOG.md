@@ -1,5 +1,11 @@
 # Histórico de versões
 
+## v0.9.62 — Mochilas pela raridade
+- **A raridade agora manda no espaço da mochila.** Antes, em nível alto toda mochila chegava ao mesmo limite (+42), então uma Incomum valia o mesmo que uma Mítica. Agora cada raridade tem o seu máximo: Comum **12**, Incomum **18**, Raro **24**, Épico **30**, Mítico **38** e Lendário **45**. O nível do item leva até esse máximo: no nível 1 é cerca de um terço, a partir do nível 120 é o máximo. Forjada na Fenda: +10%.
+- **Mochila só dá espaço:** nenhum outro atributo.
+- As mochilas que você já tem foram recalculadas pela regra nova. **Nenhum item se perde:** se a sua mochila equipada ficar menor do que a bolsa cheia, ela mantém o espaço necessário até você liberar.
+- Os espaços da mochila aparecem na bolsa mesmo **vazios**, para você ver quanto ainda cabe.
+
 ## v0.9.61 — Celular sempre deitado e em tela cheia
 - **Tela cheia sempre:** se o celular sair da tela cheia (voltar, notificação, trocar de app), o jogo entra de novo no **próximo toque**. Antes ele desistia depois de 3 tentativas e as barras do navegador ficavam aparecendo.
 - **Sempre deitado:** ao entrar em tela cheia, a tela trava no lado em que o celular está e **não gira mais**. Com o celular em pé, aparece "Gire o celular" por cima de tudo (até da tela de entrar), em qualquer celular ou tablet.
