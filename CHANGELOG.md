@@ -1,5 +1,14 @@
 # Histórico de versões
 
+## v0.9.60 — Bolsa com páginas e arqueiro/mago com mais alcance
+**Bolsa, cofre e lojas com páginas**
+- Os itens agora têm **sempre o mesmo tamanho**, maior e fácil de tocar, na bolsa, no cofre do banco e nas lojas (vender no Mercador e anunciar na Leiloeira). Eles não encolhem mais quando a bolsa cresce.
+- Quando não cabe tudo, aparece uma **seta ao lado dos itens** (›) para trocar de página, com os tracinhos em cima mostrando em qual página você está (estilo Rucoy).
+
+**Arqueiro e Mago**
+- **Alcance maior:** a Flecha foi de 15 para **18 m** (e voa mais rápido), e a Fagulha Arcana de 13,5 para **16,5 m**. As habilidades de distância também ganharam cerca de 2 m.
+- **Tiro estranho corrigido:** no celular, segurando o ataque sem nenhum monstro no alcance, o arqueiro e o mago **não atiram mais** para todo lado (as flechas saíam para onde você estava andando). Aparece o aviso "Nenhum alvo no alcance". Com um alvo, atiram normal, mesmo andando.
+
 ## v0.9.59 — Menos travadas, mapa com zoom, gestos e Titã de Gelo mais difícil
 **Desempenho (as "travadinhas")**
 - Os efeitos (golpes, anéis, explosões) não refazem mais o shader toda vez: antes, cada efeito que sumia jogava o shader fora e o próximo igual travava o celular para compilar de novo. Agora cada tipo compila **uma vez só**, e os principais já são preparados ao entrar no jogo.
