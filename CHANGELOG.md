@@ -1,5 +1,19 @@
 # Histórico de versões
 
+## v0.9.71 — Ultra realismo + monstros morrem na hora
+- **Monstros morrem na hora do golpe** no modo online (antes caíam com atraso, esperando a resposta do anfitrião).
+- Nova qualidade gráfica **Ultra realismo** (Menu › Configurações › Gráficos). Quem entra pela 1ª vez começa na **Média**; cada um escolhe depois.
+  - **Sombras** maiores, mais nítidas e com borda macia. Monstros fazem sombra de mais longe.
+  - **Sol** com brilho e coroa em volta; o horizonte acende do lado do sol.
+  - **Nuvens de algodão** macias, iluminadas por cima.
+  - **Tempo fechando:** antes da chuva chegar o céu escurece, aparecem mais nuvens e cinzas e o sol some aos poucos. Na tempestade tem **relâmpago e trovão**.
+  - **Chuva** mais densa e inclinada pelo vento. As gotas **respingam no chão** e fazem **ondinhas na água**.
+  - **Água** com ondinhas finas e **reflexo do sol**.
+  - **Golpe de espada** com mais corpo, faíscas e clarão no acerto.
+  - **Flechas e magias** com rastro brilhante. Na **Chuva de Flechas**, cada flecha deixa risco e faz um impacto no chão.
+  - É a opção mais pesada: indicada para PC ou celular forte.
+- Corrigido: o redemoinho colorido dentro do portal não aparecia (erro no efeito).
+
 ## v0.9.70 — Personalizar HUD
 - Novo botão **✥ Personalizar HUD** em Menu › Configurações › Controles (celular).
 - **Arraste** qualquer botão para onde quiser: ataque, as 4 habilidades, esquiva, poção, correr, montaria, interagir, menu, conversa e até o analógico.
