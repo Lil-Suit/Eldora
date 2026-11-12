@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## v0.9.67 — Muralha de Ferro sem escudo infinito
+- A barreira ficava **infinita**: a recarga era de só 3 s, então dava para renovar toda vez que ela caía para a metade. Agora:
+  - **recarga de 15 s**, e continua só renovando quando a barreira cai para a metade ou menos;
+  - a barreira tem **30% da vida máxima + 1,5× a defesa** (antes 35% + 3× a defesa, o que deixava quem tem muita defesa quase imortal).
+
 ## v0.9.66 — Seta dupla e item no meio da tela
 - **Seta das páginas dividida ao meio:** em cima **›** vai para a próxima página e embaixo **‹** volta, com o número da página no meio. Vale para a bolsa, o cofre e as lojas.
 - **Bolsa maior:** saiu a coluna fixa de detalhes ao lado, então cabem mais itens por página.
