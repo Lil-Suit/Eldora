@@ -1,5 +1,22 @@
 # Histórico de versões
 
+## v0.9.63 — Raridade vale de verdade (ataque e defesa)
+- **A raridade agora multiplica o ataque e a defesa.** Antes ela só somava +1 ponto por degrau, então em nível alto um Mítico ficava só uns 6% acima de um Comum (ex.: Elmo Épico 264 × Mítico 268).
+- Agora cada degrau pesa de verdade. Defesa de uma peça no nível máximo:
+
+  | Raridade | Defesa |
+  |---|---|
+  | Comum | 252 |
+  | Incomum | 276 |
+  | Raro | 300 |
+  | Épico | 328 |
+  | Mítico | **364** |
+  | Lendário | **400** |
+
+  O ataque das armas segue a mesma proporção.
+- No começo do jogo continua igual: a diferença entre as raridades já era grande.
+- Os itens que você já tem (bolsa, equipados e cofre) foram recalculados pela regra nova.
+
 ## v0.9.62 — Mochilas pela raridade
 - **A raridade agora manda no espaço da mochila.** Antes, em nível alto toda mochila chegava ao mesmo limite (+42), então uma Incomum valia o mesmo que uma Mítica. Agora cada raridade tem o seu máximo: Comum **12**, Incomum **18**, Raro **24**, Épico **30**, Mítico **38** e Lendário **45**. O nível do item leva até esse máximo: no nível 1 é cerca de um terço, a partir do nível 120 é o máximo. Forjada na Fenda: +10%.
 - **Mochila só dá espaço:** nenhum outro atributo.
