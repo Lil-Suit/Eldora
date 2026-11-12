@@ -1,5 +1,14 @@
 # Histórico de versões
 
+## v0.9.72 — Ultra leve
+- Nova qualidade gráfica **Ultra leve (resolução cheia)** em Menu › Configurações › Gráficos. É a mais leve do jogo e a imagem continua **nítida**: usa a **resolução cheia da tela** e ela **nunca diminui**, nem quando o FPS cai.
+- O que ela tira para ficar leve:
+  - Sem sombras e sem as luzes extras de tochas e fogueiras. O fogo continua aparecendo.
+  - Só desenha o que está até a neblina, então coisas muito longe não pesam.
+  - Sem nuvens, metade das partículas e chuva mais rala.
+  - De longe, as pecinhas dos monstros que ficariam com 2 ou 3 pixels (olhos, dentes, botões) não são desenhadas. De perto aparece tudo normal.
+- Nas Ruínas, cheias de monstros, o celular desenha cerca de **3 vezes menos coisas** que na Média.
+
 ## v0.9.71 — Ultra realismo + monstros morrem na hora
 - **Monstros morrem na hora do golpe** no modo online (antes caíam com atraso, esperando a resposta do anfitrião).
 - Nova qualidade gráfica **Ultra realismo** (Menu › Configurações › Gráficos). Quem entra pela 1ª vez começa na **Média**; cada um escolhe depois.
