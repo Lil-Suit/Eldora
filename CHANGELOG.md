@@ -1,5 +1,9 @@
 # Histórico de versões
 
+## v0.9.61 — Celular sempre deitado e em tela cheia
+- **Tela cheia sempre:** se o celular sair da tela cheia (voltar, notificação, trocar de app), o jogo entra de novo no **próximo toque**. Antes ele desistia depois de 3 tentativas e as barras do navegador ficavam aparecendo.
+- **Sempre deitado:** ao entrar em tela cheia, a tela trava no lado em que o celular está e **não gira mais**. Com o celular em pé, aparece "Gire o celular" por cima de tudo (até da tela de entrar), em qualquer celular ou tablet.
+
 ## v0.9.60 — Bolsa com páginas e arqueiro/mago com mais alcance
 **Bolsa, cofre e lojas com páginas**
 - Os itens agora têm **sempre o mesmo tamanho**, maior e fácil de tocar, na bolsa, no cofre do banco e nas lojas (vender no Mercador e anunciar na Leiloeira). Eles não encolhem mais quando a bolsa cresce.
