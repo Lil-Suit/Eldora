@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## v0.9.68 — Muralha de Ferro: 10% da vida por 10 segundos
+- A barreira agora vale **10% da sua vida máxima** e dura **no máximo 10 segundos** (ou até quebrar antes). O ícone mostra a contagem.
+- Não dá para renovar enquanto ela estiver ativa. Recarga de 15 s.
+- A bolha dourada continua aparecendo só nos 3 primeiros segundos.
+
 ## v0.9.67 — Muralha de Ferro sem escudo infinito
 - A barreira ficava **infinita**: a recarga era de só 3 s, então dava para renovar toda vez que ela caía para a metade. Agora:
   - **recarga de 15 s**, e continua só renovando quando a barreira cai para a metade ou menos;
