@@ -1,5 +1,15 @@
 # Histórico de versões
 
+## v0.9.83 — Fendas em qualquer lugar e modo natal ligado
+- **As fendas (raids) abrem em qualquer lugar do mapa**, e não mais sempre perto do personagem.
+  - Valem o Vale todo e os Ermos inteiros. Nos Confins, que são enormes, abrem de 120 a 650 m de distância.
+  - Ficam sempre em lugar aberto: fora da vila e dos acampamentos, e longe de ruínas, casas, portais, pedras de teleporte e baús.
+  - A fenda aparece marcada no mapa (✦), com o nome do lugar.
+  - **As ondas só começam quando alguém chega perto** (30 m), seja você ou outro jogador. Até lá, o portal fica aberto esperando e a faixa mostra quanto tempo falta.
+  - Se ninguém chegar em 8 min, a fenda se fecha.
+  - Também podem abrir com você dentro da vila.
+- **Modo natal LIGADO:** depois que um chefe de Natal morre ou vai embora, outro aleatório nasce em 3 a 5 min. Continua só um vivo por vez.
+
 ## v0.9.82 — Natal: horários, 1 item por chefe e lugares abertos
 - **Quando os chefes de Natal nascem.** Nunca nasce um enquanto outro dos três estiver vivo.
   - **Normal (agora):** um a cada 30 min a 2 h, em horário sorteado. O chefe também é sorteado e nunca repete o anterior.
