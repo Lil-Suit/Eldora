@@ -1,5 +1,11 @@
 # Histórico de versões
 
+## v0.9.87 — Cérebros maiores
+- Os cérebros dos Confins ficaram 1,5× maiores e a área de acerto cresceu junto:
+  - **Cérebro Pútrido** (de 1,25 para 1,9);
+  - **Cérebro Abissal** (de 1,6 para 2,4);
+  - **Cérebro-Colmeia** (o campeão do Enxame de Cérebros), que acompanha o Abissal.
+
 ## v0.9.86 — Flocos Maligno
 - O chefe boneco de neve agora se chama **Flocos Maligno**.
 
