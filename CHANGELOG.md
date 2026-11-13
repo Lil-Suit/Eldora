@@ -1,5 +1,9 @@
 # Histórico de versões
 
+## v0.9.75 — Prece só no time + conjunto para os GMs
+- **Conjunto da Prece cura só quem está no seu TIME.** Fora de um time, a poção cura só você e não gasta mana. Cura vinda de quem não é do seu time também não vale.
+- **GMs** recebem o **Conjunto da Prece completo** (as 9 peças, fundo branco, no nível do GM) direto na bolsa, uma vez por personagem, ao entrar no jogo.
+
 ## v0.9.74 — Conjunto da Prece, itens sem atributos, chefes nos Ermos/Confins e chuva maior
 - **Novo: Conjunto da Prece** (estilo Rucoy), saque de chefe.
   - **Ao beber uma poção de vida**, você também **cura os aliados por perto** com parte da cura da poção (55% com 1 peça, +5% por peça a mais, +1% por nível das peças).
