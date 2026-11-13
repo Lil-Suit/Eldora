@@ -1,5 +1,19 @@
 # Histórico de versões
 
+## v0.9.73 — Menos travadas nos chefes + Arqueiro e Mago rebalanceados
+- **Fúria dos chefes sem travar:** os ajudantes que o chefe chama agora aparecem **um por vez**, em vez de todos no mesmo instante. Criar vários monstros de uma vez era o que dava a travadinha junto com o rugido.
+- **Gráficos Baixa e Ultra leve:** chefes e elites **não soltam mais partículas** (golpes, marcas que explodem, fúria e magias). Os avisos no chão continuam.
+- **Arqueiro com menos dano:**
+  - Flecha básica: −20% de dano.
+  - Flecha Perfurante: −33%.
+  - Disparo Múltiplo: −17%.
+  - Chuva de Flechas: −19%.
+  - Agilidade agora dá **+0,25% de crítico** (antes 0,4%) e **+0,3% de velocidade de ataque** (antes 0,5%) por ponto. Era isso que fazia o Arqueiro bater bem mais que todo mundo.
+  - No nível 55, o dano médio da flecha básica caiu de ~480 para ~355.
+- **Menos vida para Arqueiro e Mago:** agora o Guerreiro é sempre o que tem mais vida.
+  - Vitalidade vale +10 de vida no Guerreiro, +7 no Arqueiro e +6 no Mago.
+  - No nível 55: Guerreiro ~1.860, Arqueiro ~1.120 (antes ~1.440), Mago ~890 (antes ~1.210).
+
 ## v0.9.72 — Ultra leve
 - Nova qualidade gráfica **Ultra leve (resolução cheia)** em Menu › Configurações › Gráficos. É a mais leve do jogo e a imagem continua **nítida**: usa a **resolução cheia da tela** e ela **nunca diminui**, nem quando o FPS cai.
 - O que ela tira para ficar leve:
