@@ -1,5 +1,15 @@
 # Histórico de versões
 
+## v0.9.77 — Saque do time + ataque básico dos chefes à distância
+- **Time › aba Saque do time:** mostra tudo o que os membros pegaram de monstros e chefes desde que o time foi criado.
+  - Cada item aparece com o nome de quem pegou e de qual monstro veio.
+  - O ouro aparece somado por pessoa e no total do time.
+  - Materiais e poções aparecem somados.
+  - O que alguém larga da própria bolsa e pega de volta não conta.
+- **Chefes com ataque básico à distância:** chefes corpo a corpo não ficam mais só correndo atrás de quem ataca de longe. A cada ~2,8 s (um pouco menos na fúria), eles atiram um golpe básico lento e fácil de desviar, com 60% do dano normal.
+  - O tiro tem o estilo de cada chefe: pedra (goblin, minotauro), gosma (slimes), cristal de gelo, fogo ou magia na cor do chefe.
+  - Perto, eles continuam com os golpes normais.
+
 ## v0.9.76 — Chefe Goblin solo, chefe novo na raid Goblin e aba Conjuntos do GM
 - **Chefe Goblin Saqueador** agora é **chefe solo**: nasce sozinho no **Acampamento Goblin** (nível 8), como o Rei Slime e o Lorde dos Ossos. Continua soltando o Conjunto da Prece.
 - **Raid Invasão Goblin** ganhou um chefe próprio: o **Capitão da Horda Goblin**, que atira pedras de longe e chama atiradores na fúria.
