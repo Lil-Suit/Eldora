@@ -1,5 +1,8 @@
 # Histórico de versões
 
+## v0.9.85 — Nome mais curto
+- O chefe boneco de neve agora se chama só **Flocos**.
+
 ## v0.9.84 — Modo natal desligado e fenda longe das lutas
 - **Modo natal desligado.** Os chefes de Natal voltam a nascer "normalmente": um a cada 30 min a 2 h, em horário sorteado, e só um vivo por vez.
 - **Corrigido:** uma fenda (raid) abriu em cima de quem estava lutando com o Noel. Agora:
