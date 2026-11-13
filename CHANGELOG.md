@@ -1,5 +1,12 @@
 # Histórico de versões
 
+## v0.9.76 — Chefe Goblin solo, chefe novo na raid Goblin e aba Conjuntos do GM
+- **Chefe Goblin Saqueador** agora é **chefe solo**: nasce sozinho no **Acampamento Goblin** (nível 8), como o Rei Slime e o Lorde dos Ossos. Continua soltando o Conjunto da Prece.
+- **Raid Invasão Goblin** ganhou um chefe próprio: o **Capitão da Horda Goblin**, que atira pedras de longe e chama atiradores na fúria.
+- **Painel do GM › aba Conjuntos:** escolha o fundo (comum até branco) e o nível, e pegue qualquer peça do Conjunto da Prece ou o conjunto completo direto na bolsa.
+- Corrigido: ao pegar um item de monstro que caiu no chão, quem estava perto via a mensagem "fulano pegou o item que você largou", como se o item fosse dele. Agora esse aviso só aparece quando alguém pega um item que você **largou da sua bolsa**.
+- Corrigido: os itens que o GM recebia direto na bolsa também caíam uma cópia no chão.
+
 ## v0.9.75 — Prece só no time + conjunto para os GMs
 - **Conjunto da Prece cura só quem está no seu TIME.** Fora de um time, a poção cura só você e não gasta mana. Cura vinda de quem não é do seu time também não vale.
 - **GMs** recebem o **Conjunto da Prece completo** (as 9 peças, fundo branco, no nível do GM) direto na bolsa, uma vez por personagem, ao entrar no jogo.
