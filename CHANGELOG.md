@@ -1,5 +1,15 @@
 # Histórico de versões
 
+## v0.9.79 — Mais FPS (monstros e NPCs bem mais leves de desenhar)
+- **Monstros:** as peças de cada parte do corpo agora são desenhadas juntas, mesmo tendo cores diferentes. Antes cada cor era uma "pintura" separada para a placa de vídeo. O visual continua o mesmo, inclusive o brilho do golpe.
+- **Pecinhas que ficariam com menos de ~2 pixels** (olhos, dentes, botões de monstros longe) não são desenhadas em nenhuma qualidade. De perto aparece tudo.
+- **NPCs da vila** também foram juntados.
+- Na Média, o número de "pinturas" por quadro caiu assim:
+  - Planalto da Fenda: ~470 → ~290
+  - Ruínas: ~1.410 → ~675
+  - Vila: ~690 → ~600
+- Os monstros também nascem mais leves, com menos travadinhas quando aparecem.
+
 ## v0.9.78 — Prece cura 100% + tônico para o time, versões por classe e nomes novos
 - **Conjunto da Prece:**
   - Ao beber uma **poção de vida**, o time recebe na hora a **mesma cura da poção** (100%).
