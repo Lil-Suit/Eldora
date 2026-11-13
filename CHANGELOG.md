@@ -1,5 +1,17 @@
 # Histórico de versões
 
+## v0.9.82 — Natal: horários, 1 item por chefe e lugares abertos
+- **Quando os chefes de Natal nascem.** Nunca nasce um enquanto outro dos três estiver vivo.
+  - **Normal (agora):** um a cada 30 min a 2 h, em horário sorteado. O chefe também é sorteado e nunca repete o anterior.
+  - **Modo natal** (liga quando o dono do jogo pedir): 3 a 5 min depois que o anterior morre ou vai embora, nasce outro chefe aleatório.
+  - O aviso de derrota diz em quantos minutos aparece o próximo.
+- **Saque:** cada chefe solta só **1 item**: uma peça do Conjunto Natalino (sorteada pelo dano, se tiver mais gente) e o ouro. Não solta mais poções.
+- **Nunca nasce dentro de construções.** Fica fora de:
+  - vila, acampamentos, ruínas, cripta, ponte, círculo de pedras, Poço da Lua e Planalto;
+  - Ossário, Trono Partido e portais;
+  - perto de pedras de teleporte e baús.
+  - Também precisa de 12 m livres de paredes, casas, cercas e pedras grandes para todos os lados.
+
 ## v0.9.81 — Evento de Natal: Noel, Flocos e a Rena Maligna 🎄
 - **Três chefes de Natal.** A cada 30 min aparece um deles, em rodízio, num lugar aleatório do Vale (nível 30) ou dos Ermos (nível 55):
   - **Noel:** 200 mil de vida.
