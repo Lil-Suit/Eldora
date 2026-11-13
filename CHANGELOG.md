@@ -1,5 +1,31 @@
 # Histórico de versões
 
+## v0.9.81 — Evento de Natal: Noel, Flocos e a Rena Maligna 🎄
+- **Três chefes de Natal.** A cada 30 min aparece um deles, em rodízio, num lugar aleatório do Vale (nível 30) ou dos Ermos (nível 55):
+  - **Noel:** 200 mil de vida.
+  - **Flocos, o Boneco de Neve:** 150 mil.
+  - **Rena Maligna:** 130 mil.
+- **Aviso para todo mundo.** Quando um chefe nasce, todos os jogadores conectados recebem o aviso, em qualquer mapa: faixa na tela e mensagem no bate-papo com o lugar. Ele também aparece marcado no minimapa e no mapa.
+  - Se ninguém derrotar o chefe em 25 min, ele vai embora.
+  - Quando alguém derrota, todos também ficam sabendo.
+- **Golpes variados** (cada um avisa no chão antes), além do ataque normal:
+  - **Noel:** Chuva de Presentes, Salto do Trenó, Investida com o Saco e Tremor de Neve.
+  - **Flocos:** Bola de Neve, Avalanche Rolante, Nevasca e Pancada de Gelo.
+  - **Rena Maligna:** Investida dos Chifres, Salto da Rena, Coice e Sinos Amaldiçoados.
+- **Mini bonecos de neve:** de vez em quando os três chamam mini bonecos para ajudar. Os bonecos somem quando o chefe cai.
+- **Conjunto Natalino** (só sai desses chefes):
+  - São 6 peças de defesa: Gorro, Casaco, Calça, 2 Luvas e Botas. Não tem arma nem escudo.
+  - Saem só nos fundos verde, vermelho e branco.
+  - **Congelamento:** ao acertar um inimigo, os inimigos em volta (até 4,5 m) ficam mais lentos por 2 s. É 8% no verde, 15% no vermelho e 20% no branco, +1% por peça a mais, no máximo 25%.
+  - **Gasta mana a cada segundo** enquanto está congelando: quanto mais alto o fundo e mais inimigos congelados, mais gasta. Sem mana, o congelamento para.
+  - Vestir qualquer peça mostra a barra de mana (guerreiro e arqueiro).
+- **GM:**
+  - Botão **"🎄 Chefe de Natal agora"** na aba Chefes.
+  - Conjunto Natalino na aba Conjuntos.
+- **Para desligar depois do Natal:** em `src/config/seasonal.js`, troque `ligado: true` para `false`.
+  - Assim ele volta sozinho todo ano, de 1º/dez a 6/jan.
+  - Para nunca mais voltar, ponha também `janela: null`.
+
 ## v0.9.80 — Mais FPS: heróis mais leves e sem travadinha nos ícones
 - **Heróis (você e os outros jogadores):** as peças de cada parte do corpo também passaram a ser desenhadas juntas. O seu personagem caiu de ~70 para ~46 "pinturas" por quadro, contando a silhueta azul que aparece atrás das paredes. Cada jogador perto de você também ficou mais leve.
 - **Ícones de itens** (quando cai ou entra item na bolsa) agora são feitos sem esperar a placa de vídeo. Antes, cada ícone novo fazia a placa parar o quadro para devolver a imagem, e isso dava uma travadinha.
