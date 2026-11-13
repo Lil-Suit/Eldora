@@ -1,5 +1,11 @@
 # Histórico de versões
 
+## v0.9.84 — Modo natal desligado e fenda longe das lutas
+- **Modo natal desligado.** Os chefes de Natal voltam a nascer "normalmente": um a cada 30 min a 2 h, em horário sorteado, e só um vivo por vez.
+- **Corrigido:** uma fenda (raid) abriu em cima de quem estava lutando com o Noel. Agora:
+  - a fenda abre a pelo menos 45 m de qualquer jogador e a 70 m de qualquer chefe vivo (de Natal, mundial ou mini-chefe);
+  - o chefe de Natal também não nasce perto de uma fenda aberta (fica a pelo menos 80 m).
+
 ## v0.9.83 — Fendas em qualquer lugar e modo natal ligado
 - **As fendas (raids) abrem em qualquer lugar do mapa**, e não mais sempre perto do personagem.
   - Valem o Vale todo e os Ermos inteiros. Nos Confins, que são enormes, abrem de 120 a 650 m de distância.
