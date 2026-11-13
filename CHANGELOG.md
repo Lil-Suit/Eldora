@@ -1,5 +1,24 @@
 # Histórico de versões
 
+## v0.9.74 — Conjunto da Prece, itens sem atributos, chefes nos Ermos/Confins e chuva maior
+- **Novo: Conjunto da Prece** (estilo Rucoy), saque de chefe.
+  - **Ao beber uma poção de vida**, você também **cura os aliados por perto** com parte da cura da poção (55% com 1 peça, +5% por peça a mais, +1% por nível das peças).
+  - Cada cura nos aliados **gasta mana**. Quanto maior o nível das peças, maior a cura e maior o gasto. Sem aliados precisando por perto, não gasta nada.
+  - O **fundo** (raridade) da melhor peça define a **distância** da cura: de 6 m (comum) até 12,5 m (branco).
+  - Vestir qualquer peça mostra uma **barra de Mana** no Guerreiro e no Arqueiro (o Mago usa a mana dele).
+  - As peças têm **30% menos defesa** que as comuns.
+  - Caem do **Rei Slime**, do **Chefe Goblin Saqueador** e do **Lorde dos Ossos**. Só o Lorde dos Ossos solta a **Mochila**, o **Cordão** e o **Anel** do conjunto.
+  - Novo espaço de equipamento: **Cordão**.
+- **Itens sem atributos:** armaduras agora só dão **defesa** e armas só dão **ataque**. Atributos extras ficam só para itens de chefe. Os itens que você já tem foram ajustados (lendários com nome continuam com o efeito especial).
+- **Chefes nos Ermos e nos Confins aparecem muito mais.** Antes era cerca de 1 vez a cada 2–4 horas.
+  - **Ermos:** os campeões (Gosma-Mãe Abissal, Comandante de Osso, Colosso Desperto) agora andam pelas regiões, e não só no fim dos eventos.
+  - **Confins:** o chefe de cada região também anda fora das estruturas.
+  - Ao chegar perto, há chance de o chefe já estar lá, e ele volta 10 minutos depois de morrer.
+- **Slime (nível 1):** solta item 3 vezes mais (1 a cada ~10 slimes).
+- **Chuva:**
+  - **Dura bem mais** (~2 minutos seguidos), vem com mais frequência e agora chove **também nos Ermos e nos Confins**.
+  - **Gotículas batendo no chão** (respingos e poçinhas) e **ondinhas na água** em todas as qualidades gráficas. Na água aparecem até ~70 m de distância, não só quando você chega perto.
+
 ## v0.9.73 — Menos travadas nos chefes + Arqueiro e Mago rebalanceados
 - **Fúria dos chefes sem travar:** os ajudantes que o chefe chama agora aparecem **um por vez**, em vez de todos no mesmo instante. Criar vários monstros de uma vez era o que dava a travadinha junto com o rugido.
 - **Gráficos Baixa e Ultra leve:** chefes e elites **não soltam mais partículas** (golpes, marcas que explodem, fúria e magias). Os avisos no chão continuam.
