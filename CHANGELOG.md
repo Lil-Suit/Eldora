@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## v0.9.80 — Mais FPS: heróis mais leves e sem travadinha nos ícones
+- **Heróis (você e os outros jogadores):** as peças de cada parte do corpo também passaram a ser desenhadas juntas. O seu personagem caiu de ~70 para ~46 "pinturas" por quadro, contando a silhueta azul que aparece atrás das paredes. Cada jogador perto de você também ficou mais leve.
+- **Ícones de itens** (quando cai ou entra item na bolsa) agora são feitos sem esperar a placa de vídeo. Antes, cada ícone novo fazia a placa parar o quadro para devolver a imagem, e isso dava uma travadinha.
+- No Planalto da Fenda (Média), as "pinturas" por quadro caíram de ~470 (v0.9.78) para ~250.
+
 ## v0.9.79 — Mais FPS (monstros e NPCs bem mais leves de desenhar)
 - **Monstros:** as peças de cada parte do corpo agora são desenhadas juntas, mesmo tendo cores diferentes. Antes cada cor era uma "pintura" separada para a placa de vídeo. O visual continua o mesmo, inclusive o brilho do golpe.
 - **Pecinhas que ficariam com menos de ~2 pixels** (olhos, dentes, botões de monstros longe) não são desenhadas em nenhuma qualidade. De perto aparece tudo.
