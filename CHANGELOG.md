@@ -1,5 +1,23 @@
 # Histórico de versões
 
+## v0.9.78 — Prece cura 100% + tônico para o time, versões por classe e nomes novos
+- **Conjunto da Prece:**
+  - Ao beber uma **poção de vida**, o time recebe na hora a **mesma cura da poção** (100%).
+  - O **tônico** agora também devolve a mesma quantidade de **Mana, Energia ou Fúria** para o time, e enche a barra de mana do conjunto de quem bebeu.
+  - Cada uso gasta mana (peças de nível maior gastam mais). O fundo da melhor peça define a distância.
+  - Cada peça agora tem a versão de cada estilo:
+    - Mago: Chapéu da Prece e Manto da Prece.
+    - Arqueiro: Capuz da Prece e Gibão da Prece.
+    - Guerreiro: Capacete da Prece, Peitoral da Prece, Manopla da Prece e Botas de Ferro da Prece.
+    - Todos: Calça, Luvas e Botas da Prece.
+  - Peça nova: **Escudo da Prece**. O conjunto agora tem 10 peças.
+  - O GM recebe o conjunto completo da classe dele.
+- **Nomes novos dos equipamentos:**
+  - Elmo agora é **Capacete**.
+  - O chapéu do Mago agora é **Chapéu** (a Tiara Rúnica virou Chapéu Rúnico, com ícone de chapéu de mago).
+  - Grevas agora são **Calça** (Grevas de Ferro viraram Calça de Ferro).
+  - Os itens que você já tem foram renomeados.
+
 ## v0.9.77 — Saque do time + ataque básico dos chefes à distância
 - **Time › aba Saque do time:** mostra tudo o que os membros pegaram de monstros e chefes desde que o time foi criado.
   - Cada item aparece com o nome de quem pegou e de qual monstro veio.
