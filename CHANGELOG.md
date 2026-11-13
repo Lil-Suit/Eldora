@@ -1,5 +1,8 @@
 # Histórico de versões
 
+## v0.9.86 — Flocos Maligno
+- O chefe boneco de neve agora se chama **Flocos Maligno**.
+
 ## v0.9.85 — Nome mais curto
 - O chefe boneco de neve agora se chama só **Flocos**.
 
