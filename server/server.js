@@ -11,7 +11,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.90'; // (a variável é só para testes)
+const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.92'; // (a variável é só para testes)
 
 // ---------- Erros do servidor → Sentry (só no Render; sem dados pessoais) ----------
 const SENTRY_DSN = process.env.SENTRY_DSN || 'https://8ffc505d8bfbef96c829cace57608900@o4512419115499520.ingest.us.sentry.io/4512419158622208';
@@ -237,6 +237,7 @@ async function api(req, res, p) {
         const d = await diaGet(owner);
         if (!DIA_REPEAT.has(sku) && diaOwns(d, sku)) return json(res, 200, { ok: true, owned: true, balance: diaBal(d), spent: d.spent });
         if (DIA_REQUIRES[sku] && !diaOwns(d, DIA_REQUIRES[sku])) return json(res, 400, { error: 'Compre a roupa primeiro: a cor extra vale só para quem já tem a roupa.' });
+        if (sku === 'mk10' && MKT_MAX + MKT_EXTRA * d.spent.filter((x) => x.sku === 'mk10').length >= MKT_TOP) return json(res, 400, { error: `Você já tem o máximo de ${MKT_TOP} espaços de venda.` });
         if (diaBal(d) < price) return json(res, 400, { error: `Faltam ${price - diaBal(d)} 💎.` });
         d.spent.push({ sku, p: price, t: Date.now() }); if (d.spent.length > 500) d.spent = d.spent.slice(-500);
         await store.setDoc(DIA_OWNER, String(owner).toLowerCase(), d);
@@ -287,6 +288,46 @@ async function api(req, res, p) {
       }
       return json(res, 404, { error: 'não encontrado' });
     }
+    // diretório de jogadores (para achar alguém pelo nome no banco, e para o site com os rankings)
+    if (p === '/api/dir' && req.method === 'POST') {
+      const b = await readBody(req, 4096);
+      const n = String(b.n || '').replace(/\s+/g, ' ').trim().slice(0, 20), key = nameKey(n);
+      if (!key) return json(res, 400, { error: 'Nome inválido.' });
+      // o nome tem que ser desta conta (nomes são únicos no servidor)
+      const reg = await store.getDoc(NAMES, key);
+      if (reg && reg.owner && reg.owner !== owner) return json(res, 403, { error: 'Esse nome é de outra conta.' });
+      const cur = (await store.getDoc(DIR, key)) || {};
+      const num = (v, max) => Math.max(0, Math.min(max, Math.floor(+v || 0)));
+      const kills = Array.isArray(b.pk) ? b.pk.slice(-30).map((k) => ({ n: String(k.n || '').slice(0, 20), t: num(k.t, 9e15) })).filter((k) => k.n) : cur.pk || [];
+      await store.setDoc(DIR, key, { n, owner, code: String(b.code || '').slice(0, 12), l: num(b.l, 5000), c: ['guerreiro', 'mago', 'arqueiro'].includes(b.c) ? b.c : cur.c || '',
+        melee: num(b.melee, 5000), dist: num(b.dist, 5000), magic: num(b.magic, 5000), pvp: num(b.pvp, 1e7), deaths: num(b.deaths, 1e7), guild: String(b.guild || '').slice(0, 24), pk: kills, sv: num(b.sv, 9) || 1, t: Date.now() });
+      return json(res, 200, { ok: true });
+    }
+    if (p === '/api/dir' && req.method === 'GET') {
+      const q = nameKey(new URL(req.url, 'http://x').searchParams.get('q') || '').replace('-', '');
+      const list = (await store.listDocs(DIR)).map((d) => d.data).filter((x) => x && x.n && x.owner !== owner)
+        .filter((x) => !q || nameKey(x.n).includes(q) || String(x.code || '').toLowerCase().replace('-', '').includes(q))
+        .sort((a, b) => b.t - a.t).slice(0, 12).map((x) => ({ id: x.owner, n: x.n, l: x.l, c: x.c, code: x.code }));
+      return json(res, 200, { list });
+    }
+    // correio: ouro enviado pelo banco chega no banco de quem recebe (mesmo offline)
+    if (p === '/api/mail' && req.method === 'POST') {
+      const b = await readBody(req, 4096);
+      const to = String(b.to || '').toLowerCase(), gold = Math.floor(+b.gold);
+      if (!to || to === owner) return json(res, 400, { error: 'Escolha para quem enviar.' });
+      if (!(gold > 0 && gold <= 100000000)) return json(res, 400, { error: 'Valor inválido.' });
+      if (!(await store.getUser(to))) return json(res, 404, { error: 'Jogador não encontrado.' });
+      const id = 'g' + Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
+      await store.setDoc(MAIL, id, { to, from: owner, fromName: String(b.fromName || owner).slice(0, 20), gold, t: Date.now() });
+      return json(res, 200, { ok: true });
+    }
+    if (p === '/api/mail/take' && req.method === 'POST') {
+      return mailLock(async () => {
+        const mine = (await store.listDocs(MAIL)).filter((d) => d.data?.to === owner);
+        for (const d of mine) await store.delDoc(MAIL, d.id);
+        return json(res, 200, { mail: mine.map((d) => d.data) });
+      });
+    }
     if (p === '/api/docs' && req.method === 'GET') return json(res, 200, { docs: await store.listDocs(owner) });
     const m = p.match(/^\/api\/docs\/([^/]+)$/);
     if (m && DOC_RE.test(m[1])) {
@@ -312,8 +353,9 @@ async function api(req, res, p) {
 // ---------- Diamantes: preços (iguais aos do jogo, src/config/monetization.js) ----------
 const DIA_OWNER = '__diamantes__';
 const DIA_PRICES = {
+  mk10: 100, // +10 espaços de venda no mercado (até 50)
   skin_rubi: 120, skin_geada: 120, skin_abismo: 200, skin_jade: 150, skin_dragao: 220,
-  fx_geada: 80, fx_ouro: 80, fx_trovao: 100, aura_petalas: 90, aura_vazio: 120,
+  fx_geada: 80, fx_ouro: 80, fx_trovao: 100, // (auras removidas: aura_petalas/aura_vazio não se compram mais)
   tp3: 1, tp8: 2, // Pergaminhos de Teleporte: 3 por 💎1, 8 por 💎2 (pode comprar de novo)
   // skins dos heróis (iguais a src/config/heroskins.js): roupa e as cores extras (metade do preço)
   hs_campones_2: 50, hs_patrulheiro: 100, hs_patrulheiro_3: 50, hs_mago: 150, hs_mago_2: 75, hs_mago_3: 75,
@@ -321,12 +363,14 @@ const DIA_PRICES = {
 };
 // cor extra só para quem já tem a roupa
 const DIA_REQUIRES = { hs_patrulheiro_3: 'hs_patrulheiro', hs_mago_2: 'hs_mago', hs_mago_3: 'hs_mago', hs_nobre_2: 'hs_nobre', hs_nobre_3: 'hs_nobre', hs_cavaleiro_2: 'hs_cavaleiro', hs_cavaleiro_3: 'hs_cavaleiro' };
-const DIA_REPEAT = new Set(['tp3', 'tp8']);
+const DIA_REPEAT = new Set(['tp3', 'tp8', 'mk10']);
 // skins antigas (antes dos heróis 3D): quem comprou ganhou a roupa nova equivalente e a cor
 const DIA_LEGACY = { skin_rubi: ['hs_nobre'], skin_geada: ['hs_mago', 'hs_mago_3'], skin_abismo: ['hs_mago', 'hs_mago_2'], skin_jade: ['hs_patrulheiro', 'hs_patrulheiro_3'], skin_dragao: ['hs_cavaleiro', 'hs_cavaleiro_2'] };
 const diaOwns = (d, sku) => d.spent.some((x) => x.sku === sku || DIA_LEGACY[x.sku]?.includes(sku));
 async function diaGet(name) { const d = await store.getDoc(DIA_OWNER, String(name).toLowerCase()); return { total: Math.max(0, Math.floor(+d?.total || 0)), spent: Array.isArray(d?.spent) ? d.spent : [], log: Array.isArray(d?.log) ? d.log : [] }; }
-function diaBal(d) { return Math.max(0, d.total - d.spent.reduce((a, x) => a + (Math.max(0, Math.floor(+x.p)) || 0), 0)); }
+// itens que saíram do jogo: o que foi gasto neles volta para o saldo (as auras, v0.9.92)
+const DIA_REFUND = new Set(['aura_petalas', 'aura_vazio']);
+function diaBal(d) { return Math.max(0, d.total - d.spent.reduce((a, x) => a + (DIA_REFUND.has(x.sku) ? 0 : Math.max(0, Math.floor(+x.p)) || 0), 0)); }
 let diaQueue = Promise.resolve();
 const diaLock = (fn) => { const r = diaQueue.then(fn, fn); diaQueue = r.catch(() => {}); return r; };
 
@@ -334,6 +378,9 @@ const diaLock = (fn) => { const r = diaQueue.then(fn, fn); diaQueue = r.catch(()
 // "Lil" e "lil" (e "Líl") contam como o mesmo nome. O nome de conta de outra pessoa também não pode
 // ser usado (ninguém se passa pelo criador). Cada nome fica guardado no dono especial "~names".
 const NAMES = '~names';
+const DIR = '~dir', MAIL = '~mail';
+let mailQueue = Promise.resolve();
+const mailLock = (fn) => { const r = mailQueue.then(fn, fn); mailQueue = r.catch(() => {}); return r; };
 const nameKey = (n) => String(n || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
 let nameQueue = Promise.resolve();
 const nameLock = (fn) => { const r = nameQueue.then(fn, fn); nameQueue = r.catch(() => {}); return r; };
@@ -361,6 +408,9 @@ async function nameApi(req, res, p, owner) {
 // Mercado: cada anúncio é um documento do dono especial "~market". O servidor decide quem compra
 // (uma operação por vez), então nunca vende o mesmo item duas vezes.
 const MKT = '~market', MKT_MAX = 10, MKT_DAYS = 3, MKT_FEE = 5;
+// espaços de venda: 10 de graça; cada compra de "mk10" (💎100) dá +10, até 50 no total
+const MKT_EXTRA = 10, MKT_TOP = 50;
+const mktMax = async (owner) => Math.min(MKT_TOP, MKT_MAX + MKT_EXTRA * (await diaGet(owner)).spent.filter((x) => x.sku === 'mk10').length);
 let mktQueue = Promise.resolve();
 const mktLock = (fn) => { const r = mktQueue.then(fn, fn); mktQueue = r.catch(() => {}); return r; };
 async function market(req, res, p, owner) {
@@ -378,7 +428,8 @@ async function market(req, res, p, owner) {
       if (!item || item.length > 6000) return json(res, 400, { error: 'Item inválido.' });
       try { const it = JSON.parse(item); if (!it || !['equip', 'material', 'consumable'].includes(it.kind)) throw 0; } catch { return json(res, 400, { error: 'Item inválido.' }); }
       const L = await all();
-      if (L.filter((l) => l.seller === owner && l.status === 'open').length >= MKT_MAX) return json(res, 400, { error: `No máximo ${MKT_MAX} anúncios por jogador.` });
+      const max = await mktMax(owner);
+      if (L.filter((l) => l.seller === owner && l.status === 'open').length >= max) return json(res, 400, { error: max >= MKT_TOP ? `No máximo ${MKT_TOP} anúncios por jogador.` : `Seus ${max} espaços de venda estão cheios. Compre +${MKT_EXTRA} espaços por 💎100.`, full: true, max });
       if (L.length >= 2000) return json(res, 400, { error: 'O mercado está cheio agora. Tente mais tarde.' });
       const id = 'm' + Date.now().toString(36) + crypto.randomBytes(4).toString('hex');
       const data = { item, name: String(b.name || '').slice(0, 60), price, seller: owner, sellerName: String(b.sellerName || owner).slice(0, 20), t: Date.now(), status: 'open' };

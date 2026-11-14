@@ -1,5 +1,45 @@
 # Histórico de versões
 
+## v0.9.92 — Vila murada, Natal na neve e arqueiro de verdade
+- **Vila de Eldoria:**
+  - a cerca redonda virou uma **muralha de castelo** reta, com ameias, torres nos cantos e três portões com tochas (norte, leste e oeste);
+  - a cidade cresceu para o leste e o oeste com as **Fazendas**: plantações de trigo, milho, abóbora e horta, espantalhos, celeiros, feno e moinhos;
+  - tudo dentro da muralha é zona segura.
+- **Natal:**
+  - **modo natal LIGADO:** depois que um chefe de Natal é derrotado ou vai embora, outro aparece em 3 a 5 minutos (um por vez, em lugar aberto);
+  - a vila fica **coberta de neve** (chão, telhados, plantações) e as árvores em volta viram **pinheiros nevados**. Só durante o evento.
+- **Arqueiro:**
+  - o arco fica na mão esquerda, com o **punho fechado em volta da empunhadura**;
+  - ao atirar, o braço esquerdo estica com o arco em pé, e a mão direita pega a corda, puxa até o queixo e solta junto com a flecha;
+  - atirando andando, as pernas continuam no passo (não arrasta mais os pés) — vale para todas as classes;
+  - sem escudo nas costas;
+  - **Rajada Tripla** (1ª habilidade): 3 flechas seguidas, bem rápido, no mesmo alvo (no lugar do leque de 5);
+  - **contador de flechas** ao lado do ouro.
+- **Tiros e morros:**
+  - flechas e magias vão na direção do alvo **na altura dele** (sobem e descem o morro);
+  - o morro, o chão e as paredes **seguram o tiro**: não dá mais para acertar quem está escondido atrás;
+  - a mira automática só escolhe quem dá para ver;
+  - o corpo a corpo não alcança quem está em cima do barranco ou lá embaixo;
+  - os tiros dos monstros seguem as mesmas regras.
+- **Heróis:** mais 13% de altura.
+- **Itens:** nome diferente = visual diferente. Peças do mesmo tema com "sobrenome" diferente (ex.: Mochila Osso × Mochila Ossário) ganham cor e detalhe próprios — dá para saber de onde veio só de olhar.
+- **Luvas:** sobem de 1 em 1 (davam defesa demais). As luvas que você já tem foram recalculadas.
+- **Mercado:**
+  - 10 espaços de venda de graça;
+  - com eles cheios, compre **+10 espaços por 💎100**, até 50.
+- **Banco:**
+  - enviar ouro agora acha o jogador pelo nome (com ou sem acento) ou pelo código, e o ouro chega no banco dele mesmo offline.
+- **Raids:**
+  - quanto mais estrelas, **bem mais rara**;
+  - do 3º mapa em diante as raids são mais raras, até as mais fracas.
+- **Auras removidas.** Quem comprou aura com diamantes recebeu os diamantes de volta.
+- **Bolsa sem buracos:** quando um item sai (largar, vender, usar, anunciar…), os outros andam para ocupar o espaço.
+- **Inventário** abre sem nenhum item escolhido (no celular, o toque que abria a bolsa às vezes clicava num item).
+- **Chuva:**
+  - opção nos Gráficos para ligar/desligar (desligada, não chove para você);
+  - a chuva realista (respingos e ondinhas na água) fica só no Ultra realismo.
+- **Loja:** sem a silhueta azul no herói enquanto conversa com o vendedor.
+
 ## v0.9.90 — Heróis maiores e machado certo
 - **Heróis maiores:** os personagens cresceram 22% e agora têm a mesma altura dos NPCs (~2,2 m), como era o boneco antigo. A câmera das lojas foi ajustada para a nova altura.
 - **Machado:** o corte agora fica virado para baixo, na mão dos heróis e dos monstros (Cavaleiro de Osso, Cavaleiro da Fenda). A alabarda do chefe também foi virada.
