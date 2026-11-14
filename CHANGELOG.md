@@ -1,5 +1,11 @@
 # Histórico de versões
 
+## v0.9.90 — Heróis maiores e machado certo
+- **Heróis maiores:** os personagens cresceram 22% e agora têm a mesma altura dos NPCs (~2,2 m), como era o boneco antigo. A câmera das lojas foi ajustada para a nova altura.
+- **Machado:** o corte agora fica virado para baixo, na mão dos heróis e dos monstros (Cavaleiro de Osso, Cavaleiro da Fenda). A alabarda do chefe também foi virada.
+- **Arco:** o arqueiro segura o arco do jeito certo, com a corda do lado do rosto e a curva para o alvo.
+- **Monstros invisíveis (corrigido):** ao entrar no jogo, trocar de mapa ou numa fenda, alguns monstros ficavam invisíveis (só a barra de vida e o círculo). Isso acontecia quando o jogo media o monstro enquanto ele ainda estava "nascendo" (pequenininho).
+
 ## v0.9.89 — Skins liberadas para os GMs
 - **GMs** têm todas as skins (roupas e cores) liberadas de graça, sem gastar diamantes. Só eles: os outros jogadores continuam comprando na Loja de Diamantes.
 - O selo de GM (e tudo que vem com ele) agora vale já no primeiro login, sem precisar recarregar a página.
