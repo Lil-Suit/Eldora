@@ -1,5 +1,9 @@
 # Histórico de versões
 
+## v0.9.89 — Skins liberadas para os GMs
+- **GMs** têm todas as skins (roupas e cores) liberadas de graça, sem gastar diamantes. Só eles: os outros jogadores continuam comprando na Loja de Diamantes.
+- O selo de GM (e tudo que vem com ele) agora vale já no primeiro login, sem precisar recarregar a página.
+
 ## v0.9.88 — Heróis novos em 3D
 - **Personagens novos:** os heróis agora são modelos 3D animados, com rosto, cabelo e roupa de verdade. São 49 animações: andar, correr, golpes de espada, magias, tiro de arco, esquiva, nado, montaria, dança e morte.
 - **Homem ou Mulher:** ao criar um personagem, a primeira escolha é "Qual será seu personagem?". Personagens antigos escolhem uma vez ao entrar.
