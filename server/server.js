@@ -11,7 +11,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.87'; // (a variável é só para testes)
+const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.88'; // (a variável é só para testes)
 
 // ---------- Erros do servidor → Sentry (só no Render; sem dados pessoais) ----------
 const SENTRY_DSN = process.env.SENTRY_DSN || 'https://8ffc505d8bfbef96c829cace57608900@o4512419115499520.ingest.us.sentry.io/4512419158622208';
@@ -121,7 +121,7 @@ const ROOT = (() => {
 })();
 const PORT = +process.env.PORT || 10000;
 
-const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.css': 'text/css' };
+const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.css': 'text/css', '.glb': 'model/gltf-binary' };
 const BLOCK = /(^|\/)(\.|server\/|src\/|tools\/|test\/|node_modules\/|package)/;
 const store = await openStore();
 
@@ -235,7 +235,8 @@ async function api(req, res, p) {
       if (!price) return json(res, 400, { error: 'Este item não está à venda.' });
       return diaLock(async () => {
         const d = await diaGet(owner);
-        if (!DIA_REPEAT.has(sku) && d.spent.some((x) => x.sku === sku)) return json(res, 200, { ok: true, owned: true, balance: diaBal(d), spent: d.spent });
+        if (!DIA_REPEAT.has(sku) && diaOwns(d, sku)) return json(res, 200, { ok: true, owned: true, balance: diaBal(d), spent: d.spent });
+        if (DIA_REQUIRES[sku] && !diaOwns(d, DIA_REQUIRES[sku])) return json(res, 400, { error: 'Compre a roupa primeiro: a cor extra vale só para quem já tem a roupa.' });
         if (diaBal(d) < price) return json(res, 400, { error: `Faltam ${price - diaBal(d)} 💎.` });
         d.spent.push({ sku, p: price, t: Date.now() }); if (d.spent.length > 500) d.spent = d.spent.slice(-500);
         await store.setDoc(DIA_OWNER, String(owner).toLowerCase(), d);
@@ -314,8 +315,16 @@ const DIA_PRICES = {
   skin_rubi: 120, skin_geada: 120, skin_abismo: 200, skin_jade: 150, skin_dragao: 220,
   fx_geada: 80, fx_ouro: 80, fx_trovao: 100, aura_petalas: 90, aura_vazio: 120,
   tp3: 1, tp8: 2, // Pergaminhos de Teleporte: 3 por 💎1, 8 por 💎2 (pode comprar de novo)
+  // skins dos heróis (iguais a src/config/heroskins.js): roupa e as cores extras (metade do preço)
+  hs_campones_2: 50, hs_patrulheiro: 100, hs_patrulheiro_3: 50, hs_mago: 150, hs_mago_2: 75, hs_mago_3: 75,
+  hs_nobre: 200, hs_nobre_2: 100, hs_nobre_3: 100, hs_cavaleiro: 250, hs_cavaleiro_2: 125, hs_cavaleiro_3: 125,
 };
+// cor extra só para quem já tem a roupa
+const DIA_REQUIRES = { hs_patrulheiro_3: 'hs_patrulheiro', hs_mago_2: 'hs_mago', hs_mago_3: 'hs_mago', hs_nobre_2: 'hs_nobre', hs_nobre_3: 'hs_nobre', hs_cavaleiro_2: 'hs_cavaleiro', hs_cavaleiro_3: 'hs_cavaleiro' };
 const DIA_REPEAT = new Set(['tp3', 'tp8']);
+// skins antigas (antes dos heróis 3D): quem comprou ganhou a roupa nova equivalente e a cor
+const DIA_LEGACY = { skin_rubi: ['hs_nobre'], skin_geada: ['hs_mago', 'hs_mago_3'], skin_abismo: ['hs_mago', 'hs_mago_2'], skin_jade: ['hs_patrulheiro', 'hs_patrulheiro_3'], skin_dragao: ['hs_cavaleiro', 'hs_cavaleiro_2'] };
+const diaOwns = (d, sku) => d.spent.some((x) => x.sku === sku || DIA_LEGACY[x.sku]?.includes(sku));
 async function diaGet(name) { const d = await store.getDoc(DIA_OWNER, String(name).toLowerCase()); return { total: Math.max(0, Math.floor(+d?.total || 0)), spent: Array.isArray(d?.spent) ? d.spent : [], log: Array.isArray(d?.log) ? d.log : [] }; }
 function diaBal(d) { return Math.max(0, d.total - d.spent.reduce((a, x) => a + (Math.max(0, Math.floor(+x.p)) || 0), 0)); }
 let diaQueue = Promise.resolve();

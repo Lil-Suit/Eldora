@@ -1,5 +1,26 @@
 # Histórico de versões
 
+## v0.9.88 — Heróis novos em 3D
+- **Personagens novos:** os heróis agora são modelos 3D animados, com rosto, cabelo e roupa de verdade. São 49 animações: andar, correr, golpes de espada, magias, tiro de arco, esquiva, nado, montaria, dança e morte.
+- **Homem ou Mulher:** ao criar um personagem, a primeira escolha é "Qual será seu personagem?". Personagens antigos escolhem uma vez ao entrar.
+- **Roupa padrão grátis:** Camponês ou Camponesa.
+- **Skins na Loja de Diamantes** (aba Roupas), com 13 para cada gênero. Qualquer classe pode usar qualquer skin.
+  - Preços: Patrulheiro 💎100, Mago 💎150, Nobre 💎200 e Cavaleiro 💎250.
+  - As cores extras custam metade e só podem ser compradas por quem já tem a roupa.
+  - **Cavaleiro / Cavaleira:**
+    - a primeira tem elmo com chifres e ombreiras de espinhos;
+    - a Dourada e a de Aço não têm elmo e mostram o rosto.
+  - **Corpos:**
+    - as heroínas têm cintura um pouco mais fina, busto e coxas um pouco maiores;
+    - os heróis têm coxas e braços um pouco mais fortes.
+  - Quem comprou um visual antigo ganhou a roupa nova equivalente (e a cor).
+- **Câmera nas lojas:** ao falar com um vendedor, a câmera fica atrás do ombro dele e mostra o rosto do seu herói. Com o celular em pé, a janela fica embaixo.
+- **Teleporte:**
+  - as estátuas de teleporte foram removidas;
+  - o Pergaminho de Teleporte agora é **roxo**, vendido por 💎 na Loja de Diamantes e na Fornecedora Lia;
+  - toque nele na bolsa para viajar.
+- **Mais leve:** os modelos dos heróis foram simplificados (metade dos triângulos, mesma aparência).
+
 ## v0.9.87 — Cérebros maiores
 - Os cérebros dos Confins ficaram 1,5× maiores e a área de acerto cresceu junto:
   - **Cérebro Pútrido** (de 1,25 para 1,9);
