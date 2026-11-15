@@ -1,5 +1,9 @@
 # Histórico de versões
 
+## v0.9.97 — App instalado abre mesmo com o servidor dormindo
+- O **app instalado** (ícone na tela do celular) agora **abre na hora** com a cópia guardada do jogo quando o servidor está "dormindo" (plano grátis do Render). Antes ele ficava preso na página do Render e parecia não abrir.
+- A cópia do jogo nunca é trocada pela página do Render; a versão nova chega sozinha quando o servidor está acordado.
+
 ## v0.9.96 — Andar de lado sem "correr para a frente"
 - Atacando ou mirando enquanto anda **de lado**, as **pernas correm para onde você está indo** e o tronco continua virado para o alvo (antes ele corria para a frente deslizando de lado).
 - Andando **para trás** enquanto mira: ele **anda de costas** (o passo toca ao contrário), de frente para o alvo.

@@ -11,7 +11,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.96'; // (a variável é só para testes)
+const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.97'; // (a variável é só para testes)
 
 // ---------- Erros do servidor → Sentry (só no Render; sem dados pessoais) ----------
 const SENTRY_DSN = process.env.SENTRY_DSN || 'https://8ffc505d8bfbef96c829cace57608900@o4512419115499520.ingest.us.sentry.io/4512419158622208';
@@ -537,7 +537,9 @@ const server = http.createServer((req, res) => {
   if (!file.startsWith(ROOT) || BLOCK.test(path.relative(ROOT, file).replace(/\\/g, '/'))) { res.writeHead(404); return res.end('Not found'); }
   fs.readFile(file, (err, buf) => {
     if (err) { res.writeHead(404); return res.end('Not found'); }
-    res.writeHead(200, { 'content-type': TYPES[path.extname(file)] || 'application/octet-stream', 'cache-control': p.endsWith('index.html') || p.endsWith('sw.js') ? 'no-cache' : 'public, max-age=3600' });
+    // x-eldoria: o app instalado (service worker) só guarda/usa respostas que vieram mesmo do jogo,
+    // nunca a página "acordando" do Render (plano grátis) que aparece quando o servidor está dormindo
+    res.writeHead(200, { 'content-type': TYPES[path.extname(file)] || 'application/octet-stream', 'cache-control': p.endsWith('index.html') || p.endsWith('sw.js') ? 'no-cache' : 'public, max-age=3600', 'x-eldoria': VERSION });
     res.end(buf);
   });
 });
