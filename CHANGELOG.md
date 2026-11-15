@@ -1,5 +1,15 @@
 # Histórico de versões
 
+## v0.9.98 — Planície do Guardião vira o mapa 2
+- A **Planície do Guardião** (a parte roxa ao norte do Planalto) agora é um **mapa separado: o mapa 2**.
+  - Entra-se pelo **portal no norte do topo do Planalto da Fenda** (com tela de carregamento). Ao norte do Planalto o mapa 1 agora termina em montanha.
+  - Na chegada do mapa 2 há um **portal de volta ao Vale** e uma área protegida; quem morre lá renasce nessa chegada.
+  - Conteúdo igual: níveis 5–18, Hunt da Planície, o **Guardião da Fenda** no Trono e o portal para os Ermos atrás dele.
+  - O mapa e o minimapa mostram cada mapa separado, com os portais; a missão do Guardião aponta para o portal certo.
+- Numeração dos mapas: **1 Vale de Eldoria · 2 Planície do Guardião · 3 Ermos da Fenda · 4 Confins de Eldoria** (também na Pedra/Pergaminho de Teleporte).
+- Dos Ermos, o portal de volta leva à Planície do Guardião.
+- Quem salvou o jogo na planície continua lá, agora no mapa 2.
+
 ## v0.9.97 — App instalado abre mesmo com o servidor dormindo
 - O **app instalado** (ícone na tela do celular) agora **abre na hora** com a cópia guardada do jogo quando o servidor está "dormindo" (plano grátis do Render). Antes ele ficava preso na página do Render e parecia não abrir.
 - A cópia do jogo nunca é trocada pela página do Render; a versão nova chega sozinha quando o servidor está acordado.
