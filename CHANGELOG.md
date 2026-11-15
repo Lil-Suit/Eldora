@@ -1,5 +1,13 @@
 # Histórico de versões
 
+## v0.9.94 — Ranking dentro do jogo
+- O **Ranking** agora abre **dentro do jogo**, sem sair para outra página: botão **🏆 Ranking** no **canto superior direito** da tela inicial.
+  - abas de **nível**, **guerreiros**, **magos**, **arqueiros**, **PvP** e **mortes recentes**, com filtro por servidor;
+  - busca de jogador pelo nome e página do jogador (quem ele derrotou e quando);
+  - **seta ← no canto** para voltar (da página do jogador para a lista, e da lista para a tela inicial). Esc também volta.
+- O botão saiu de dentro da caixa de servidores.
+- Funciona também na página do Claude (lá o ranking mostra quem joga por lá).
+
 ## v0.9.93 — Dois servidores, site do jogo e golpes com impacto
 - **Dois servidores (como no Rucoy):** na tela inicial você escolhe **Eldoria 1** ou **Eldoria 2** e vê quantos estão jogando em cada um.
   - cada servidor é um mundo separado: jogadores à vista, monstros, chefes de Natal, raids, eventos e bate-papo;
