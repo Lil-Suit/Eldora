@@ -1,5 +1,8 @@
 # Histórico de versões
 
+## v0.9.95 — Sem micro-pausa nos golpes
+- Tirada a **micro-pausa** que congelava o jogo por um instante a cada golpe (parecia lag). O monstro continua piscando, amassando, tremendo e soltando faíscas e lascas.
+
 ## v0.9.94 — Ranking dentro do jogo
 - O **Ranking** agora abre **dentro do jogo**, sem sair para outra página: botão **🏆 Ranking** no **canto superior direito** da tela inicial.
   - abas de **nível**, **guerreiros**, **magos**, **arqueiros**, **PvP** e **mortes recentes**, com filtro por servidor;
