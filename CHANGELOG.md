@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## v0.9.96 — Andar de lado sem "correr para a frente"
+- Atacando ou mirando enquanto anda **de lado**, as **pernas correm para onde você está indo** e o tronco continua virado para o alvo (antes ele corria para a frente deslizando de lado).
+- Andando **para trás** enquanto mira: ele **anda de costas** (o passo toca ao contrário), de frente para o alvo.
+- Vale para você e para os outros jogadores que você vê.
+
 ## v0.9.95 — Sem micro-pausa nos golpes
 - Tirada a **micro-pausa** que congelava o jogo por um instante a cada golpe (parecia lag). O monstro continua piscando, amassando, tremendo e soltando faíscas e lascas.
 
