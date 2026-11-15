@@ -11,7 +11,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.92'; // (a variável é só para testes)
+const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.93'; // (a variável é só para testes)
 
 // ---------- Erros do servidor → Sentry (só no Render; sem dados pessoais) ----------
 const SENTRY_DSN = process.env.SENTRY_DSN || 'https://8ffc505d8bfbef96c829cace57608900@o4512419115499520.ingest.us.sentry.io/4512419158622208';
@@ -120,6 +120,10 @@ const ROOT = (() => {
   return pick;
 })();
 const PORT = +process.env.PORT || 10000;
+// SERVIDORES (mundos): cada um tem seus próprios jogadores à vista, monstros, eventos, raids e bate-papo.
+// Contas, personagens, mercado, banco e diamantes são os mesmos em todos (como no Rucoy).
+const SERVERS = [{ id: 1, name: 'Eldoria 1' }, { id: 2, name: 'Eldoria 2' }];
+const svOf = (v) => { const n = parseInt(v, 10); return SERVERS.some((x) => x.id === n) ? n : 1; };
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.css': 'text/css', '.glb': 'model/gltf-binary', '.wasm': 'application/wasm' };
 const BLOCK = /(^|\/)(\.|server\/|src\/|tools\/|test\/|node_modules\/|package)/;
@@ -163,6 +167,8 @@ async function api(req, res, p) {
   try {
     const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
     if (p === '/api/status') return json(res, 200, { ok: true, versao: VERSION, store: store.kind, google: GOOGLE_ID || null });
+    if (p === '/api/servers') return json(res, 200, { servers: SERVERS.map((x) => ({ ...x, online: [...peers.values()].filter((q) => q.sv === x.id && !q.old && q.presence?.c).length })) });
+    if (p.startsWith('/api/site/')) return siteApi(req, res, p);
     // ---- login com Google + senha (quando GOOGLE_CLIENT_ID está configurado) ----
     if (p === '/api/google' && req.method === 'POST') {
       if (!GOOGLE_ID) return json(res, 400, { error: 'Login com Google não configurado no servidor.' });
@@ -374,6 +380,67 @@ function diaBal(d) { return Math.max(0, d.total - d.spent.reduce((a, x) => a + (
 let diaQueue = Promise.resolve();
 const diaLock = (fn) => { const r = diaQueue.then(fn, fn); diaQueue = r.catch(() => {}); return r; };
 
+// ---------- SITE do jogo (público): rankings, busca de jogadores e mortes no PvP ----------
+// Lê o diretório (~dir) que cada jogo atualiza. Nada de conta, e-mail ou dono aparece aqui.
+let dirCache = { t: 0, list: [] };
+async function dirAll() {
+  if (Date.now() - dirCache.t < 20000) return dirCache.list;
+  const list = (await store.listDocs(DIR)).map((d) => d.data).filter((x) => x && x.n);
+  dirCache = { t: Date.now(), list };
+  return list;
+}
+const pubEntry = (x) => ({ n: x.n, l: x.l || 1, c: x.c || '', pvp: x.pvp || 0, deaths: x.deaths || 0, sv: x.sv || 1, t: x.t || 0 });
+function onlineNow() { // nome → servidor de quem está jogando agora
+  const m = new Map();
+  for (const q of peers.values()) if (!q.old && q.presence?.c && q.presence?.n) m.set(nameKey(q.presence.n), q.sv);
+  return m;
+}
+const RANKS = {
+  nivel: { f: () => true, k: (x) => x.l || 0 },
+  guerreiro: { f: (x) => x.c === 'guerreiro', k: (x) => x.l || 0 },
+  mago: { f: (x) => x.c === 'mago', k: (x) => x.l || 0 },
+  arqueiro: { f: (x) => x.c === 'arqueiro', k: (x) => x.l || 0 },
+  pvp: { f: (x) => (x.pvp || 0) > 0, k: (x) => x.pvp || 0 },
+};
+async function siteApi(req, res, p) {
+  const q = new URL(req.url, 'http://x').searchParams;
+  const sv = parseInt(q.get('sv'), 10) || 0; // 0 = todos os servidores
+  const all = (await dirAll()).filter((x) => !sv || (x.sv || 1) === sv);
+  const on = onlineNow();
+  const withOn = (x) => ({ ...pubEntry(x), on: on.get(nameKey(x.n)) || 0 });
+  if (p === '/api/site/rank') {
+    const R = RANKS[q.get('by')] || RANKS.nivel, n = Math.max(1, Math.min(100, +q.get('n') || 50));
+    const list = all.filter(R.f).sort((a, b) => R.k(b) - R.k(a) || (a.t || 0) - (b.t || 0)).slice(0, n).map(withOn);
+    return json(res, 200, { list, total: all.length, servers: SERVERS });
+  }
+  if (p === '/api/site/search') {
+    const k = nameKey(q.get('q') || '').slice(0, 20);
+    if (!k) return json(res, 200, { list: [] });
+    const list = all.filter((x) => nameKey(x.n).includes(k)).sort((a, b) => (nameKey(a.n) === k ? -1 : 0) - (nameKey(b.n) === k ? -1 : 0) || (b.l || 0) - (a.l || 0)).slice(0, 20).map(withOn);
+    return json(res, 200, { list });
+  }
+  if (p === '/api/site/player') {
+    const k = nameKey(q.get('n') || '');
+    const x = (await dirAll()).find((d) => nameKey(d.n) === k);
+    if (!x) return json(res, 404, { error: 'Jogador não encontrado.' });
+    const every = await dirAll();
+    const pos = (by) => { const R = RANKS[by]; if (!R || !R.f(x)) return 0; return every.filter(R.f).sort((a, b) => R.k(b) - R.k(a) || (a.t || 0) - (b.t || 0)).indexOf(x) + 1; };
+    const rank = { nivel: pos('nivel'), classe: x.c ? pos(x.c) : 0, pvp: pos('pvp') };
+    return json(res, 200, { player: { ...withOn(x), kills: (x.pk || []).slice().sort((a, b) => b.t - a.t), rank } });
+  }
+  if (p === '/api/site/kills') {
+    const list = [];
+    for (const x of all) for (const k of x.pk || []) list.push({ by: x.n, byL: x.l || 1, byC: x.c || '', n: k.n, t: k.t, sv: x.sv || 1 });
+    list.sort((a, b) => b.t - a.t);
+    return json(res, 200, { list: list.slice(0, Math.max(1, Math.min(100, +q.get('n') || 50))) });
+  }
+  if (p === '/api/site/resumo') {
+    const online = [...peers.values()].filter((x) => !x.old && x.presence?.c);
+    return json(res, 200, { jogadores: (await dirAll()).length, online: online.length, servers: SERVERS.map((x) => ({ ...x, online: online.filter((o) => o.sv === x.id).length })), versao: VERSION });
+  }
+  return json(res, 404, { error: 'não encontrado' });
+}
+
 // ---------- Nomes de personagem ÚNICOS no servidor inteiro ----------
 // "Lil" e "lil" (e "Líl") contam como o mesmo nome. O nome de conta de outra pessoa também não pode
 // ser usado (ninguém se passa pelo criador). Cada nome fica guardado no dono especial "~names".
@@ -464,6 +531,7 @@ const server = http.createServer((req, res) => {
   let p = decodeURIComponent((req.url || '/').split('?')[0]);
   if (p === '/health') { res.writeHead(200, { 'content-type': 'text/plain' }); return res.end('ok ' + peers.size); }
   if (p.startsWith('/api/')) return api(req, res, p);
+  if (p === '/site' || p === '/ranking') p = '/site.html';
   if (p.endsWith('/')) p += 'index.html';
   const file = path.normalize(path.join(ROOT, p));
   if (!file.startsWith(ROOT) || BLOCK.test(path.relative(ROOT, file).replace(/\\/g, '/'))) { res.writeHead(404); return res.end('Not found'); }
@@ -487,10 +555,11 @@ server.on('upgrade', (req, sock) => {
   sock.setNoDelay(true);
   const id = 'p' + (++seq).toString(36) + crypto.randomBytes(3).toString('hex');
   const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || sock.remoteAddress || '?';
-  const peer = { id, ip, sock, presence: {}, joined: Date.now(), updatedAt: Date.now(), buf: Buffer.alloc(0), alive: true, rate: { t: Date.now(), n: 0 } };
+  const sv = svOf(new URL(req.url || '/', 'http://x').searchParams.get('sv'));
+  const peer = { id, ip, sv, sock, presence: {}, joined: Date.now(), updatedAt: Date.now(), buf: Buffer.alloc(0), alive: true, rate: { t: Date.now(), n: 0 } };
   peers.set(id, peer);
-  send(peer, { t: 'hello', peer: id, now: Date.now() });
-  peersChanged();
+  send(peer, { t: 'hello', peer: id, now: Date.now(), sv });
+  peersChanged(sv);
   sock.on('data', (chunk) => onData(peer, chunk));
   sock.on('close', () => drop(peer));
   sock.on('error', () => drop(peer));
@@ -507,12 +576,12 @@ function drop(peer, force = false) {
   if (!force && !peer.old && !peer.linger && peer.presence?.c && !peer.presence.d && bl > Date.now()) {
     peer.linger = true; peer.sock = null;
     peer.lingerT = setTimeout(() => drop(peer, true), Math.min(10 * 60000, bl - Date.now() + 500));
-    peersChanged();
+    peersChanged(peer.sv);
     return;
   }
   clearTimeout(peer.lingerT);
   peers.delete(peer.id);
-  peersChanged();
+  peersChanged(peer.sv);
 }
 // golpe PvP num personagem que ficou no mundo (dono desconectado): o servidor aplica o dano
 function lingerHit(from, target, d) {
@@ -526,7 +595,7 @@ function lingerHit(from, target, d) {
     send(from, { t: 'msg', topic: 'fx', peer: target.id, data: { type: 'v_kill', to: from.id, sk: +P.pk || 0, id: P.id || null, n: P.n } });
     setTimeout(() => drop(target, true), 3000);
   }
-  peersChanged();
+  peersChanged(target.sv);
 }
 
 function frame(text, op = 1) {
@@ -536,7 +605,8 @@ function frame(text, op = 1) {
   return Buffer.concat([head, data]);
 }
 function send(peer, obj) { try { if (peer.sock && !peer.sock.destroyed) peer.sock.write(frame(JSON.stringify(obj))); } catch { /* ignora */ } }
-function broadcast(obj) { const f = frame(JSON.stringify(obj)); for (const p of peers.values()) { try { if (p.sock && !p.sock.destroyed) p.sock.write(f); } catch { /* ignora */ } } }
+// sv: só para quem está naquele servidor (sem sv: todos, ex.: aviso de manutenção)
+function broadcast(obj, sv) { const f = frame(JSON.stringify(obj)); for (const p of peers.values()) { if (sv && p.sv !== sv) continue; try { if (p.sock && !p.sock.destroyed) p.sock.write(f); } catch { /* ignora */ } } }
 
 function onData(peer, chunk) {
   peer.buf = Buffer.concat([peer.buf, chunk]);
@@ -618,7 +688,7 @@ function onMessage(peer, text) {
   if (!m || typeof m !== 'object') return;
   // a conta da conexão (o jogo manda o token logo depois de entrar): só assim o servidor sabe quem é GM
   if (m.t === 'auth' && typeof m.token === 'string' && m.token.length < 200) {
-    store.userByToken(m.token).then((name) => { peer.account = name || null; peer.gm = !!name && GMS.has(String(name).toLowerCase()); peersChanged(); }).catch(() => {});
+    store.userByToken(m.token).then((name) => { peer.account = name || null; peer.gm = !!name && GMS.has(String(name).toLowerCase()); peersChanged(peer.sv); }).catch(() => {});
     return;
   }
   if (m.t === 'pres' && m.p && typeof m.p === 'object') {
@@ -633,7 +703,7 @@ function onMessage(peer, text) {
     const old = !!m.p.n && m.p.vv !== VERSION;
     if (old && !peer.oldSent) { peer.oldSent = true; send(peer, { t: 'maint' }); }
     if (old !== !!peer.old) { peer.old = old; }
-    return peersChanged();
+    return peersChanged(peer.sv);
   }
   if (m.t === 'emit' && TOPICS.has(m.topic)) {
     if (peer.old) return; // versão antiga: não fala com os outros
@@ -651,13 +721,14 @@ function onMessage(peer, text) {
     // mensagem para uma pessoa só (convite, troca, privado): vai só para ela
     if (d && typeof d.to === 'string') {
       const target = peers.get(d.to);
+      if (target && target.sv !== peer.sv) return; // outro servidor: não alcança
       if (target?.linger) { if (d.type === 'v_hit') lingerHit(peer, target, d); return; }
       if (target) send(target, { t: 'msg', topic: m.topic, peer: peer.id, data: d });
       return;
     }
     // selo de GM: quem decide é o servidor (o que o jogador mandar é ignorado)
     if (d && m.topic === 'chat') d.gm = peer.gm ? 1 : 0;
-    broadcast({ t: 'msg', topic: m.topic, peer: peer.id, data: m.data ?? null });
+    broadcast({ t: 'msg', topic: m.topic, peer: peer.id, data: m.data ?? null }, peer.sv);
   }
   if (m.t === 'ping') send(peer, { t: 'pong', at: m.at });
 }
@@ -665,27 +736,27 @@ function onMessage(peer, text) {
 // ANFITRIÃO ÚNICO (quem simula os monstros, o dia/noite e os eventos para todos): o servidor escolhe
 // e avisa todo mundo, então nunca há dois mundos diferentes. É quem está há mais tempo conectado
 // ENTRE os que estão jogando de verdade (personagem em jogo, tela aberta e mandando sinal nos últimos 8 s).
-let lastHost = null;
-function pickHost() {
+const lastHost = new Map(); // servidor -> anfitrião
+function pickHost(sv) {
   const now = Date.now(); let best = null;
   for (const p of peers.values()) {
-    if (p.old || p.linger || !p.presence?.c || p.presence.v === 0 || now - p.updatedAt > 8000) continue;
+    if (p.sv !== sv || p.old || p.linger || !p.presence?.c || p.presence.v === 0 || now - p.updatedAt > 8000) continue;
     if (!best || p.joined < best.joined) best = p;
   }
   return best ? best.id : null;
 }
-setInterval(() => { if (pickHost() !== lastHost) peersChanged(); }, 2000);
+setInterval(() => { for (const { id } of SERVERS) if (pickHost(id) !== (lastHost.get(id) ?? null)) peersChanged(id); }, 2000);
 
-// lista de jogadores: enviada no máximo a cada 50 ms (posições chegam quase em tempo real)
-let pending = null;
-function peersChanged() {
-  if (pending) return;
-  pending = setTimeout(() => {
-    pending = null;
-    const list = [...peers.values()].filter((p) => !p.old).map((p) => ({ peer: p.id, presence: { ...p.presence, gm: p.gm ? 1 : 0, lg: p.linger ? 1 : 0 }, updatedAt: p.updatedAt }));
-    lastHost = pickHost();
-    broadcast({ t: 'peers', peers: list, host: lastHost, now: Date.now() });
-  }, 33);
+// lista de jogadores (de cada servidor): enviada no máximo a cada 50 ms (posições chegam quase em tempo real)
+const pending = new Map();
+function peersChanged(sv = 1) {
+  if (pending.get(sv)) return;
+  pending.set(sv, setTimeout(() => {
+    pending.delete(sv);
+    const list = [...peers.values()].filter((p) => !p.old && p.sv === sv).map((p) => ({ peer: p.id, presence: { ...p.presence, gm: p.gm ? 1 : 0, lg: p.linger ? 1 : 0 }, updatedAt: p.updatedAt }));
+    const host = pickHost(sv); lastHost.set(sv, host);
+    broadcast({ t: 'peers', peers: list, host, now: Date.now() }, sv);
+  }, 33));
 }
 
 // limpa bloqueios vencidos

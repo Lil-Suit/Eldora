@@ -1,5 +1,20 @@
 # Histórico de versões
 
+## v0.9.93 — Dois servidores, site do jogo e golpes com impacto
+- **Dois servidores (como no Rucoy):** na tela inicial você escolhe **Eldoria 1** ou **Eldoria 2** e vê quantos estão jogando em cada um.
+  - cada servidor é um mundo separado: jogadores à vista, monstros, chefes de Natal, raids, eventos e bate-papo;
+  - conta, personagens, mercado, banco e diamantes são os mesmos nos dois;
+  - para trocar: Menu → **Trocar de servidor**. O servidor atual aparece no canto da tela.
+- **Site do jogo** (botão 🏆 Ranking na tela inicial, ou /site):
+  - rankings de **nível**, **guerreiros**, **magos**, **arqueiros** e **PvP** (abates), com filtro por servidor;
+  - **busca de jogador** pelo nome, com página própria: classe, nível, servidor, se está online, posições nos rankings e os jogadores que derrotou, com a data;
+  - **mortes recentes no PvP**: quem derrotou quem e quando.
+- **Golpes com impacto nos monstros:**
+  - o monstro **pisca branco**, **amassa e treme no lugar** (sem empurrão) e o golpe dá uma **micro-pausa** (maior no crítico);
+  - **faíscas e lascas** do material de cada bicho: gosma, osso, pedra, madeira e folhas, neve, metal, casco ou brilho mágico;
+  - você também vê o efeito quando outro jogador acerta o monstro.
+- Tela inicial e menu cabem sem rolar no celular deitado (com muitos personagens, o resto fica em "ver todos").
+
 ## v0.9.92 — Vila murada, Natal na neve e arqueiro de verdade
 - **Vila de Eldoria:**
   - a cerca redonda virou uma **muralha de castelo** reta, com ameias, torres nos cantos e três portões com tochas (norte, leste e oeste);

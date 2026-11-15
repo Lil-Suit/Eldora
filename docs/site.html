@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ELDORIA · Ranking e jogadores</title>
+<meta name="description" content="Rankings, busca de jogadores e mortes no PvP de ELDORIA: O Mundo Sem Limites.">
+<meta name="theme-color" content="#0d0e1a">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Nunito+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #0d0e1a; --panel: #15162a; --panel2: #1c1d36; --line: rgba(217,178,95,.22); --line2: rgba(217,178,95,.55);
+  --gold: #d9b25f; --gold2: #f3d58c; --rift: #5ef0ff; --text: #f0eadc; --muted: #a8a2b6; --good: #7ee08a; --bad: #ff7a7a;
+  --guerreiro: #ff9a5a; --mago: #7ab8ff; --arqueiro: #8fe07a;
+  --title: 'Cinzel', Georgia, serif; --body: 'Nunito Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+* { box-sizing: border-box; }
+html { background: var(--ink); }
+body { margin: 0; color: var(--text); font-family: var(--body); min-height: 100vh; -webkit-font-smoothing: antialiased;
+  background: radial-gradient(1200px 500px at 50% -120px, rgba(94,240,255,.10), transparent 70%), var(--ink); }
+a { color: var(--gold2); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.hero { position: relative; overflow: hidden; border-bottom: 1px solid var(--line); }
+.hero::before { content: ''; position: absolute; inset: 0; background: url(telas/vila.jpg) center 40% / cover no-repeat; opacity: .32; filter: saturate(1.1); }
+.hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(13,14,26,.2), var(--ink) 96%); }
+.hero-in { position: relative; z-index: 1; max-width: 980px; margin: 0 auto; padding: 28px 18px 18px; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px 24px; }
+.logo { font-family: var(--title); font-weight: 800; font-size: clamp(34px, 7vw, 56px); letter-spacing: .12em; color: var(--gold2); line-height: 1; text-shadow: 0 0 22px rgba(94,240,255,.3), 0 2px 0 #000; }
+.sub { font-family: var(--title); letter-spacing: .32em; font-size: 12px; color: var(--muted); margin-top: 8px; }
+.stats { margin-left: auto; display: flex; gap: 10px; flex-wrap: wrap; }
+.stat { background: rgba(21,22,42,.85); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; min-width: 96px; }
+.stat b { display: block; font-size: 20px; color: var(--gold2); }
+.stat small { color: var(--muted); font-size: 12px; }
+.play { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(180deg, #e9c46e, #b88a35); color: #1b140a; font-weight: 800; padding: 11px 18px; border-radius: 10px; border: 1px solid #f3d58c; box-shadow: 0 6px 18px rgba(0,0,0,.4); }
+.play:hover { text-decoration: none; filter: brightness(1.08); }
+main { max-width: 980px; margin: 0 auto; padding: 16px 14px 60px; }
+.bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+.search { flex: 1 1 260px; display: flex; gap: 8px; }
+.search input { flex: 1; min-width: 0; background: var(--panel); border: 1px solid var(--line2); color: var(--text); border-radius: 10px; padding: 11px 13px; font: inherit; font-size: 15px; outline: none; }
+.search input:focus { border-color: var(--gold2); box-shadow: 0 0 0 3px rgba(243,213,140,.15); }
+.btn { background: var(--panel2); border: 1px solid var(--line2); color: var(--gold2); border-radius: 10px; padding: 10px 14px; font: inherit; font-weight: 800; cursor: pointer; }
+.btn:hover { border-color: var(--gold2); }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 999px; padding: 7px 12px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.chip.on { color: #1b140a; background: var(--gold2); border-color: var(--gold2); }
+.chip .dot, .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--good); margin-right: 5px; vertical-align: 1px; box-shadow: 0 0 6px var(--good); }
+nav.tabs { display: flex; gap: 2px; overflow-x: auto; border-bottom: 1px solid var(--line); margin: 6px 0 0; scrollbar-width: none; }
+nav.tabs a { flex: none; padding: 11px 14px; color: var(--muted); font-weight: 800; font-size: 14px; border-bottom: 2px solid transparent; }
+nav.tabs a:hover { color: var(--text); text-decoration: none; }
+nav.tabs a.on { color: var(--gold2); border-bottom-color: var(--gold2); }
+.card { background: var(--panel); border: 1px solid var(--line); border-top: none; border-radius: 0 0 12px 12px; }
+.card.solo { border-top: 1px solid var(--line); border-radius: 12px; margin-top: 14px; }
+.ch { font-family: var(--title); font-size: 18px; color: var(--gold2); padding: 14px 16px 4px; margin: 0; }
+.cd { color: var(--muted); font-size: 13px; padding: 0 16px 10px; margin: 0; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; color: var(--muted); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+td { padding: 10px 12px; border-bottom: 1px solid rgba(217,178,95,.08); }
+tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: rgba(243,213,140,.04); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.pos { width: 46px; color: var(--muted); font-weight: 800; }
+.pos.p1 { color: #ffd65a; } .pos.p2 { color: #d6dde6; } .pos.p3 { color: #e0a272; }
+.nm { font-weight: 800; color: var(--text); }
+.cls { font-size: 12px; font-weight: 800; padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.cls.guerreiro { color: var(--guerreiro); } .cls.mago { color: var(--mago); } .cls.arqueiro { color: var(--arqueiro); }
+.sv { color: var(--muted); font-size: 13px; white-space: nowrap; }
+.empty { padding: 26px 16px; color: var(--muted); text-align: center; }
+.kill { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; padding: 11px 16px; border-bottom: 1px solid rgba(217,178,95,.08); }
+.kill:last-child { border-bottom: none; }
+.kill .when { margin-left: auto; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.kill .x { color: var(--bad); font-weight: 800; }
+.prof { display: grid; grid-template-columns: auto 1fr; gap: 16px; padding: 18px 16px; align-items: center; }
+.avatar { width: 74px; height: 74px; border-radius: 14px; display: grid; place-items: center; font-size: 36px; background: var(--panel2); border: 1px solid var(--line2); }
+.prof h2 { font-family: var(--title); margin: 0 0 6px; font-size: 26px; color: var(--gold2); word-break: break-word; }
+.meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; color: var(--muted); font-size: 14px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; padding: 0 16px 16px; }
+.box { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.box b { display: block; font-size: 22px; color: var(--text); font-variant-numeric: tabular-nums; }
+.box small { color: var(--muted); font-size: 12px; font-weight: 700; }
+.back { display: inline-block; margin: 12px 0 0; font-weight: 800; }
+footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px 12px 34px; }
+.load { padding: 26px; text-align: center; color: var(--muted); }
+@media (max-width: 620px) {
+  .hide-sm { display: none; }
+  td, th { padding: 9px 8px; }
+  .pos { width: 34px; }
+  .stats { margin-left: 0; }
+}
+</style>
+</head>
+<body>
+<header class="hero"><div class="hero-in">
+  <div><div class="logo">ELDORIA</div><div class="sub">RANKING · JOGADORES · PVP</div></div>
+  <div class="stats" id="stats"></div>
+  <a class="play" href="./">⚔ Jogar agora</a>
+</div></header>
+<main>
+  <div class="bar">
+    <form class="search" id="sf" autocomplete="off"><input id="q" placeholder="Procurar jogador pelo nome…" maxlength="20" aria-label="Nome do jogador"><button class="btn">Buscar</button></form>
+    <div class="chips" id="svs"></div>
+  </div>
+  <div id="view"><div class="load">Carregando…</div></div>
+</main>
+<footer>ELDORIA: O Mundo Sem Limites · os dados são atualizados enquanto cada um joga · <span id="ver"></span></footer>
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const CLS = { guerreiro: ['Guerreiro', '⚔️'], mago: ['Mago', '🔮'], arqueiro: ['Arqueiro', '🏹'] };
+const TABS = [['nivel', 'Nível'], ['guerreiro', 'Guerreiros'], ['mago', 'Magos'], ['arqueiro', 'Arqueiros'], ['pvp', 'PvP'], ['mortes', 'Mortes recentes']];
+let SERVERS = [{ id: 1, name: 'Eldoria 1' }, { id: 2, name: 'Eldoria 2' }];
+let sv = +(localStorage.getItem('site.sv') || 0) || 0;
+const svName = (id) => (SERVERS.find((s) => s.id === id) || { name: 'Eldoria ' + id }).name;
+const api = async (path) => { const r = await fetch('/api/site/' + path, { cache: 'no-store' }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Erro ' + r.status); return j; };
+const dt = (t) => { if (!t) return '—'; const d = new Date(t); return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); };
+const ago = (t) => { if (!t) return '—'; const s = (Date.now() - t) / 1000; if (s < 90) return 'agora'; if (s < 3600) return Math.round(s / 60) + ' min atrás'; if (s < 86400) return Math.round(s / 3600) + ' h atrás'; return Math.round(s / 86400) + ' dias atrás'; };
+const cls = (c) => c && CLS[c] ? `<span class="cls ${c}">${CLS[c][1]} ${CLS[c][0]}</span>` : '<span class="sv">—</span>';
+const who = (x) => `<a class="nm" href="#j/${encodeURIComponent(x.n)}">${x.on ? '<span class="dot" title="Online agora"></span>' : ''}${esc(x.n)}</a>`;
+
+async function head() {
+  try {
+    const r = await api('resumo');
+    if (r.servers) SERVERS = r.servers;
+    $('#stats').innerHTML = `<div class="stat"><b>${r.online}</b><small>online agora</small></div><div class="stat"><b>${r.jogadores}</b><small>heróis no ranking</small></div>`;
+    $('#ver').textContent = 'v' + r.versao;
+  } catch { $('#stats').innerHTML = ''; }
+  chips();
+}
+function chips() {
+  $('#svs').innerHTML = [{ id: 0, name: 'Todos' }, ...SERVERS].map((s) => `<button class="chip${s.id === sv ? ' on' : ''}" data-sv="${s.id}">${s.online ? '<span class="dot"></span>' : ''}${esc(s.name)}${s.online != null && s.id ? ` · ${s.online}` : ''}</button>`).join('');
+}
+$('#svs').addEventListener('click', (e) => { const b = e.target.closest('[data-sv]'); if (!b) return; sv = +b.dataset.sv; try { localStorage.setItem('site.sv', sv); } catch {} chips(); route(); });
+$('#sf').addEventListener('submit', (e) => { e.preventDefault(); const q = $('#q').value.trim(); if (q) location.hash = 'busca/' + encodeURIComponent(q); });
+
+const tabsHtml = (cur) => `<nav class="tabs">${TABS.map(([k, n]) => `<a href="#${k}" class="${k === cur ? 'on' : ''}">${n}</a>`).join('')}</nav>`;
+const svQ = () => (sv ? '&sv=' + sv : '');
+
+async function rank(by) {
+  $('#view').innerHTML = tabsHtml(by) + '<div class="card"><div class="load">Carregando…</div></div>';
+  try {
+    const { list } = await api(`rank?by=${by}&n=100${svQ()}`);
+    const title = { nivel: 'Maiores níveis', guerreiro: 'Melhores guerreiros', mago: 'Melhores magos', arqueiro: 'Melhores arqueiros', pvp: 'Mais abates no PvP' }[by];
+    const pvp = by === 'pvp';
+    const rows = list.map((x, i) => `<tr><td class="pos p${i + 1}">${i + 1}º</td><td>${who(x)}</td><td class="hide-sm">${cls(x.c)}</td>
+      <td class="num">${pvp ? x.pvp : x.l}</td>${pvp ? `<td class="num hide-sm">${x.deaths}</td>` : ''}<td class="sv hide-sm">${esc(svName(x.sv))}</td></tr>`).join('');
+    $('#view .card').innerHTML = `<h2 class="ch">${title}${sv ? ' · ' + esc(svName(sv)) : ''}</h2>` + (list.length
+      ? `<table><thead><tr><th>#</th><th>Jogador</th><th class="hide-sm">Classe</th><th class="num">${pvp ? 'Abates' : 'Nível'}</th>${pvp ? '<th class="num hide-sm">Mortes</th>' : ''}<th class="hide-sm">Servidor</th></tr></thead><tbody>${rows}</tbody></table>`
+      : `<div class="empty">${pvp ? 'Ninguém derrotou outro jogador ainda.' : 'Ninguém aqui ainda. Seja o primeiro!'}</div>`);
+  } catch (e) { $('#view .card').innerHTML = `<div class="empty">Não deu para carregar (${esc(e.message)}).</div>`; }
+}
+
+async function mortes() {
+  $('#view').innerHTML = tabsHtml('mortes') + '<div class="card"><div class="load">Carregando…</div></div>';
+  try {
+    const { list } = await api(`kills?n=60${svQ()}`);
+    $('#view .card').innerHTML = `<h2 class="ch">Mortes recentes no PvP</h2><p class="cd">Quem derrotou quem, e quando.</p>` + (list.length
+      ? list.map((k) => `<div class="kill">${who({ n: k.by })} <span class="sv">Nv ${k.byL}</span> <span class="x">derrotou</span> ${who({ n: k.n })}<span class="when">${dt(k.t)} · ${esc(svName(k.sv))}</span></div>`).join('')
+      : '<div class="empty">Nenhuma morte no PvP ainda.</div>');
+  } catch (e) { $('#view .card').innerHTML = `<div class="empty">Não deu para carregar (${esc(e.message)}).</div>`; }
+}
+
+async function busca(q) {
+  $('#q').value = q;
+  $('#view').innerHTML = `<div class="card solo"><div class="load">Procurando…</div></div>`;
+  try {
+    const { list } = await api(`search?q=${encodeURIComponent(q)}${svQ()}`);
+    if (list.length === 1 && list[0].n.toLowerCase() === q.toLowerCase()) { location.replace('#j/' + encodeURIComponent(list[0].n)); return; }
+    $('#view .card').innerHTML = `<h2 class="ch">Busca: “${esc(q)}”</h2>` + (list.length
+      ? `<table><thead><tr><th>Jogador</th><th class="hide-sm">Classe</th><th class="num">Nível</th><th class="hide-sm">Servidor</th></tr></thead><tbody>${list.map((x) => `<tr><td>${who(x)}</td><td class="hide-sm">${cls(x.c)}</td><td class="num">${x.l}</td><td class="sv hide-sm">${esc(svName(x.sv))}</td></tr>`).join('')}</tbody></table>`
+      : '<div class="empty">Nenhum jogador com esse nome.</div>') + `<div style="padding:0 16px 14px"><a class="back" href="#nivel">← Voltar ao ranking</a></div>`;
+  } catch (e) { $('#view .card').innerHTML = `<div class="empty">Não deu para buscar (${esc(e.message)}).</div>`; }
+}
+
+async function jogador(n) {
+  $('#view').innerHTML = `<div class="card solo"><div class="load">Carregando…</div></div>`;
+  try {
+    const { player: x } = await api('player?n=' + encodeURIComponent(n));
+    const c = CLS[x.c] || ['Herói', '🛡️'];
+    const rk = (v) => (v ? v + 'º' : '—');
+    const kills = x.kills.length
+      ? x.kills.map((k) => `<div class="kill"><span class="x">Derrotou</span> ${who({ n: k.n })}<span class="when">${dt(k.t)}</span></div>`).join('')
+      : '<div class="empty">Ainda não derrotou nenhum jogador.</div>';
+    $('#view .card').innerHTML = `<div class="prof"><div class="avatar">${c[1]}</div><div><h2>${esc(x.n)}</h2>
+      <div class="meta">${cls(x.c)} <span>Nível <b style="color:var(--text)">${x.l}</b></span> <span>· ${esc(svName(x.sv))}</span>
+      <span>· ${x.on ? `<span class="dot"></span><b style="color:var(--good)">Online agora</b>${x.on !== x.sv ? ' (' + esc(svName(x.on)) + ')' : ''}` : 'Visto ' + ago(x.t)}</span></div></div></div>
+      <div class="grid">
+        <div class="box"><small>Ranking de nível</small><b>${rk(x.rank.nivel)}</b></div>
+        <div class="box"><small>Ranking de ${c[0].toLowerCase()}s</small><b>${rk(x.rank.classe)}</b></div>
+        <div class="box"><small>Abates no PvP</small><b>${x.pvp}</b></div>
+        <div class="box"><small>Mortes no PvP</small><b>${x.deaths}</b></div>
+        <div class="box"><small>Ranking PvP</small><b>${rk(x.rank.pvp)}</b></div>
+      </div>
+      <h2 class="ch">Jogadores derrotados</h2><p class="cd">Os últimos 30, com a data.</p>${kills}
+      <div style="padding:0 16px 14px"><a class="back" href="#nivel">← Voltar ao ranking</a></div>`;
+    document.title = x.n + ' · ELDORIA';
+  } catch (e) { $('#view .card').innerHTML = `<div class="empty">${esc(e.message)}</div><div style="padding:0 16px 14px;text-align:center"><a class="back" href="#nivel">← Voltar ao ranking</a></div>`; }
+}
+
+function route() {
+  const h = decodeURIComponent(location.hash.slice(1));
+  document.title = 'ELDORIA · Ranking e jogadores';
+  if (h.startsWith('j/')) return jogador(h.slice(2));
+  if (h.startsWith('busca/')) return busca(h.slice(6));
+  if (h === 'mortes') return mortes();
+  return rank(TABS.some(([k]) => k === h) ? h : 'nivel');
+}
+window.addEventListener('hashchange', () => { route(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+head(); route();
+setInterval(head, 30000);
+</script>
+</body>
+</html>
