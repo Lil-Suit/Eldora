@@ -1,5 +1,13 @@
 # Histórico de versões
 
+## v0.10.2 — Celular mais leve
+- **Mostrar FPS** volta a mostrar só o FPS.
+- Pelos números do seu print (o **desenho** era o que mais pesava: 23 ms com 270 objetos olhando a vila de longe):
+  - no celular, nada além da neblina é desenhado (em todos os gráficos);
+  - na Baixa a neblina fica um pouco mais perto;
+  - os NPCs da vila só aparecem a até 60 m e só se mexem a até 45 m.
+- **Celular anfitrião** simula só os monstros a até 65 m de algum jogador (antes 95 m): a parte "monstros" era 7 ms por quadro.
+
 ## v0.10.1 — NPCs com o modelo dos personagens, arqueiro anda ao atirar, medidor de desempenho
 - **NPCs da vila** agora usam o **mesmo modelo 3D dos personagens**, cada um com a sua roupa: o Mestre e a Fornecedora de mago, a Banqueira e o Mercador de nobres, a Exploradora de patrulheira… (o Eco continua espírito).
 - **Atirando ou atacando em movimento, o personagem ANDA** (não corre), e o quadril gira no máximo ~50° (antes ia até 92°), sem "estalar" ao virar de costas.
