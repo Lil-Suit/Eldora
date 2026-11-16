@@ -1,5 +1,13 @@
 # Histórico de versões
 
+## 0.10.9 — animações dos monstros e Cérbero novo
+- Golens e Ente ganharam cotovelos e joelhos de verdade: passada pesada com o joelho dobrando, braços balançando com o cotovelo solto, guarda, levar dano com o joelho cedendo.
+- Golens: pisão (ergue os punhos e esmaga dobrando os joelhos), gancho de direita e de esquerda, arremesso de rocha (agacha, ergue e joga), investida e urro.
+- Cada golpe do combo usa uma animação diferente: espadas (diagonal, horizontal e golpe pesado com salto), garras/adagas (estocada, arranhão em X e bote), gosmas (bote, pancada girando e salto esmagador).
+- Feras com ataque próprio: lobo (mordida e patada), urso (fica de pé e desaba), javali (abaixa e joga as presas), cervo (marrada e coice empinado), aranha (empina e crava as presas), escorpião (ferrão por cima da cabeça e pinças), caranguejo (pinças esmagando), besouro (chifrada).
+- Bichos de casca (aranha, escorpião, caranguejo, besouro) andam em passinhos cruzados rápidos; bonecos de neve mexem os braços de galho.
+- Cérbero redesenhado: três cabeças com chifres, coleiras de espinhos, juba e cauda de fogo, rachaduras de lava.
+
 ## 0.10.8 — monstros, segunda rodada
 - Minotauro, Lobisomem e Yeti: pelagem desgrenhada em tufos, pintura de guerra, cascos, correntes, camisa rasgada, presas.
 - Titãs: veios brilhando pelo corpo, pedras soltas nos ombros, barba de gelo, chaminés de lava, cristais e correntes da Fenda.
