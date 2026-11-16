@@ -1,5 +1,9 @@
 # Histórico de versões
 
+## 0.10.6 — chefes só dropam de azul para cima
+- Itens de chefe (inclusive raid, Natal e eventos) agora são no mínimo **Raros (azuis)**: a chance que era do verde foi para o azul.
+- Quem já tinha item de chefe verde (na bolsa, equipado ou no cofre) ganha ele **azul** ao entrar, com os atributos recalculados. Item de chefe verde que chegar por troca ou leilão também vira azul.
+
 ## 0.10.5 — arco mira para cima, golens com mais golpes
 - Arqueiro: quando o alvo está mais alto ou mais baixo (chefes grandes, morros), o arco inclina junto com a flecha — a coluna inclina para trás e os braços acompanham.
 - Golens (todos os tipos): além do pisão, agora dão socos alternados (direita/esquerda), combo de socos que fecha com o pisão, arremessam rocha de longe e dão investida.
