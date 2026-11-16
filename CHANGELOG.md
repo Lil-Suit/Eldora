@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## 0.10.5 — arco mira para cima, golens com mais golpes
+- Arqueiro: quando o alvo está mais alto ou mais baixo (chefes grandes, morros), o arco inclina junto com a flecha — a coluna inclina para trás e os braços acompanham.
+- Golens (todos os tipos): além do pisão, agora dão socos alternados (direita/esquerda), combo de socos que fecha com o pisão, arremessam rocha de longe e dão investida.
+- Editor do HUD: o botão da montaria não aparece para quem não tem montaria.
+
 ## 0.10.4 — mira de tiro e câmera fixa
 - Nova opção **Mira de tiro (arqueiro e mago)** em Configurações → Controles: aparece uma mira, a câmera vai para trás do ombro e o tiro vai para onde ela aponta; fica vermelha quando trava num monstro. O herói anda de lado/de costas mirando.
 - Nova opção **Câmera fixa no personagem**: a câmera volta sozinha para as costas do herói enquanto anda.
