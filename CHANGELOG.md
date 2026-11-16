@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## 0.10.4 — mira de tiro e câmera fixa
+- Nova opção **Mira de tiro (arqueiro e mago)** em Configurações → Controles: aparece uma mira, a câmera vai para trás do ombro e o tiro vai para onde ela aponta; fica vermelha quando trava num monstro. O herói anda de lado/de costas mirando.
+- Nova opção **Câmera fixa no personagem**: a câmera volta sozinha para as costas do herói enquanto anda.
+- Distância de visão Curta não corta mais as nuvens do céu.
+
 ## 0.10.3 — mais leve no celular
 - Nova opção **Distância de visão** (Configurações → Gráficos): Curta / Média / Longa. Celular começa em Curta.
 - Monstros calmos e longe pensam menos vezes por segundo; lista de jogadores montada 1x por quadro; chão/ponte sem desotimizar (−25 a −40% de tempo dos monstros, bem menos lixo de memória).
