@@ -1,5 +1,12 @@
 # Histórico de versões
 
+## 0.10.8 — monstros, segunda rodada
+- Minotauro, Lobisomem e Yeti: pelagem desgrenhada em tufos, pintura de guerra, cascos, correntes, camisa rasgada, presas.
+- Titãs: veios brilhando pelo corpo, pedras soltas nos ombros, barba de gelo, chaminés de lava, cristais e correntes da Fenda.
+- Cérebros: veias acesas, gosma pingando e dentes embaixo. Vigia: correntes enroladas, cadeado e almas na barra do manto.
+- Brilho de verdade: metal, gemas, ossos e gosmas refletem a luz (armaduras e coroas brilham).
+- Lobos com tufos nas patas, esqueletos com cinto e tanga rasgada, goblins com orelhonas de verdade, golens com runas nos punhos, cultistas com livro e runas flutuando.
+
 ## 0.10.7 — monstros redesenhados
 - Todos os monstros e chefes ganharam arte nova, peça por peça, mantendo a cara de cada um: gosmas em forma de gota com olhos brilhantes e "recheio" próprio (folha, favo de mel, inseto no âmbar, galáxia…), lobos com juba, focinho e cauda cheia, goblins com orelhonas, nariz torto e barrigão, esqueletos com costelas, crânio e elmo de ferro, golens de blocos lapidados, cultistas com capuz fundo e runas, cavaleiros de armadura completa, feras novas (javali, urso, cervo, aranha de galhos, escorpião, caranguejo, besouro, salamandra), homem-lagarto, ente, Noel, bonecos de neve e rena.
 - Capas, mantos e cachecóis agora flutuam: balançam parados e sobem para trás quando o monstro anda ou ataca.
