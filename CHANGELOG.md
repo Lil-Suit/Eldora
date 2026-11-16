@@ -1,5 +1,11 @@
 # Histórico de versões
 
+## 0.10.7 — monstros redesenhados
+- Todos os monstros e chefes ganharam arte nova, peça por peça, mantendo a cara de cada um: gosmas em forma de gota com olhos brilhantes e "recheio" próprio (folha, favo de mel, inseto no âmbar, galáxia…), lobos com juba, focinho e cauda cheia, goblins com orelhonas, nariz torto e barrigão, esqueletos com costelas, crânio e elmo de ferro, golens de blocos lapidados, cultistas com capuz fundo e runas, cavaleiros de armadura completa, feras novas (javali, urso, cervo, aranha de galhos, escorpião, caranguejo, besouro, salamandra), homem-lagarto, ente, Noel, bonecos de neve e rena.
+- Capas, mantos e cachecóis agora flutuam: balançam parados e sobem para trás quando o monstro anda ou ataca.
+- Luz de borda e sombra de contato em todos os monstros (leem melhor à noite).
+- Mais leve: as peças paradas de cada monstro viram uma malha só (em média 13% menos desenhos por monstro; chefes até 50% menos).
+
 ## 0.10.6 — chefes só dropam de azul para cima
 - Itens de chefe (inclusive raid, Natal e eventos) agora são no mínimo **Raros (azuis)**: a chance que era do verde foi para o azul.
 - Quem já tinha item de chefe verde (na bolsa, equipado ou no cofre) ganha ele **azul** ao entrar, com os atributos recalculados. Item de chefe verde que chegar por troca ou leilão também vira azul.
