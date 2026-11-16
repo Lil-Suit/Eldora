@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## v0.10.1 — NPCs com o modelo dos personagens, arqueiro anda ao atirar, medidor de desempenho
+- **NPCs da vila** agora usam o **mesmo modelo 3D dos personagens**, cada um com a sua roupa: o Mestre e a Fornecedora de mago, a Banqueira e o Mercador de nobres, a Exploradora de patrulheira… (o Eco continua espírito).
+- **Atirando ou atacando em movimento, o personagem ANDA** (não corre), e o quadril gira no máximo ~50° (antes ia até 92°), sem "estalar" ao virar de costas.
+- **Mostrar FPS** agora fica embaixo (não cobre a vida do alvo) e mostra quanto tempo cada parte leva por quadro (jogo, desenho, monstros, tela, rede…) e se você é o anfitrião — é para achar a causa do lag.
+
 ## v0.10.0 — Tribunal das IAs, lote 1: fim do lag
 Decidido por um "tribunal" (proponente, crítico, juiz e veredito) que leu o código inteiro.
 - **Celular:**
