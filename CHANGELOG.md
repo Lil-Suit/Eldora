@@ -1,5 +1,12 @@
 # Histórico de versões
 
+## 0.10.10 — pedras do tamanho de quem joga, rena e Noel
+- Tiros de monstro acompanham o tamanho de quem atira: goblin joga pedrinha, colosso e golem arremessam pedregulho (e de mais alto). Vale para pedra, gelo, fogo, magia e presentes, e os outros jogadores veem do mesmo tamanho.
+- Rena Maligna: pescoço reto (não fica mais em "Z"), galhada escura grande com pontas vermelhas, peito de pelo claro, rabo fofo e rédeas.
+- Noel 2x maior (e alcance do golpe acompanhando).
+- Monstros chamados por chefes (ajudantes, mini bonecos, almas, invocações) não mostram mais placa de nome na cabeça (só se você mirar neles): menos peso quando vêm vários de uma vez.
+- Chefes de Natal nascem em qualquer mapa (Vale, Planície do Guardião, Ermos ou Confins), sorteado, sem depender de onde os jogadores estão.
+
 ## 0.10.9 — animações dos monstros e Cérbero novo
 - Golens e Ente ganharam cotovelos e joelhos de verdade: passada pesada com o joelho dobrando, braços balançando com o cotovelo solto, guarda, levar dano com o joelho cedendo.
 - Golens: pisão (ergue os punhos e esmaga dobrando os joelhos), gancho de direita e de esquerda, arremesso de rocha (agacha, ergue e joga), investida e urro.
