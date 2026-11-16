@@ -1,5 +1,12 @@
 # Histórico de versões
 
+## 0.10.11 — magias mais bonitas
+- Fagulha Arcana (ataque do mago): brilho roxo macio com rastro de faíscas, sem a "bola branca" e sem o fio de laser.
+- Energia juntando na ponta da varinha antes de soltar a magia, e clarão no disparo.
+- Bola de Fogo com fumaça saindo atrás; explosões viraram bolas de fogo que crescem e sobem esfriando, com fumaça, faíscas e onda macia no chão (vale para todas as explosões do jogo).
+- Marca queimada no chão agora é macia e irregular, com brasas que apagam — acabou o disco preto que parecia um buraco.
+- Rachaduras do gelo e de golpes no chão mais suaves (sem linhas pretas grossas).
+
 ## 0.10.10 — pedras do tamanho de quem joga, rena e Noel
 - Tiros de monstro acompanham o tamanho de quem atira: goblin joga pedrinha, colosso e golem arremessam pedregulho (e de mais alto). Vale para pedra, gelo, fogo, magia e presentes, e os outros jogadores veem do mesmo tamanho.
 - Rena Maligna: pescoço reto (não fica mais em "Z"), galhada escura grande com pontas vermelhas, peito de pelo claro, rabo fofo e rédeas.
