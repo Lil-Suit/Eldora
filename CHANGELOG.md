@@ -1,5 +1,8 @@
 # Histórico de versões
 
+## v0.9.99 — App não "perde" os personagens com o servidor dormindo
+- Correção (achada pelo crítico do tribunal): com o servidor dormindo, o app abria rápido mas desistia da conta em 6 s, e os personagens sumiam da tela (pareciam perdidos). Agora a tela mostra **"Acordando o servidor do jogo…"** e espera até ~1 minuto; quando o servidor acorda, entra na conta sozinho.
+
 ## v0.9.98 — Planície do Guardião vira o mapa 2
 - A **Planície do Guardião** (a parte roxa ao norte do Planalto) agora é um **mapa separado: o mapa 2**.
   - Entra-se pelo **portal no norte do topo do Planalto da Fenda** (com tela de carregamento). Ao norte do Planalto o mapa 1 agora termina em montanha.
