@@ -1,5 +1,12 @@
 # Histórico de versões
 
+## 0.10.3 — mais leve no celular
+- Nova opção **Distância de visão** (Configurações → Gráficos): Curta / Média / Longa. Celular começa em Curta.
+- Monstros calmos e longe pensam menos vezes por segundo; lista de jogadores montada 1x por quadro; chão/ponte sem desotimizar (−25 a −40% de tempo dos monstros, bem menos lixo de memória).
+- Celular: monstros desenhados até 48 m; sombra redonda e brilho dos olhos só de perto; peças pequenas somem antes na Baixa.
+- NPCs atrás da câmera não são desenhados; armas e escudos numa peça só; chuva parada não desenha.
+- Botões de recarga não redesenham a cada quadro.
+
 ## v0.10.2 — Celular mais leve
 - **Mostrar FPS** volta a mostrar só o FPS.
 - Pelos números do seu print (o **desenho** era o que mais pesava: 23 ms com 270 objetos olhando a vila de longe):
