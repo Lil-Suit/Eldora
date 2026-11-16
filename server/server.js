@@ -11,7 +11,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.9.99'; // (a variável é só para testes)
+const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.10.0'; // (a variável é só para testes)
 
 // ---------- Erros do servidor → Sentry (só no Render; sem dados pessoais) ----------
 const SENTRY_DSN = process.env.SENTRY_DSN || 'https://8ffc505d8bfbef96c829cace57608900@o4512419115499520.ingest.us.sentry.io/4512419158622208';
@@ -730,6 +730,12 @@ function onMessage(peer, text) {
     }
     // selo de GM: quem decide é o servidor (o que o jogador mandar é ignorado)
     if (d && m.topic === 'chat') d.gm = peer.gm ? 1 : 0;
+    // estado dos monstros de UM mapa (o anfitrião manda separado por mapa): só para quem está nele
+    if (m.topic === 'mob' && d && typeof d.ar === 'string' && d.s) {
+      const f = frame(JSON.stringify({ t: 'msg', topic: 'mob', peer: peer.id, data: d }));
+      for (const p of peers.values()) { if (p.sv !== peer.sv || p === peer || (p.presence?.ar || 'world') !== d.ar) continue; try { if (p.sock && !p.sock.destroyed) p.sock.write(f); } catch { /* ignora */ } }
+      return;
+    }
     broadcast({ t: 'msg', topic: m.topic, peer: peer.id, data: m.data ?? null }, peer.sv);
   }
   if (m.t === 'ping') send(peer, { t: 'pong', at: m.at });
@@ -739,26 +745,50 @@ function onMessage(peer, text) {
 // e avisa todo mundo, então nunca há dois mundos diferentes. É quem está há mais tempo conectado
 // ENTRE os que estão jogando de verdade (personagem em jogo, tela aberta e mandando sinal nos últimos 8 s).
 const lastHost = new Map(); // servidor -> anfitrião
+// Anfitrião (quem simula os monstros do servidor): prefere PC a celular (celular esquenta e trava com o mundo todo);
+// entre iguais, quem entrou primeiro. Fica com o atual enquanto ele servir (trocar reinicia os monstros de todos).
 function pickHost(sv) {
-  const now = Date.now(); let best = null;
+  const now = Date.now(), ok = (p) => p && p.sv === sv && !p.old && !p.linger && p.presence?.c && p.presence.v !== 0 && now - p.updatedAt <= 8000;
+  let best = null;
   for (const p of peers.values()) {
-    if (p.sv !== sv || p.old || p.linger || !p.presence?.c || p.presence.v === 0 || now - p.updatedAt > 8000) continue;
-    if (!best || p.joined < best.joined) best = p;
+    if (!ok(p)) continue;
+    if (!best || (p.presence.mb ? 1 : 0) < (best.presence.mb ? 1 : 0) || ((p.presence.mb ? 1 : 0) === (best.presence.mb ? 1 : 0) && p.joined < best.joined)) best = p;
   }
+  const cur = peers.get(lastHost.get(sv));
+  if (ok(cur) && best && (cur.presence.mb ? 1 : 0) <= (best.presence.mb ? 1 : 0)) return cur.id;
   return best ? best.id : null;
 }
 setInterval(() => { for (const { id } of SERVERS) if (pickHost(id) !== (lastHost.get(id) ?? null)) peersChanged(id); }, 2000);
 
 // lista de jogadores (de cada servidor): enviada no máximo a cada 50 ms (posições chegam quase em tempo real)
 const pending = new Map();
+// Lista de jogadores: no máximo 10 vezes por segundo (antes até 30). Cada um recebe a posição em tempo real só de
+// quem está no MESMO mapa; os de outros mapas vão inteiros 1 vez por segundo (no meio, só "continua aí": keep).
+const lastFull = new Map();
 function peersChanged(sv = 1) {
   if (pending.get(sv)) return;
   pending.set(sv, setTimeout(() => {
     pending.delete(sv);
-    const list = [...peers.values()].filter((p) => !p.old && p.sv === sv).map((p) => ({ peer: p.id, presence: { ...p.presence, gm: p.gm ? 1 : 0, lg: p.linger ? 1 : 0 }, updatedAt: p.updatedAt }));
+    const now = Date.now();
+    const all = [...peers.values()].filter((p) => !p.old && p.sv === sv);
+    const ent = new Map(all.map((p) => [p.id, { peer: p.id, presence: { ...p.presence, gm: p.gm ? 1 : 0, lg: p.linger ? 1 : 0 }, updatedAt: p.updatedAt }]));
     const host = pickHost(sv); lastHost.set(sv, host);
-    broadcast({ t: 'peers', peers: list, host, now: Date.now() }, sv);
-  }, 33));
+    const full = now - (lastFull.get(sv) || 0) >= 1000;
+    if (full) { lastFull.set(sv, now); return broadcast({ t: 'peers', peers: [...ent.values()], host, now }, sv); }
+    const byArea = new Map();
+    for (const r of peers.values()) {
+      if (r.sv !== sv || !r.sock) continue;
+      const ar = r.presence?.ar || 'world';
+      let f = byArea.get(ar);
+      if (!f) {
+        const same = [], keep = [];
+        for (const p of all) ((p.presence?.ar || 'world') === ar ? same.push(ent.get(p.id)) : keep.push(p.id));
+        f = frame(JSON.stringify({ t: 'peers', peers: same, keep, partial: 1, host, now }));
+        byArea.set(ar, f);
+      }
+      try { if (!r.sock.destroyed) r.sock.write(f); } catch { /* ignora */ }
+    }
+  }, 100));
 }
 
 // limpa bloqueios vencidos

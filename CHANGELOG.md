@@ -1,5 +1,33 @@
 # Histórico de versões
 
+## v0.10.0 — Tribunal das IAs, lote 1: fim do lag
+Decidido por um "tribunal" (proponente, crítico, juiz e veredito) que leu o código inteiro.
+- **Celular:**
+  - no máximo **60 FPS**: telas de 90/120 Hz faziam o dobro de trabalho e esquentavam o aparelho;
+  - quem instala agora começa no gráfico **Baixa** (PC continua na Média);
+  - na Baixa, as tochas não acendem luz própria.
+- **Resolução automática** (agora vale também no Ultra leve):
+  - quando trava, tira primeiro as sombras e depois baixa a nitidez;
+  - quando o jogo fica folgado, volta sozinha.
+- **Menos peso na tela:**
+  - outros jogadores longe (além de ~65 m) não são desenhados nem animados;
+  - monstros fora da vista não calculam ossos;
+  - as nuvens são desenhadas de uma vez só;
+  - as partículas mandam à placa de vídeo só o trecho vivo;
+  - as barras da tela só se redesenham quando mudam.
+- **Anfitrião** (quem simula os monstros):
+  - prefere **PC a celular** e não troca à toa;
+  - a conta de "monstros se empurrando" deixou de comparar todos com todos.
+- **Rede:**
+  - a posição vai 10× por segundo, antes eram 20×;
+  - a lista de jogadores sai no máximo 10× por segundo, antes eram até 30×;
+  - posição em tempo real só de quem está no **mesmo mapa**;
+  - monstros só para quem está no mapa deles.
+- **Guardião da Fenda:** se ninguém lutar com ele por 1 minuto, **recupera a vida toda**. Acabou o "morre, renasce e volta" até vencer.
+- **Servidor dormindo:**
+  - o aviso diz "até 1 min e meio";
+  - se não acordar, os personagens da conta **continuam na lista** ("aguardando servidor"), com o botão **Tentar de novo**.
+
 ## v0.9.99 — App não "perde" os personagens com o servidor dormindo
 - Correção (achada pelo crítico do tribunal): com o servidor dormindo, o app abria rápido mas desistia da conta em 6 s, e os personagens sumiam da tela (pareciam perdidos). Agora a tela mostra **"Acordando o servidor do jogo…"** e espera até ~1 minuto; quando o servidor acorda, entra na conta sozinho.
 
