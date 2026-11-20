@@ -1,5 +1,12 @@
 # Histórico de versões
 
+## 0.10.13 — Ultra realismo, parte 2: as árvores
+- Só no gráfico "Ultra realismo" (as outras qualidades não mudam nada):
+- Árvores de verdade nas mesmas posições: tronco com casca em relevo afinando, raízes entrando no chão, galhos, copa irregular de muitos cachos de folhas pequenas com tons variados, miolo sombreado e o sol atravessando as folhas; balançam com o vento.
+- Pinheiros com camadas de agulhas e raminhos pendentes; os da vila e da tundra com neve acumulada nos galhos.
+- Carvalhos, bétulas, moitas, árvores mortas retorcidas (Ermos, Guardião, Planalto, Vulcão), árvore antiga e dourada, e nos Confins: árvore do pântano com barba-de-velho, cacto com gomos, juncos, capim alto, cogumelos que brilham à noite e arbustos secos.
+- Perto detalhadas, longe leves; no celular o detalhe vem mais curto.
+
 ## 0.10.12 — Ultra realismo, parte 1: o chão
 - Só no gráfico "Ultra realismo" (as outras qualidades não mudam nada):
 - Solo novo desenhado por pixel: grama com falhas de terra, terra com cascalho, rocha nas encostas, areia com ondinhas, neve que brilha, lama com poças, chão rachado com brasas (Guardião e Ermos), chão de floresta com folhas e musgo; estradas com marcas de roda e bordas irregulares; beira d'água molhada.
