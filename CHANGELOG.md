@@ -1,5 +1,12 @@
 # Histórico de versões
 
+## 0.10.12 — Ultra realismo, parte 1: o chão
+- Só no gráfico "Ultra realismo" (as outras qualidades não mudam nada):
+- Solo novo desenhado por pixel: grama com falhas de terra, terra com cascalho, rocha nas encostas, areia com ondinhas, neve que brilha, lama com poças, chão rachado com brasas (Guardião e Ermos), chão de floresta com folhas e musgo; estradas com marcas de roda e bordas irregulares; beira d'água molhada.
+- Matinhos de verdade: capim balançando com o vento, flores, folhagem rasteira, pedrinhas, folhas secas e gravetos em volta de você, sumindo suave na distância. Nada nasce em estrada, água, casas ou plantações; a grama deita em volta do herói e dos monstros para não esconder ninguém.
+- No celular vem metade das plantinhas (mesmo visual, bem mais leve).
+- Mapa, alturas e colisões continuam iguais.
+
 ## 0.10.11 — magias mais bonitas
 - Fagulha Arcana (ataque do mago): brilho roxo macio com rastro de faíscas, sem a "bola branca" e sem o fio de laser.
 - Energia juntando na ponta da varinha antes de soltar a magia, e clarão no disparo.
