@@ -1,5 +1,12 @@
 # Histórico de versões
 
+## 0.10.15 — Ultra realismo, parte 3: as construções
+- Só no gráfico "Ultra realismo" (as outras qualidades não mudam nada):
+- Materiais de verdade em todas as construções: pedra em blocos com argamassa, líquen, sujeira escorrida e musgo; reboco de cal manchado com umidade e tijolo à mostra; madeira com veios e tábuas; telhado nevado macio; metal com ferrugem; arenito e gelo nas megaestruturas dos Confins.
+- Casas da vila com vigas aparentes, molduras, peitoris e venezianas nas janelas, batente e ferragens na porta, degrau de pedra, chaminé com chapéu; no Natal, neve na beirada com pingentes de gelo.
+- Janelas com vidro de dia e luz quente com cortinas à noite; pedras soltas no pé das paredes e hera no Vale; cristais facetados e murais com relevo.
+- Mesmas posições, formas e colisões.
+
 ## 0.10.14 — mundo no servidor (preparação para servidor próprio 24h)
 - Novo "mundo no servidor": num servidor próprio, uma página sem tela roda monstros, chefes, eventos e dia/noite para todos. Nenhum celular/PC de jogador vira mais "anfitrião" — menos lag para todo mundo. Ela é invisível (não aparece, não conta como jogador, não salva nada).
 - Instalador para servidor 24h (Oracle Cloud grátis, Hetzner…): HTTPS automático, liga sozinho e se atualiza sozinho pelo GitHub a cada 5 min.
