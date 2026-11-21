@@ -11,7 +11,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.10.13'; // (a variável é só para testes)
+const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.10.14'; // (a variável é só para testes)
 
 // ---------- Erros do servidor → Sentry (só no Render; sem dados pessoais) ----------
 const SENTRY_DSN = process.env.SENTRY_DSN || 'https://8ffc505d8bfbef96c829cace57608900@o4512419115499520.ingest.us.sentry.io/4512419158622208';
@@ -123,6 +123,9 @@ const PORT = +process.env.PORT || 10000;
 // SERVIDORES (mundos): cada um tem seus próprios jogadores à vista, monstros, eventos, raids e bate-papo.
 // Contas, personagens, mercado, banco e diamantes são os mesmos em todos (como no Rucoy).
 const SERVERS = [{ id: 1, name: 'Eldoria 1' }, { id: 2, name: 'Eldoria 2' }];
+// "Mundo no servidor" (server/mundo.mjs): página sem tela que entra com esta chave e vira o anfitrião fixo.
+// Sem a variável MUNDO_KEY (ex.: no Render), nada muda: o anfitrião continua sendo um jogador.
+const MUNDO_KEY = String(process.env.MUNDO_KEY || '');
 const svOf = (v) => { const n = parseInt(v, 10); return SERVERS.some((x) => x.id === n) ? n : 1; };
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.css': 'text/css', '.glb': 'model/gltf-binary', '.wasm': 'application/wasm' };
@@ -528,6 +531,8 @@ async function market(req, res, p, owner) {
 }
 
 const server = http.createServer((req, res) => {
+  // mudou de casa (ex.: Render → servidor próprio): REDIRECT_TO=https://novo-endereco manda todo mundo para lá
+  if (process.env.REDIRECT_TO && !String(req.url || '').startsWith('/ws')) { res.writeHead(301, { Location: process.env.REDIRECT_TO.replace(/\/$/, '') + (req.url || '/') }); return res.end(); }
   let p = decodeURIComponent((req.url || '/').split('?')[0]);
   if (p === '/health') { res.writeHead(200, { 'content-type': 'text/plain' }); return res.end('ok ' + peers.size); }
   if (p.startsWith('/api/')) return api(req, res, p);
@@ -557,8 +562,9 @@ server.on('upgrade', (req, sock) => {
   sock.setNoDelay(true);
   const id = 'p' + (++seq).toString(36) + crypto.randomBytes(3).toString('hex');
   const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || sock.remoteAddress || '?';
-  const sv = svOf(new URL(req.url || '/', 'http://x').searchParams.get('sv'));
-  const peer = { id, ip, sv, sock, presence: {}, joined: Date.now(), updatedAt: Date.now(), buf: Buffer.alloc(0), alive: true, rate: { t: Date.now(), n: 0 } };
+  const qs = new URL(req.url || '/', 'http://x').searchParams, sv = svOf(qs.get('sv'));
+  const bot = MUNDO_KEY.length >= 12 && qs.get('mundo') === MUNDO_KEY;
+  const peer = { id, ip, sv, bot, sock, presence: {}, joined: Date.now(), updatedAt: Date.now(), buf: Buffer.alloc(0), alive: true, rate: { t: Date.now(), n: 0 } };
   peers.set(id, peer);
   send(peer, { t: 'hello', peer: id, now: Date.now(), sv });
   peersChanged(sv);
@@ -702,7 +708,7 @@ function onMessage(peer, text) {
     if (cid && pendingPvp.has(cid)) { send(peer, { t: 'pvpdead', ...pendingPvp.get(cid) }); pendingPvp.delete(cid); }
     // jogo aberto numa versão antiga (aba velha, cópia velha em cache): fica isolado e recebe "atualizar"
     // — assim uma aba velha não vira anfitriã e não bagunça os monstros de quem está na versão nova
-    const old = !!m.p.n && m.p.vv !== VERSION;
+    const old = (!!m.p.n || peer.bot) && m.p.vv !== VERSION;
     if (old && !peer.oldSent) { peer.oldSent = true; send(peer, { t: 'maint' }); }
     if (old !== !!peer.old) { peer.old = old; }
     return peersChanged(peer.sv);
@@ -748,6 +754,10 @@ const lastHost = new Map(); // servidor -> anfitrião
 // Anfitrião (quem simula os monstros do servidor): prefere PC a celular (celular esquenta e trava com o mundo todo);
 // entre iguais, quem entrou primeiro. Fica com o atual enquanto ele servir (trocar reinicia os monstros de todos).
 function pickHost(sv) {
+  // mundo no servidor ligado e respondendo: ele é sempre o anfitrião (nenhum jogador carrega o mundo)
+  const now0 = Date.now(), okBot = (p) => p && p.bot && p.sv === sv && !p.old && p.sock && now0 - p.updatedAt <= 8000;
+  const curB = peers.get(lastHost.get(sv)); if (okBot(curB)) return curB.id;
+  for (const p of peers.values()) if (okBot(p)) return p.id;
   const now = Date.now(), ok = (p) => p && p.sv === sv && !p.old && !p.linger && p.presence?.c && p.presence.v !== 0 && now - p.updatedAt <= 8000;
   let best = null;
   for (const p of peers.values()) {

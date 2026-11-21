@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## 0.10.14 — mundo no servidor (preparação para servidor próprio 24h)
+- Novo "mundo no servidor": num servidor próprio, uma página sem tela roda monstros, chefes, eventos e dia/noite para todos. Nenhum celular/PC de jogador vira mais "anfitrião" — menos lag para todo mundo. Ela é invisível (não aparece, não conta como jogador, não salva nada).
+- Instalador para servidor 24h (Oracle Cloud grátis, Hetzner…): HTTPS automático, liga sozinho e se atualiza sozinho pelo GitHub a cada 5 min.
+- No Render nada muda (sem a chave do mundo, o anfitrião continua sendo um jogador). O Render pode redirecionar para o endereço novo.
+
 ## 0.10.13 — Ultra realismo, parte 2: as árvores
 - Só no gráfico "Ultra realismo" (as outras qualidades não mudam nada):
 - Árvores de verdade nas mesmas posições: tronco com casca em relevo afinando, raízes entrando no chão, galhos, copa irregular de muitos cachos de folhas pequenas com tons variados, miolo sombreado e o sol atravessando as folhas; balançam com o vento.
