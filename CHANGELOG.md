@@ -1,5 +1,13 @@
 # Histórico de versões
 
+## 0.10.16 — Ultra realismo, parte 4: luz, céu e água
+- Só no gráfico "Ultra realismo" (as outras qualidades não mudam nada):
+- Céu de verdade: sol com halo, lua, estrelas que cintilam, Via Láctea e nuvens com volume e borda prateada.
+- Luz que muda com a hora: nascer e pôr do sol dourados, sombras iluminadas pelo céu, noite de lua azulada (jogável), tempestade escurecendo o céu.
+- Acabamento de cinema: brilho suave nas luzes, sombra de contato, raios de sol, neblina baixa de manhã, exposição que se adapta e cor própria de cada mapa. No celular, versão mais leve.
+- Água nova (Vale, Ermos e Confins): reflexo do céu, mais escura no fundo, espuma na beira e brilho do sol e da lua.
+- Partículas de ambiente: poeira no sol, vaga-lumes, folhas, neve, brasas e esporos conforme o lugar e a hora.
+
 ## 0.10.15 — Ultra realismo, parte 3: as construções
 - Só no gráfico "Ultra realismo" (as outras qualidades não mudam nada):
 - Materiais de verdade em todas as construções: pedra em blocos com argamassa, líquen, sujeira escorrida e musgo; reboco de cal manchado com umidade e tijolo à mostra; madeira com veios e tábuas; telhado nevado macio; metal com ferrugem; arenito e gelo nas megaestruturas dos Confins.
