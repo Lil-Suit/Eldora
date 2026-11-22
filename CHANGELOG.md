@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## 0.10.17 — grama do Ultra sem "círculo"
+- Ultra realismo: a grama agora vai bem mais longe e vai baixando aos poucos na distância — acabou o círculo de capim em volta do personagem.
+- Nova opção em Configurações > Gráficos: "Grama e matinhos do Ultra realismo" (desligue para tirar o capim, flores e pedrinhas e deixar mais leve; o chão realista continua).
+- Servidor pronto para o app da Play Store (arquivo de verificação do app).
+
 ## 0.10.16 — Ultra realismo, parte 4: luz, céu e água
 - Só no gráfico "Ultra realismo" (as outras qualidades não mudam nada):
 - Céu de verdade: sol com halo, lua, estrelas que cintilam, Via Láctea e nuvens com volume e borda prateada.

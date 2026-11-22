@@ -11,7 +11,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.10.16'; // (a variável é só para testes)
+const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.10.17'; // (a variável é só para testes)
 
 // ---------- Erros do servidor → Sentry (só no Render; sem dados pessoais) ----------
 const SENTRY_DSN = process.env.SENTRY_DSN || 'https://8ffc505d8bfbef96c829cace57608900@o4512419115499520.ingest.us.sentry.io/4512419158622208';
@@ -533,6 +533,14 @@ async function market(req, res, p, owner) {
 const server = http.createServer((req, res) => {
   // mudou de casa (ex.: Render → servidor próprio): REDIRECT_TO=https://novo-endereco manda todo mundo para lá
   if (process.env.REDIRECT_TO && !String(req.url || '').startsWith('/ws')) { res.writeHead(301, { Location: process.env.REDIRECT_TO.replace(/\/$/, '') + (req.url || '/') }); return res.end(); }
+  // app da Play Store (Trusted Web Activity): prova que o site é do app → abre em tela cheia, sem barra de endereço.
+  // Configure ANDROID_PACKAGE (ex.: com.eldoria.app) e ANDROID_SHA256 (impressão digital da chave, "AA:BB:…"; várias separadas por vírgula).
+  if ((req.url || '').split('?')[0] === '/.well-known/assetlinks.json') {
+    const pkg = String(process.env.ANDROID_PACKAGE || ''), fps = String(process.env.ANDROID_SHA256 || '').split(',').map((x) => x.trim()).filter(Boolean);
+    if (!pkg || !fps.length) { res.writeHead(404); return res.end('[]'); }
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=300' });
+    return res.end(JSON.stringify([{ relation: ['delegate_permission/common.handle_all_urls'], target: { namespace: 'android_app', package_name: pkg, sha256_cert_fingerprints: fps } }]));
+  }
   let p = decodeURIComponent((req.url || '/').split('?')[0]);
   if (p === '/health') { res.writeHead(200, { 'content-type': 'text/plain' }); return res.end('ok ' + peers.size); }
   if (p.startsWith('/api/')) return api(req, res, p);

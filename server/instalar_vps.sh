@@ -72,6 +72,9 @@ DATABASE_URL=$DBU
 GMS=$GMSV
 GOOGLE_CLIENT_ID=$GCID
 MONTARIAS=$MONT
+# app da Play Store (preencha depois de gerar o app no PWABuilder):
+ANDROID_PACKAGE=
+ANDROID_SHA256=
 ENV
 fi
 
