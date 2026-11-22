@@ -766,7 +766,8 @@ function pickHost(sv) {
   const now0 = Date.now(), okBot = (p) => p && p.bot && p.sv === sv && !p.old && p.sock && now0 - p.updatedAt <= 8000;
   const curB = peers.get(lastHost.get(sv)); if (okBot(curB)) return curB.id;
   for (const p of peers.values()) if (okBot(p)) return p.id;
-  const now = Date.now(), ok = (p) => p && p.sv === sv && !p.old && !p.linger && p.presence?.c && p.presence.v !== 0 && now - p.updatedAt <= 8000;
+  // nh: 1 = cliente que nunca simula o mundo (app nativo da Godot): nunca vira anfitrião
+  const now = Date.now(), ok = (p) => p && p.sv === sv && !p.old && !p.linger && p.presence?.c && p.presence.v !== 0 && !p.presence.nh && now - p.updatedAt <= 8000;
   let best = null;
   for (const p of peers.values()) {
     if (!ok(p)) continue;

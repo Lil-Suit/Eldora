@@ -1,0 +1,74 @@
+; ELDORIA — versão nativa (Godot 4.5). Ver LEIA-ME.md.
+
+config_version=5
+
+[application]
+
+config/name="ELDORIA"
+config/description="RPG de ação 3D multiplayer — o mesmo mundo do jogo web."
+run/main_scene="res://cenas/principal.tscn"
+config/features=PackedStringArray("4.5", "GL Compatibility")
+config/icon="res://icon.png"
+boot_splash/bg_color=Color(0.05, 0.04, 0.08, 1)
+boot_splash/image="res://icon.png"
+boot_splash/fullsize=false
+
+[autoload]
+
+Dados="*res://scripts/dados.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/size/mode=3
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=4
+window/vsync/vsync_mode=1
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=false
+pointing/emulate_mouse_from_touch=false
+
+[physics]
+
+common/physics_ticks_per_second=30
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true
+lights_and_shadows/directional_shadow/size=2048
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality=2
+anti_aliasing/quality/msaa_3d=1
+environment/defaults/default_clear_color=Color(0.74, 0.85, 0.94, 1)
+
+[shader_globals]
+
+eld_hemi_sky={
+"type": "vec3",
+"value": Vector3(0.3, 0.33, 0.36)
+}
+eld_hemi_ground={
+"type": "vec3",
+"value": Vector3(0.1, 0.08, 0.05)
+}
+eld_fog_color={
+"type": "vec3",
+"value": Vector3(0.5, 0.6, 0.7)
+}
+eld_fog_range={
+"type": "vec2",
+"value": Vector2(55, 215)
+}
+eld_sun={
+"type": "vec3",
+"value": Vector3(2.7, 2.4, 1.9)
+}
+eld_time={
+"type": "float",
+"value": 0.0
+}

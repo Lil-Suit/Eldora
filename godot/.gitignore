@@ -1,0 +1,4 @@
+# cache do editor/importação (a Godot recria ao abrir o projeto)
+.godot/
+/android/
+*.tmp
