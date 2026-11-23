@@ -11,7 +11,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.10.17'; // (a variável é só para testes)
+const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.10.18'; // (a variável é só para testes)
 
 // ---------- Erros do servidor → Sentry (só no Render; sem dados pessoais) ----------
 const SENTRY_DSN = process.env.SENTRY_DSN || 'https://8ffc505d8bfbef96c829cace57608900@o4512419115499520.ingest.us.sentry.io/4512419158622208';
@@ -94,15 +94,27 @@ async function openStore() {
   };
 }
 
-function hashPass(pass, salt = crypto.randomBytes(16).toString('hex')) {
-  const hash = crypto.scryptSync(pass, salt, 32).toString('hex');
-  return { salt, hash };
+// scrypt assíncrono: conferir senha não trava o servidor (antes, uma enxurrada de logins congelava o jogo de todos)
+const scryptA = (pass, salt) => new Promise((ok, no) => crypto.scrypt(String(pass), String(salt), 32, (e, k) => (e ? no(e) : ok(k))));
+async function hashPass(pass, salt = crypto.randomBytes(16).toString('hex')) {
+  return { salt, hash: (await scryptA(pass, salt)).toString('hex') };
 }
-function checkPass(pass, salt, hash) {
-  const h = crypto.scryptSync(pass, salt, 32);
-  const ref = Buffer.from(hash, 'hex');
-  return ref.length === h.length && crypto.timingSafeEqual(h, ref);
+async function checkPass(pass, salt, hash) {
+  try {
+    const h = await scryptA(pass, salt), ref = Buffer.from(String(hash || ''), 'hex');
+    return ref.length === h.length && crypto.timingSafeEqual(h, ref);
+  } catch { return false; }
 }
+// Senha errada demais na MESMA conta: trava os logins dela por 15 min (funciona mesmo se o atacante trocar de IP)
+const loginFails = new Map(); // conta → { n, at }
+const LOCK_N = 10, LOCK_MS = 15 * 60000;
+function loginLocked(name) { const f = loginFails.get(name); return !!f && f.n >= LOCK_N && Date.now() - f.at < LOCK_MS; }
+function loginFail(name) {
+  const now = Date.now(), f = loginFails.get(name);
+  if (!f || now - f.at > LOCK_MS) loginFails.set(name, { n: 1, at: now }); else f.n++;
+  if (loginFails.get(name).n === LOCK_N) segLog('login_travado', name, { tentativas: LOCK_N }, 0);
+}
+const LOCK_MSG = 'Muitas senhas erradas nesta conta. Espere 15 minutos.';
 const newToken = () => crypto.randomBytes(24).toString('hex');
 
 const REPO = path.resolve(HERE, '..');
@@ -131,6 +143,287 @@ const svOf = (v) => { const n = parseInt(v, 10); return SERVERS.some((x) => x.id
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.css': 'text/css', '.glb': 'model/gltf-binary', '.wasm': 'application/wasm' };
 const BLOCK = /(^|\/)(\.|server\/|src\/|tools\/|test\/|node_modules\/|package)/;
 const store = await openStore();
+
+// =============================================================
+// SEGURANÇA (anti-trapaça). O mundo roda no navegador dos jogadores, então o servidor confere o que dá:
+// saves que sobem rápido demais, ouro que aparece do nada, golpes PvP impossíveis, excesso de mensagens,
+// nomes falsos e roupas premium sem compra. Regra: na dúvida ele REGISTRA (server/seguranca.log e o comando
+// /seguranca no chat do GM) e no máximo corrige o valor para o maior possível. Nunca apaga save nem bane sozinho.
+// =============================================================
+const SEG = '~seg', SEG_LOG_DOC = '~seglog';
+// donos especiais de documentos: ninguém pode criar uma conta com esses nomes (ex.: "__diamantes__" lia e escrevia os diamantes de todos)
+const SPECIAL_OWNERS = new Set(['__diamantes__', '~names', '~dir', '~mail', '~market', SEG, SEG_LOG_DOC]);
+const PROD = !!(process.env.RENDER || process.env.DATABASE_URL || process.env.NODE_ENV === 'production');
+// nome de GM só se cria com GMS_REGISTRO=1 (num banco novo ou sem banco, qualquer um viraria GM criando a conta "lil")
+const nameBlocked = (name) => SPECIAL_OWNERS.has(name) || /^[_~]{2}/.test(name) || (PROD && GMS.has(name) && process.env.GMS_REGISTRO !== '1');
+const isGmName = (a) => GMS.has(String(a || '').toLowerCase());
+const cleanStr = (v, max) => String(v ?? '').replace(/[\u0000-\u001f\u007f<>]/g, '').trim().slice(0, max);
+const toInt = (v, lo, hi, def = lo) => { const n = Math.floor(+v); return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : def; };
+// links no bate-papo viram [link] (golpes de "diamante grátis", sites +18)
+const LINK_RE = /\b(?:https?:\/\/|www\.)\S+|\b[\w-]{2,}\.(?:com|net|org|gg|io|xyz|ru|ly|link|top|tk|shop|online|site|app)(?:\.br)?\b(?:\/\S*)?/gi;
+const maskLinks = (t) => String(t).replace(LINK_RE, '[link]');
+// regras do jogo (src/core/items.js) para conferir itens do mercado; se a pasta src/ não estiver no servidor, confere só o formato
+let CORE = null;
+import('../src/core/items.js').then((m) => { CORE = m; }).catch(() => console.log('[segurança] src/core/items.js não encontrado: o mercado confere só o formato dos itens'));
+
+// ---- registro (arquivo + últimos 300 no banco, para o GM ver com /seguranca mesmo depois de reiniciar) ----
+const SEG_FILE = process.env.SEG_LOG || path.join(HERE, 'seguranca.log');
+const segRecent = [], segSeen = new Map();
+let segTimer = null;
+store.getDoc(SEG_LOG_DOC, 'log').then((d) => { if (Array.isArray(d?.list)) segRecent.unshift(...d.list.slice(-300)); }).catch(() => {});
+function segLog(tipo, quem, info = {}, every = 60000) {
+  try {
+    const k = tipo + '|' + quem, now = Date.now();
+    if (every && now - (segSeen.get(k) || 0) < every) return;
+    segSeen.set(k, now); if (segSeen.size > 5000) segSeen.clear();
+    const e = { t: new Date(now).toISOString(), tipo, quem: String(quem || '?').slice(0, 40), info: Object.entries(info).map(([a, b]) => a + '=' + (typeof b === 'string' ? b : JSON.stringify(b))).join(' ').slice(0, 300) };
+    segRecent.push(e); if (segRecent.length > 300) segRecent.shift();
+    console.warn('[segurança]', e.tipo, e.quem, e.info);
+    fs.appendFile(SEG_FILE, JSON.stringify(e) + '\n', () => {});
+    if (!segTimer) segTimer = setTimeout(() => { segTimer = null; store.setDoc(SEG_LOG_DOC, 'log', { list: segRecent.slice(-300) }).catch(() => {}); }, 20000);
+  } catch { /* nunca derruba o servidor */ }
+}
+
+// ---- cabeçalhos de segurança (sem travar o jogo dentro do Claude: a página continua podendo abrir em moldura) ----
+function secHeaders(req, res) {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Content-Security-Policy', "object-src 'none'; base-uri 'self'");
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  if (String(req.headers['x-forwarded-proto'] || '').startsWith('https')) res.setHeader('Strict-Transport-Security', 'max-age=15552000');
+}
+
+// ---- limites de quantidade (balde de fichas) ----
+function bucket(o, k, cap, perSec) {
+  const now = Date.now(), B = (o.bk ||= {}), b = (B[k] ||= { n: cap, t: now });
+  b.n = Math.min(cap, b.n + ((now - b.t) / 1000) * perSec); b.t = now;
+  if (b.n < 1) return false;
+  b.n -= 1; return true;
+}
+const apiBuckets = new Map();
+function apiBucket(owner) { let o = apiBuckets.get(owner); if (!o) apiBuckets.set(owner, (o = {})); o.t = Date.now(); return bucket(o, 'api', 240, 4); }
+
+// ---- XP (cópia de src/core/progression.js: curva do Rucoy, nível máximo 1000) ----
+const MAX_LEVEL = 1000;
+const xpToNext = (L) => (L >= MAX_LEVEL ? Infinity : Math.max(5, Math.round((Math.pow(L + 1, 3 + (L + 1) / 1000) - Math.pow(L, 3 + L / 1000)) * 0.95)));
+const XP_AT = (() => { const a = [0, 0]; for (let L = 1; L < MAX_LEVEL; L++) a[L + 1] = a[L] + xpToNext(L); return a; })();
+const xpTotal = (l, xp) => XP_AT[toInt(l, 1, MAX_LEVEL)] + Math.max(0, Math.min(+xp || 0, 1e13));
+function levelOfXp(t) { let lo = 1, hi = MAX_LEVEL; while (lo < hi) { const m = (lo + hi + 1) >> 1; if (XP_AT[m] <= t) lo = m; else hi = m - 1; } return { level: lo, xp: lo >= MAX_LEVEL ? 0 : Math.max(0, Math.floor(t - XP_AT[lo])) }; }
+// o máximo que dá para ganhar honestamente (bem folgado): 3 chefes mais fortes de uma vez + 1 milhão de XP por minuto
+const BOSS_XP = xpToNext(168) * 2.5;
+const xpAllow = (ms) => 3 * BOSS_XP + (1e6 * Math.min(ms, 60 * 864e5)) / 60000;
+// ouro: 1 milhão + 20 mil por nível de uma vez, e 50 mil + 2 mil por nível por minuto (vender a bolsa cheia de lendários cabe)
+const goldAllow = (lvl, ms) => Math.round(1e6 + 2e4 * lvl + ((5e4 + 2e3 * lvl) * Math.min(ms, 60 * 864e5)) / 60000);
+const GOLD_MAX = 2e9;
+
+// ---- livro-caixa de cada conta (dono "~seg"): o servidor anota de onde o ouro pode vir ----
+// ch: último save conferido de cada personagem { g ouro, x XP total, l nível, t hora, n nome }
+// deb: ouro que SAIU do banco (vira saque no personagem ou transferência)   bcred: ouro que o banco pode receber (correio)
+// cred: ouro que o personagem pode receber (vendas no mercado)   pend: ouro que precisa SAIR de um personagem (depósito, compra)
+const H = 3600e3;
+function ledgerNorm(d, now = Date.now()) {
+  const L = d && typeof d === 'object' ? d : {};
+  const keep = (a, ms) => (Array.isArray(a) ? a.filter((x) => x && x.n > 0 && now - x.t < ms).slice(-200) : []);
+  return { ch: L.ch && typeof L.ch === 'object' ? L.ch : {}, bank: L.bank || null, deb: keep(L.deb, 6 * H), cred: keep(L.cred, 24 * H), bcred: keep(L.bcred, 24 * H), pend: keep(L.pend, H), nov: Array.isArray(L.nov) ? L.nov.filter((t) => now - t < 864e5) : [] };
+}
+const ledgerGet = async (a) => ledgerNorm(await store.getDoc(SEG, a));
+const ledgerSet = (a, L) => store.setDoc(SEG, a, L);
+const sumN = (a) => a.reduce((s, x) => s + x.n, 0);
+function take(a, n) { let got = 0; while (n - got > 0 && a.length) { const x = a[0], k = Math.min(x.n, n - got); x.n -= k; got += k; if (x.n <= 0) a.shift(); } return got; }
+const acctQ = new Map(); // uma operação por vez em cada conta
+function acctLock(a, fn) {
+  const prev = acctQ.get(a) || Promise.resolve(), r = prev.then(fn, fn), tail = r.then(() => {}, () => {});
+  acctQ.set(a, tail); tail.then(() => { if (acctQ.get(a) === tail) acctQ.delete(a); });
+  return r;
+}
+const charCredit = (a, n, k) => acctLock(a, async () => { const L = await ledgerGet(a); L.cred.push({ n, t: Date.now(), k }); await ledgerSet(a, L); });
+const bankCredit = (a, n) => acctLock(a, async () => { const L = await ledgerGet(a); L.bcred.push({ n, t: Date.now() }); await ledgerSet(a, L); });
+// personagens que o livro ainda não viu (primeira vez depois desta versão): lê os saves guardados
+async function seedChars(owner, L) {
+  if (Object.keys(L.ch).length) return;
+  for (const d of await store.listDocs(owner)) {
+    if (!String(d.id).startsWith('rift_char_')) continue;
+    try { const p = JSON.parse(d.data.json).player; L.ch[d.id.slice(10)] = { g: toInt(p.gold, 0, GOLD_MAX, 0), x: xpTotal(p.level, p.xp), l: toInt(p.level, 1, MAX_LEVEL), t: Date.now(), n: cleanStr(p.name, 16) }; } catch { /* save estranho: ignora */ }
+  }
+}
+
+// trocas entre jogadores (o ouro passa de um para o outro pelo navegador): o servidor anota as ofertas que viu
+const tradeFin = new Map(), tradeOffer = new Map(); // "contaA|contaB" → hora da troca concluída · quem recebe → Map(quem dá → { n, t })
+function noteTrade(from, to, d, now) {
+  if (!from.account || !to.account || from.account === to.account) return;
+  if (d.type === 'tr_off') { let mm = tradeOffer.get(to.account); if (!mm) tradeOffer.set(to.account, (mm = new Map())); mm.set(from.account, { n: toInt(d.gold, 0, 1e7, 0), t: now }); }
+  if (d.type === 'tr_fin') tradeFin.set([from.account, to.account].sort().join('|'), now);
+}
+async function tradeTake(owner, need, now) {
+  let got = 0;
+  for (const [from, o] of tradeOffer.get(owner) || []) {
+    if (need - got <= 0) break;
+    const fin = tradeFin.get([owner, from].sort().join('|')) || 0;
+    if (!o.n || now - o.t > 15 * 60000 || fin < o.t - 2000 || now - fin > 15 * 60000) continue;
+    const G = await ledgerGet(from), has = Math.max(0, Math.max(0, ...Object.values(G.ch).map((c) => c.g || 0)) - sumN(G.pend)); // quem deu tinha esse ouro?
+    const k = Math.min(need - got, o.n, has);
+    if (k <= 0) continue;
+    o.n -= k; got += k;
+    acctLock(from, async () => { const L = await ledgerGet(from); L.pend.push({ n: k, t: Date.now() }); await ledgerSet(from, L); }); // precisa sair de quem deu
+  }
+  return got;
+}
+
+// ---- save de personagem: nível/XP e ouro não podem subir mais rápido que o possível ----
+async function checkChar(owner, id, body, write) {
+  let st = null;
+  if (!isGmName(owner) && typeof body.json === 'string') { try { st = JSON.parse(body.json); } catch { st = null; } }
+  const p = st?.player;
+  if (!p || typeof p !== 'object') return write(); // GM ou formato desconhecido: guarda como veio
+  const cid = id.slice(10);
+  return acctLock(owner, async () => {
+    const now = Date.now(), Lg = await ledgerGet(owner), prev = Lg.ch[cid], notes = {};
+    let lvl = toInt(p.level, 1, MAX_LEVEL), gold = toInt(p.gold, 0, GOLD_MAX, 0), fix = lvl !== p.level || gold !== p.gold;
+    if (fix) notes.fora_do_limite = { nivel: p.level, ouro: p.gold };
+    let tx = xpTotal(lvl, p.xp);
+    if (prev && prev.t) {
+      const dt = Math.max(0, now - prev.t);
+      const maxX = prev.x + xpAllow(dt);
+      if (tx > maxX) { const o = levelOfXp(maxX); notes.xp = { nivel: lvl, virou: o.level, minutos: Math.round(dt / 60000) }; lvl = o.level; p.xp = o.xp; tx = xpTotal(lvl, o.xp); fix = true; }
+      else if (tx - prev.x > 0.6 * xpAllow(dt) && tx - prev.x > 2e6) segLog('xp_rapido', owner, { personagem: cleanStr(p.name, 16), nivel: `${prev.l}→${lvl}`, minutos: Math.round(dt / 60000) }, 10 * 60000);
+      const up = gold - prev.g;
+      if (up > 0) {
+        let need = up;
+        need -= take(Lg.deb, need);   // saque do banco
+        need -= take(Lg.cred, need);  // vendas no mercado
+        if (need > 0) need -= await tradeTake(owner, need, now); // troca com outro jogador
+        const allow = Math.max(0, goldAllow(prev.l, dt) - sumN(Lg.pend)); // depósito/compra que ainda não saiu do personagem
+        if (need > allow) { const cut = need - allow; notes.ouro = { antes: prev.g, veio: gold, ficou: gold - cut, minutos: Math.round(dt / 60000) }; gold -= cut; fix = true; }
+      } else if (up < 0) take(Lg.pend, -up);
+    } else if (!prev && !(await store.getDoc(owner, id)) && (lvl > 10 || gold > 50000)) {
+      // personagem novo (ou trazido por código de save) já avançado: até 3 por dia passam (e ficam registrados)
+      if (Lg.nov.length >= 3) { notes.novo = { nivel: lvl, ouro: gold }; if (lvl > 10) { lvl = 10; p.xp = 0; tx = xpTotal(10, 0); } gold = Math.min(gold, 50000); fix = true; }
+      else { Lg.nov.push(now); segLog('personagem_novo_avancado', owner, { personagem: cleanStr(p.name, 16), nivel: lvl, ouro: gold }, 0); }
+    }
+    const pts = Object.values(p.attrs || {}).reduce((a, v) => a + Math.max(0, +v || 0), 0) + Math.max(0, +p.freePoints || 0);
+    if (pts > Math.floor(1.5 * (lvl - 1)) + 3 && !p.gmBoost) segLog('atributos_demais', owner, { personagem: cleanStr(p.name, 16), pontos: pts, nivel: lvl }, 30 * 60000);
+    p.level = lvl; p.gold = gold;
+    if (fix) { body.json = JSON.stringify(st); segLog('save_corrigido', owner, { personagem: cleanStr(p.name, 16), ...notes }, 0); }
+    body.level = lvl; // o resumo (lista de personagens, ranking) segue o save conferido
+    Lg.ch[cid] = { g: gold, x: tx, l: lvl, t: now, n: cleanStr(p.name, 16) };
+    await ledgerSet(owner, Lg);
+    for (const q of peers.values()) if (q.account === owner && q.presence?.id === cid) q.lvlCap = lvl;
+    return write();
+  });
+}
+
+// ---- banco: só sobe com correio recebido, transferência devolvida ou depósito de ouro que existe nos personagens ----
+// (se recusar, o jogo desfaz o depósito sozinho: o ouro volta para a bolsa)
+async function checkBank(owner, body, write) {
+  if (isGmName(owner)) { await write(); return null; }
+  return acctLock(owner, async () => {
+    const now = Date.now(), Lg = await ledgerGet(owner), g = toInt(body.gold, 0, GOLD_MAX, 0);
+    body.gold = g;
+    let prev = Lg.bank ? toInt(Lg.bank.g, 0, GOLD_MAX, 0) : null;
+    if (prev === null) { const s = await store.getDoc(owner, 'rift_bank'); prev = s ? toInt(s.gold, 0, GOLD_MAX, 0) : 0; }
+    const d = g - prev;
+    if (d < 0) Lg.deb.push({ n: -d, t: now });
+    else if (d > 0) {
+      let need = d;
+      need -= take(Lg.bcred, need); // correio recebido
+      need -= take(Lg.deb, need);   // transferência que falhou e voltou
+      if (need > 0) {
+        await seedChars(owner, Lg);
+        const ch = Object.values(Lg.ch), lv = Math.max(1, ...ch.map((c) => c.l || 1));
+        const free = ch.reduce((a, c) => a + (c.g || 0), 0) - sumN(Lg.pend) + goldAllow(lv, 5 * 60000);
+        if (need > free) { segLog('banco_recusado', owner, { antes: prev, veio: g, sem_origem: need - Math.max(0, free) }, 0); return 'O banco recusou: esse ouro não está nos seus personagens.'; }
+        Lg.pend.push({ n: need, t: now }); // tem que sair de um personagem no próximo save
+      }
+    }
+    Lg.bank = { g, t: now };
+    await ledgerSet(owner, Lg);
+    await write();
+    return null;
+  });
+}
+
+// ---- mercado: quem compra precisa ter o ouro (no último save conferido, com folga para os últimos segundos) ----
+async function buyerCheck(owner, price) {
+  if (isGmName(owner)) return null;
+  return acctLock(owner, async () => {
+    const now = Date.now(), Lg = await ledgerGet(owner);
+    await seedChars(owner, Lg);
+    const ch = Object.values(Lg.ch);
+    if (!ch.length) return null;
+    const best = Math.max(...ch.map((c) => (c.g || 0) + ((5e4 + 2e3 * (c.l || 1)) * Math.min(now - (c.t || now), 10 * 60000)) / 60000)) + 100000 + sumN(Lg.deb) + sumN(Lg.cred);
+    if (price > best) { segLog('mercado_sem_ouro', owner, { preco: price, tinha: Math.round(best - 100000) }, 0); return 'O servidor ainda não viu esse ouro no seu personagem. Espere alguns segundos e tente de novo.'; }
+    Lg.pend.push({ n: price, t: now }); // o preço tem que sair do personagem
+    await ledgerSet(owner, Lg);
+    return null;
+  });
+}
+
+// ---- jogadores conectados: roupa premium só com compra, nome só do dono, nível do save conferido ----
+const FX_SKU = { geada: 'fx_geada', ouro: 'fx_ouro', trovao: 'fx_trovao' };
+function loadOwned(peer) {
+  if (!peer.account) { peer.owns = new Set(); return; }
+  diaGet(peer.account).then((d) => { peer.owns = new Set(d.spent.flatMap((x) => [x.sku, ...(DIA_LEGACY[x.sku] || [])])); }).catch(() => {});
+}
+function loadLvlCap(peer, cid = peer.presence?.id) {
+  if (!peer.account || !cid || peer.gm) return;
+  ledgerGet(peer.account).then((L) => { if (peer.presence?.id === cid && L.ch[cid]) peer.lvlCap = L.ch[cid].l; }).catch(() => {});
+}
+function vetName(peer) {
+  const n = peer.presence?.n;
+  if (typeof n !== 'string' || !n || peer.nameOk === n || peer.nameChk === n) return;
+  peer.nameChk = n;
+  const key = nameKey(n);
+  Promise.all([store.getDoc(NAMES, key), key !== peer.account ? store.getUser(key) : null]).then(([reg, acc]) => {
+    peer.nameChk = null;
+    if ((reg?.owner && reg.owner !== peer.account) || acc) { peer.nameBad = n; segLog('nome_de_outro', peer.account || peer.ip, { nome: n }, 10 * 60000); peersChanged(peer.sv); }
+    else peer.nameOk = n;
+  }).catch(() => { peer.nameChk = null; });
+}
+function cleanPresence(peer, raw, now) {
+  const p = {};
+  for (const [k, v] of Object.entries(raw).slice(0, 60)) {
+    if (v === null || typeof v === 'boolean' || (typeof v === 'number' && Number.isFinite(v))) p[k] = v;
+    else if (typeof v === 'string') p[k] = v.slice(0, k === 'eq' ? 800 : 120);
+  }
+  if (p.n !== undefined) p.n = cleanStr(p.n, 16);
+  const ready = peer.authDone || now - peer.joined > 10000; // espera a conta ser conferida (alguns segundos)
+  if (ready && !peer.gm && !peer.bot) {
+    if (typeof p.sk === 'string' && DIA_PRICES['hs_' + p.sk] && !peer.owns?.has('hs_' + p.sk)) { segLog('roupa_sem_compra', peer.account || peer.ip, { roupa: p.sk }, 10 * 60000); p.sk = 'campones'; }
+    if (FX_SKU[p.fx] && !peer.owns?.has(FX_SKU[p.fx])) { segLog('efeito_sem_compra', peer.account || peer.ip, { efeito: p.fx }, 10 * 60000); p.fx = 'nenhum'; }
+    if (p.n) { if (p.n === peer.nameBad) p.n = 'Viajante'; else { peer.presence = { ...peer.presence, n: p.n }; vetName(peer); } }
+    if (peer.lvlCap && +p.l > peer.lvlCap + 2) p.l = peer.lvlCap;
+  }
+  moveCheck(peer, p, now);
+  return p;
+}
+// velocidade: só registra (portais, pergaminhos e renascer são saltos e não contam)
+function moveCheck(peer, p, now) {
+  if (peer.gm || peer.bot || !p.c || p.d) { peer.mv = null; return; }
+  const x = +p.x, z = +p.z, ar = p.ar || 'world';
+  if (!Number.isFinite(x) || !Number.isFinite(z)) return;
+  const v = peer.mv;
+  if (!v || v.ar !== ar) { peer.mv = { x, z, ar, wx: x, wz: z, wt: now, tp: 0, tpT: now }; return; }
+  if (Math.hypot(x - v.x, z - v.z) > 40) { v.tp++; v.wx = x; v.wz = z; v.wt = now; } // teleporte
+  else if (now - v.wt >= 3000) {
+    const sp = Math.hypot(x - v.wx, z - v.wz) / ((now - v.wt) / 1000), max = p.mt || MONTARIAS[peer.account] ? 200 : 35;
+    if (sp > max) segLog('velocidade', peer.account || peer.ip, { nome: p.n, m_por_s: Math.round(sp), area: ar }, 5 * 60000);
+    v.wx = x; v.wz = z; v.wt = now;
+  }
+  v.x = x; v.z = z;
+  if (now - v.tpT > 60000) { if (v.tp > 15) segLog('teleportes', peer.account || peer.ip, { nome: p.n, por_minuto: v.tp }, 5 * 60000); v.tp = 0; v.tpT = now; }
+}
+// golpe PvP: confere as regras no servidor (antes valia qualquer dano, de qualquer distância, até em quem saiu do jogo)
+function pvpHitOk(a, t, d, now) {
+  const A = a.presence || {}, T = t.presence || {}, who = a.account || a.ip;
+  if (!bucket(a, 'vh', 12, 8)) return false;
+  if (a.gm || t.gm || !A.c || A.d || T.d || +A.pv !== 2 || (+A.l || 0) < 30 || !(+T.pv >= 1 || +T.pk > 0) || (A.pt && A.pt === T.pt) || (A.ar || 'world') !== (T.ar || 'world')) return false;
+  const dist = Math.hypot((+A.x || 0) - (+T.x || 0), (+A.z || 0) - (+T.z || 0));
+  if (!(dist <= 60)) { segLog('pvp_longe', who, { nome: A.n, metros: Math.round(dist) }, 5 * 60000); return false; }
+  const cap = 400 * (Math.min(+A.l || 1, a.lvlCap || MAX_LEVEL) + 30);
+  if (!(+d.dmg <= cap)) { segLog('pvp_dano', who, { nome: A.n, dano: Math.round(+d.dmg) || String(d.dmg).slice(0, 20), max: cap }, 5 * 60000); d.dmg = cap; }
+  (t.hitAt ||= new Map()).set(a.id, now);
+  return true;
+}
 
 // ---------------- contas e saves (HTTP /api) ----------------
 // Montarias especiais por conta (apelido em minúsculas). Mude sem mexer no código com a variável
@@ -188,21 +481,24 @@ async function api(req, res, p) {
       if (pass.length < 6 || pass.length > 100) return json(res, 400, { error: 'A senha precisa ter pelo menos 6 caracteres.' });
       if (mode === 'login') {
         if (!byEmail) return json(res, 404, { error: 'Esse e-mail ainda não tem conta. Crie uma.' });
-        if (!checkPass(pass, byEmail.salt, byEmail.hash)) return json(res, 401, { error: 'Senha incorreta.' });
+        if (loginLocked(byEmail.name)) return json(res, 429, { error: LOCK_MSG });
+        if (!(await checkPass(pass, byEmail.salt, byEmail.hash))) { loginFail(byEmail.name); return json(res, 401, { error: 'Senha incorreta.' }); }
+        loginFails.delete(byEmail.name);
         return json(res, 200, { token: byEmail.token, user: byEmail.nick || byEmail.name });
       }
       if (byEmail) return json(res, 409, { error: 'Esse e-mail já tem uma conta. Entre com a senha.' });
-      const nick = String(b.nick || '').trim(), name = nick.toLowerCase();
+      const nick = cleanStr(String(b.nick || '').trim(), 20), name = nick.toLowerCase();
       if (mode === 'register') {
         if (!NAME_RE.test(name)) return json(res, 400, { error: 'Apelido: 3 a 20 letras, números, ponto, traço ou _.' });
-        if (await store.getUser(name)) return json(res, 409, { error: 'Esse apelido já está em uso. Escolha outro.' });
-        const { salt, hash } = hashPass(pass), token = newToken();
+        if (nameBlocked(name) || await store.getUser(name)) return json(res, 409, { error: 'Esse apelido já está em uso. Escolha outro.' });
+        const { salt, hash } = await hashPass(pass), token = newToken();
         await store.addUser({ name, nick, salt, hash, token, email });
         return json(res, 200, { token, user: nick });
       }
       if (mode === 'link') { // conta antiga (sem Google): apelido + senha antigos e liga ao e-mail
         const u = await store.getUser(name);
-        if (!u || !checkPass(pass, u.salt, u.hash)) return json(res, 401, { error: 'Apelido ou senha da conta antiga incorretos.' });
+        if (u && loginLocked(u.name)) return json(res, 429, { error: LOCK_MSG });
+        if (!u || !(await checkPass(pass, u.salt, u.hash))) { if (u) loginFail(u.name); return json(res, 401, { error: 'Apelido ou senha da conta antiga incorretos.' }); }
         if (u.email) return json(res, 409, { error: 'Essa conta já está ligada a outro e-mail.' });
         await store.setEmail(name, email);
         return json(res, 200, { token: u.token, user: u.nick || u.name, montaria: MONTARIAS[u.name] || null, gm: GMS.has(u.name) });
@@ -222,20 +518,24 @@ async function api(req, res, p) {
         const name = login, email = String(b.email || '').trim().toLowerCase();
         if (!NAME_RE.test(name)) return json(res, 400, { error: 'Apelido: 3 a 20 letras, números, ponto, traço ou _.' });
         if (!EMAIL_RE.test(email)) return json(res, 400, { error: 'Digite um e-mail válido.' });
-        if (await store.getUser(name)) return json(res, 409, { error: 'Esse apelido já está em uso. Escolha outro.' });
+        if (nameBlocked(name) || await store.getUser(name)) return json(res, 409, { error: 'Esse apelido já está em uso. Escolha outro.' });
         if (await store.userByEmail(email)) return json(res, 409, { error: 'Esse e-mail já tem uma conta. Entre com ele.' });
-        const { salt, hash } = hashPass(pass), token = newToken();
-        await store.addUser({ name, nick: String(b.user || '').trim(), salt, hash, token, email });
+        const { salt, hash } = await hashPass(pass), token = newToken();
+        await store.addUser({ name, nick: cleanStr(String(b.user || '').trim(), 20), salt, hash, token, email });
         return json(res, 200, { token, user: String(b.user || '').trim(), email });
       }
       // entrar: pode usar o e-mail OU o apelido
       const u = login.includes('@') ? await store.userByEmail(login) : await store.getUser(login);
-      if (!u || !checkPass(pass, u.salt, u.hash)) return json(res, 401, { error: 'E-mail/apelido ou senha incorretos.' });
+      if (u && loginLocked(u.name)) return json(res, 429, { error: LOCK_MSG });
+      if (!u || !(await checkPass(pass, u.salt, u.hash))) { if (u) loginFail(u.name); return json(res, 401, { error: 'E-mail/apelido ou senha incorretos.' }); }
+      loginFails.delete(u.name);
       return json(res, 200, { token: u.token, user: u.nick || u.name, email: u.email || null, montaria: MONTARIAS[u.name] || null, gm: GMS.has(u.name) });
     }
     const auth = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
     const owner = auth ? await store.userByToken(auth) : null;
     if (!owner) return json(res, 401, { error: 'Entre na sua conta de novo.' });
+    if (SPECIAL_OWNERS.has(owner)) { segLog('conta_reservada', owner, { ip }, 0); return json(res, 403, { error: 'Conta inválida.' }); }
+    if (!apiBucket(owner)) { segLog('api_excesso', owner, { ip }); return json(res, 429, { error: 'Muitos pedidos. Espere um pouco.' }); }
     if (p === '/api/me') { const u = await store.getUser(owner); return json(res, 200, { user: u?.nick || owner, email: u?.email || null, store: store.kind, montaria: MONTARIAS[String(owner).toLowerCase()] || null, gm: GMS.has(String(owner).toLowerCase()) }); }
     // ---- diamantes 💎: o saldo fica SÓ no servidor (o jogador não consegue escrever) ----
     if (p === '/api/dia' && req.method === 'GET') { const d = await diaGet(owner); return json(res, 200, { total: d.total, spent: d.spent, balance: diaBal(d), gm: GMS.has(String(owner).toLowerCase()) }); }
@@ -250,6 +550,7 @@ async function api(req, res, p) {
         if (diaBal(d) < price) return json(res, 400, { error: `Faltam ${price - diaBal(d)} 💎.` });
         d.spent.push({ sku, p: price, t: Date.now() }); if (d.spent.length > 500) d.spent = d.spent.slice(-500);
         await store.setDoc(DIA_OWNER, String(owner).toLowerCase(), d);
+        for (const q of peers.values()) if (q.account === owner) loadOwned(q); // a roupa nova já vale para os outros verem
         return json(res, 200, { ok: true, balance: diaBal(d), spent: d.spent });
       });
     }
@@ -270,7 +571,8 @@ async function api(req, res, p) {
     if (p === '/api/email' && req.method === 'POST') {
       const b = await readBody(req, 2048), email = String(b.email || '').trim().toLowerCase(), u = await store.getUser(owner);
       if (!EMAIL_RE.test(email)) return json(res, 400, { error: 'Digite um e-mail válido.' });
-      if (!u || !checkPass(String(b.pass || ''), u.salt, u.hash)) return json(res, 401, { error: 'Senha incorreta.' });
+      if (loginLocked(owner)) return json(res, 429, { error: LOCK_MSG });
+      if (!u || !(await checkPass(String(b.pass || ''), u.salt, u.hash))) { loginFail(owner); return json(res, 401, { error: 'Senha incorreta.' }); }
       const other = await store.userByEmail(email);
       if (other && other.name !== owner) return json(res, 409, { error: 'Esse e-mail já está em outra conta.' });
       await store.setEmail(owner, email);
@@ -282,6 +584,7 @@ async function api(req, res, p) {
     // ---- ferramentas de GM (só contas da lista GMS): ver uma conta e trocar a senha de quem esqueceu ----
     if (p.startsWith('/api/gm/') && req.method === 'POST') {
       if (!GMS.has(String(owner).toLowerCase())) return json(res, 403, { error: 'Só GM.' });
+      if (p === '/api/gm/seguranca') return json(res, 200, { ok: true, list: segRecent.slice(-15).map((e) => `${e.t.slice(5, 16).replace('T', ' ')} ${e.tipo} · ${e.quem}${e.info ? ' · ' + e.info : ''}`) });
       const b = (await readBody(req, 4096)) || {}, who = String(b.user || '').trim().toLowerCase();
       const u = who.includes('@') ? await store.userByEmail(who) : await store.getUser(who);
       if (!u) return json(res, 404, { error: `Não existe conta "${b.user}" neste servidor${store.kind === 'arquivo' ? ' (ATENÇÃO: servidor SEM banco de dados — as contas somem a cada atualização)' : ''}.` });
@@ -290,7 +593,8 @@ async function api(req, res, p) {
       if (p === '/api/gm/senha') {
         const np = String(b.pass || '');
         if (np.length < 4 || np.length > 100) return json(res, 400, { error: 'A senha nova precisa ter pelo menos 4 caracteres.' });
-        const { salt, hash } = hashPass(np);
+        const { salt, hash } = await hashPass(np);
+        loginFails.delete(u.name);
         await store.setPass(u.name, salt, hash, newToken()); // derruba as sessões antigas
         tries.clear();
         return json(res, 200, { ok: true, info: `Senha da conta "${u.nick || u.name}" trocada. Ela já pode entrar com a senha nova.` });
@@ -307,9 +611,18 @@ async function api(req, res, p) {
       if (reg && reg.owner && reg.owner !== owner) return json(res, 403, { error: 'Esse nome é de outra conta.' });
       const cur = (await store.getDoc(DIR, key)) || {};
       const num = (v, max) => Math.max(0, Math.min(max, Math.floor(+v || 0)));
-      const kills = Array.isArray(b.pk) ? b.pk.slice(-30).map((k) => ({ n: String(k.n || '').slice(0, 20), t: num(k.t, 9e15) })).filter((k) => k.n) : cur.pk || [];
-      await store.setDoc(DIR, key, { n, owner, code: String(b.code || '').slice(0, 12), l: num(b.l, 5000), c: ['guerreiro', 'mago', 'arqueiro'].includes(b.c) ? b.c : cur.c || '',
-        melee: num(b.melee, 5000), dist: num(b.dist, 5000), magic: num(b.magic, 5000), pvp: num(b.pvp, 1e7), deaths: num(b.deaths, 1e7), guild: String(b.guild || '').slice(0, 24), pk: kills, sv: num(b.sv, 9) || 1, t: Date.now() });
+      const kills = Array.isArray(b.pk) ? b.pk.slice(-30).map((k) => ({ n: cleanStr(k.n, 20), t: num(k.t, 9e15) })).filter((k) => k.n) : cur.pk || [];
+      // ranking: o nível vem do save que o servidor já conferiu (não do que o jogo diz) e os abates PvP não pulam
+      let lv = num(b.l, MAX_LEVEL), pvp = num(b.pvp, 1e7);
+      if (!isGmName(owner)) {
+        const Lg = await ledgerGet(owner), c = (reg?.charId && Lg.ch[reg.charId]) || Object.values(Lg.ch).find((x) => nameKey(x.n) === key);
+        const top = c ? c.l : Math.max(10, cur.l || 0);
+        if (lv > top) { segLog('ranking_nivel', owner, { nome: n, disse: lv, save: top }); lv = top; }
+        const pmax = cur.t ? (cur.pvp || 0) + 2 + Math.floor((Date.now() - cur.t) / 10000) : 50;
+        if (pvp > pmax) { segLog('ranking_pvp', owner, { nome: n, disse: pvp, max: pmax }); pvp = pmax; }
+      }
+      await store.setDoc(DIR, key, { n: cleanStr(n, 20), owner, code: cleanStr(b.code, 12), l: lv || 1, c: ['guerreiro', 'mago', 'arqueiro'].includes(b.c) ? b.c : cur.c || '',
+        melee: num(b.melee, 5000), dist: num(b.dist, 5000), magic: num(b.magic, 5000), pvp, deaths: num(b.deaths, 1e7), guild: cleanStr(b.guild, 24), pk: kills, sv: num(b.sv, 9) || 1, t: Date.now() });
       return json(res, 200, { ok: true });
     }
     if (p === '/api/dir' && req.method === 'GET') {
@@ -326,13 +639,22 @@ async function api(req, res, p) {
       if (!to || to === owner) return json(res, 400, { error: 'Escolha para quem enviar.' });
       if (!(gold > 0 && gold <= 100000000)) return json(res, 400, { error: 'Valor inválido.' });
       if (!(await store.getUser(to))) return json(res, 404, { error: 'Jogador não encontrado.' });
+      // o ouro precisa ter SAÍDO do banco de quem envia (o jogo salva o banco antes de enviar): ninguém cria ouro do nada
+      const okMail = isGmName(owner) || await acctLock(owner, async () => {
+        const Lg = await ledgerGet(owner);
+        if (sumN(Lg.deb) < gold) return false;
+        take(Lg.deb, gold); await ledgerSet(owner, Lg); return true;
+      });
+      if (!okMail) { segLog('correio_sem_saldo', owner, { ouro: gold, para: to }, 0); return json(res, 400, { error: 'Saldo do banco insuficiente.' }); }
       const id = 'g' + Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
-      await store.setDoc(MAIL, id, { to, from: owner, fromName: String(b.fromName || owner).slice(0, 20), gold, t: Date.now() });
+      await store.setDoc(MAIL, id, { to, from: owner, fromName: cleanStr(b.fromName || owner, 20), gold, t: Date.now() });
       return json(res, 200, { ok: true });
     }
     if (p === '/api/mail/take' && req.method === 'POST') {
       return mailLock(async () => {
         const mine = (await store.listDocs(MAIL)).filter((d) => d.data?.to === owner);
+        const total = mine.reduce((a, d) => a + Math.max(0, Math.floor(+d.data?.gold || 0)), 0);
+        if (total > 0) await bankCredit(owner, total); // o banco de quem recebe pode subir esse tanto
         for (const d of mine) await store.delDoc(MAIL, d.id);
         return json(res, 200, { mail: mine.map((d) => d.data) });
       });
@@ -343,11 +665,16 @@ async function api(req, res, p) {
       const id = m[1];
       if (req.method === 'GET') { const d = await store.getDoc(owner, id); return json(res, 200, { exists: !!d, data: d }); }
       if (req.method === 'PUT') {
+        // presente de nível: só um GM pode deixar (antes qualquer um se dava nível 1000 escrevendo este documento)
+        if (id === 'rift_grant' && !isGmName(owner)) { segLog('presente_falso', owner, { ip }, 0); return json(res, 403, { error: 'Só GM.' }); }
         const b = await readBody(req);
-        if (!b || typeof b !== 'object') return json(res, 400, { error: 'dados inválidos' });
+        if (!b || typeof b !== 'object' || Array.isArray(b)) return json(res, 400, { error: 'dados inválidos' });
         const docs = await store.listDocs(owner);
         if (!docs.some((d) => d.id === id) && docs.length >= 40) return json(res, 400, { error: 'limite de documentos' });
-        await store.setDoc(owner, id, b);
+        // personagens e banco: o servidor confere nível, XP e ouro antes de guardar
+        if (id.startsWith('rift_char_')) await checkChar(owner, id, b, () => store.setDoc(owner, id, b));
+        else if (id === 'rift_bank') { const err = await checkBank(owner, b, () => store.setDoc(owner, id, b)); if (err) return json(res, 400, { error: err }); }
+        else await store.setDoc(owner, id, b);
         return json(res, 200, { ok: true });
       }
       if (req.method === 'DELETE') { await store.delDoc(owner, id); return json(res, 200, { ok: true }); }
@@ -497,12 +824,14 @@ async function market(req, res, p, owner) {
       if (!(price >= 1 && price <= 9999999)) return json(res, 400, { error: 'Preço entre 1 e 9.999.999.' });
       if (!item || item.length > 6000) return json(res, 400, { error: 'Item inválido.' });
       try { const it = JSON.parse(item); if (!it || !['equip', 'material', 'consumable'].includes(it.kind)) throw 0; } catch { return json(res, 400, { error: 'Item inválido.' }); }
+      // com as regras do jogo (src/core/items.js): item que não existe, de missão ou preso à alma não vai à venda
+      if (CORE) { const ok = CORE.sanitizeEntry(item, { next: Math.random }); if (!ok || !CORE.tradable(ok)) { segLog('mercado_item_invalido', owner, { item: item.slice(0, 120) }, 0); return json(res, 400, { error: 'Item inválido.' }); } }
       const L = await all();
       const max = await mktMax(owner);
       if (L.filter((l) => l.seller === owner && l.status === 'open').length >= max) return json(res, 400, { error: max >= MKT_TOP ? `No máximo ${MKT_TOP} anúncios por jogador.` : `Seus ${max} espaços de venda estão cheios. Compre +${MKT_EXTRA} espaços por 💎100.`, full: true, max });
       if (L.length >= 2000) return json(res, 400, { error: 'O mercado está cheio agora. Tente mais tarde.' });
       const id = 'm' + Date.now().toString(36) + crypto.randomBytes(4).toString('hex');
-      const data = { item, name: String(b.name || '').slice(0, 60), price, seller: owner, sellerName: String(b.sellerName || owner).slice(0, 20), t: Date.now(), status: 'open' };
+      const data = { item, name: cleanStr(b.name, 60), price, seller: owner, sellerName: cleanStr(b.sellerName || owner, 20), t: Date.now(), status: 'open' };
       await store.setDoc(MKT, id, data);
       return json(res, 200, { listing: { id, ...data } });
     }
@@ -517,13 +846,17 @@ async function market(req, res, p, owner) {
       }
       if (l.seller === owner) return json(res, 400, { error: 'Você não pode comprar o próprio item.' });
       if (Date.now() - (l.t || 0) > MKT_DAYS * 864e5) return json(res, 409, { error: 'Este anúncio expirou.' });
-      await store.setDoc(MKT, id, { ...l, status: 'sold', buyer: owner, buyerName: String(b.buyerName || owner).slice(0, 20), soldAt: Date.now() });
+      // quem compra precisa ter o ouro no save guardado (com folga para o que ganhou nos últimos segundos)
+      const why = await buyerCheck(owner, l.price);
+      if (why) return json(res, 400, { error: why });
+      await store.setDoc(MKT, id, { ...l, status: 'sold', buyer: owner, buyerName: cleanStr(b.buyerName || owner, 20), soldAt: Date.now() });
       return json(res, 200, { item: l.item, price: l.price });
     }
     if (p === '/api/market/collect') {
       // ouro das vendas: entrega uma vez só e apaga os anúncios vendidos
       let total = 0, n = 0;
       for (const l of await all()) if (l.seller === owner && l.status === 'sold') { await store.delDoc(MKT, l.id); total += Math.floor(l.price * (1 - MKT_FEE / 100)); n++; }
+      if (total > 0) await charCredit(owner, total, 'mercado'); // o ouro do personagem pode subir esse tanto
       return json(res, 200, { total, n });
     }
     return json(res, 404, { error: 'não encontrado' });
@@ -531,6 +864,10 @@ async function market(req, res, p, owner) {
 }
 
 const server = http.createServer((req, res) => {
+  try { handle(req, res); } catch (e) { reportError(e, 'http'); try { res.writeHead(400); res.end('Bad request'); } catch { /* já respondeu */ } }
+});
+function handle(req, res) {
+  secHeaders(req, res);
   // mudou de casa (ex.: Render → servidor próprio): REDIRECT_TO=https://novo-endereco manda todo mundo para lá
   if (process.env.REDIRECT_TO && !String(req.url || '').startsWith('/ws')) { res.writeHead(301, { Location: process.env.REDIRECT_TO.replace(/\/$/, '') + (req.url || '/') }); return res.end(); }
   // app da Play Store (Trusted Web Activity): prova que o site é do app → abre em tela cheia, sem barra de endereço.
@@ -541,13 +878,15 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=300' });
     return res.end(JSON.stringify([{ relation: ['delegate_permission/common.handle_all_urls'], target: { namespace: 'android_app', package_name: pkg, sha256_cert_fingerprints: fps } }]));
   }
-  let p = decodeURIComponent((req.url || '/').split('?')[0]);
+  // endereço com % quebrado (ex.: /%E0%A4%A) derrubava o servidor inteiro: agora é só "não encontrado"
+  let p; try { p = decodeURIComponent((req.url || '/').split('?')[0]); } catch { res.writeHead(400); return res.end('Bad request'); }
+  if (p.includes('\0')) { res.writeHead(400); return res.end('Bad request'); }
   if (p === '/health') { res.writeHead(200, { 'content-type': 'text/plain' }); return res.end('ok ' + peers.size); }
   if (p.startsWith('/api/')) return api(req, res, p);
   if (p === '/site' || p === '/ranking') p = '/site.html';
   if (p.endsWith('/')) p += 'index.html';
   const file = path.normalize(path.join(ROOT, p));
-  if (!file.startsWith(ROOT) || BLOCK.test(path.relative(ROOT, file).replace(/\\/g, '/'))) { res.writeHead(404); return res.end('Not found'); }
+  if (!(file === ROOT || file.startsWith(ROOT + path.sep)) || BLOCK.test(path.relative(ROOT, file).replace(/\\/g, '/'))) { res.writeHead(404); return res.end('Not found'); }
   fs.readFile(file, (err, buf) => {
     if (err) { res.writeHead(404); return res.end('Not found'); }
     // x-eldoria: o app instalado (service worker) só guarda/usa respostas que vieram mesmo do jogo,
@@ -555,7 +894,7 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'content-type': TYPES[path.extname(file)] || 'application/octet-stream', 'cache-control': p.endsWith('index.html') || p.endsWith('sw.js') ? 'no-cache' : 'public, max-age=3600', 'x-eldoria': VERSION });
     res.end(buf);
   });
-});
+}
 
 // ---------------- WebSocket mínimo (RFC 6455, só texto) ----------------
 const peers = new Map(); // id -> { sock, presence, updatedAt, buf, alive, rate }
@@ -570,8 +909,9 @@ server.on('upgrade', (req, sock) => {
   sock.setNoDelay(true);
   const id = 'p' + (++seq).toString(36) + crypto.randomBytes(3).toString('hex');
   const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || sock.remoteAddress || '?';
-  const qs = new URL(req.url || '/', 'http://x').searchParams, sv = svOf(qs.get('sv'));
-  const bot = MUNDO_KEY.length >= 12 && qs.get('mundo') === MUNDO_KEY;
+  let qs; try { qs = new URL(req.url || '/', 'http://x').searchParams; } catch { return sock.destroy(); }
+  const sv = svOf(qs.get('sv')), mk = String(qs.get('mundo') || '');
+  const bot = MUNDO_KEY.length >= 12 && mk.length === MUNDO_KEY.length && crypto.timingSafeEqual(Buffer.from(mk), Buffer.from(MUNDO_KEY));
   const peer = { id, ip, sv, bot, sock, presence: {}, joined: Date.now(), updatedAt: Date.now(), buf: Buffer.alloc(0), alive: true, rate: { t: Date.now(), n: 0 } };
   peers.set(id, peer);
   send(peer, { t: 'hello', peer: id, now: Date.now(), sv });
@@ -699,33 +1039,60 @@ function onMessage(peer, text) {
   peer.alive = true;
   const now = Date.now();
   if (now - peer.rate.t > 1000) { peer.rate.t = now; peer.rate.n = 0; }
-  if (++peer.rate.n > 120) return; // limite de mensagens por segundo
+  if (++peer.rate.n > 120) { if (peer.rate.n === 121) segLog('ws_flood', peer.account || peer.ip, { por_segundo: 120 }); return; } // limite de mensagens por segundo
   let m; try { m = JSON.parse(text); } catch { return; }
   if (!m || typeof m !== 'object') return;
   // a conta da conexão (o jogo manda o token logo depois de entrar): só assim o servidor sabe quem é GM
   if (m.t === 'auth' && typeof m.token === 'string' && m.token.length < 200) {
-    store.userByToken(m.token).then((name) => { peer.account = name || null; peer.gm = !!name && GMS.has(String(name).toLowerCase()); peersChanged(peer.sv); }).catch(() => {});
+    if (now - (peer.authAt || 0) < 3000) return; // cada pedido consulta o banco: no máximo 1 a cada 3 s
+    peer.authAt = now;
+    store.userByToken(m.token).then((name) => {
+      if (SPECIAL_OWNERS.has(name)) name = null;
+      peer.account = name || null; peer.gm = !!name && GMS.has(String(name).toLowerCase()); peer.authDone = true;
+      loadOwned(peer); loadLvlCap(peer); vetName(peer);
+      peersChanged(peer.sv);
+    }).catch(() => {});
     return;
   }
-  if (m.t === 'pres' && m.p && typeof m.p === 'object') {
+  if (m.t === 'pres' && m.p && typeof m.p === 'object' && !Array.isArray(m.p)) {
+    if (text.length > 4096) { segLog('presenca_grande', peer.account || peer.ip, { bytes: text.length }); return; }
+    const pr = cleanPresence(peer, m.p, now);
     // o mesmo personagem conectou de novo (saiu e entrou, recarregou a página): a conexão antiga cai na hora (sem "clone" parado)
-    const cid = typeof m.p.id === 'string' && m.p.id ? m.p.id : null;
-    if (cid && peer.presence?.id !== cid) for (const o of peers.values()) if (o !== peer && o.presence?.id === cid) { send(o, { t: 'kicked' }); setTimeout(() => drop(o, !!o.linger), 50); }
-    peer.presence = m.p; peer.updatedAt = now;
+    const cid = typeof pr.id === 'string' && pr.id ? pr.id : null;
+    if (cid && peer.presence?.id !== cid) {
+      for (const o of peers.values()) if (o !== peer && o.presence?.id === cid) { send(o, { t: 'kicked' }); setTimeout(() => drop(o, !!o.linger), 50); }
+      peer.lvlCap = null; if (peer.authDone) loadLvlCap(peer, cid);
+    }
+    peer.presence = pr; peer.updatedAt = now;
     // morreu no PvP enquanto estava fora (personagem ficou no mundo por causa do block): avisa ao voltar
     if (cid && pendingPvp.has(cid)) { send(peer, { t: 'pvpdead', ...pendingPvp.get(cid) }); pendingPvp.delete(cid); }
     // jogo aberto numa versão antiga (aba velha, cópia velha em cache): fica isolado e recebe "atualizar"
     // — assim uma aba velha não vira anfitriã e não bagunça os monstros de quem está na versão nova
-    const old = (!!m.p.n || peer.bot) && m.p.vv !== VERSION;
+    const old = (!!pr.n || peer.bot) && pr.vv !== VERSION;
     if (old && !peer.oldSent) { peer.oldSent = true; send(peer, { t: 'maint' }); }
     if (old !== !!peer.old) { peer.old = old; }
     return peersChanged(peer.sv);
   }
   if (m.t === 'emit' && TOPICS.has(m.topic)) {
-    if (peer.old) return; // versão antiga: não fala com os outros
-    const d = m.data && typeof m.data === 'object' ? m.data : null;
-    // bate-papo e privado: palavras +18 bloqueiam o chat por 30 minutos
-    if (d && (m.topic === 'chat' || d.type === 's_dm')) {
+    if (peer.old || (!peer.bot && peer.presence?.vv !== VERSION)) return; // versão antiga (ou nem entrou no jogo): não fala com os outros
+    const d = m.data && typeof m.data === 'object' && !Array.isArray(m.data) ? m.data : null;
+    if (!d) return;
+    const host = lastHost.get(peer.sv), isHost = !!host && host === peer.id, who = peer.account || peer.ip;
+    // tamanho e quantidade por tipo (o anfitrião manda o estado dos monstros: sem limite próprio)
+    const L = m.topic === 'chat' ? [1500, 5, 0.5] : m.topic === 'fx' ? [32768, 120, 40] : isHost ? [65536, 0, 0] : [8192, 45, 35];
+    if (text.length > L[0]) { segLog('msg_grande', who, { tipo: m.topic, bytes: text.length }); return; }
+    if (L[1] && !bucket(peer, m.topic, L[1], L[2])) { segLog('flood_' + m.topic, who, { n: peer.presence?.n }); return; }
+    // monstros: só o anfitrião manda o estado; os outros só mandam o dano que causaram, e só para ele
+    if (m.topic === 'mob' && !isHost) {
+      if (!Array.isArray(d.d) || d.to !== host) return;
+      d.d = d.d.slice(0, 40);
+    }
+    // nome de quem fala/age: o da presença (que o servidor confere), nunca o que vem na mensagem
+    if (typeof d.n === 'string' && typeof peer.presence?.n === 'string' && peer.presence.n) d.n = peer.presence.n;
+    // bate-papo e privado: limite de tamanho, sem links (golpes) e palavras +18 bloqueiam o chat por 30 minutos
+    if (m.topic === 'chat' || d.type === 's_dm') {
+      if (d.type === 's_dm' && !bucket(peer, 'dm', 6, 0.5)) return;
+      d.text = maskLinks(String(d.text ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0, 140));
       let left = banLeft(peer);
       if (!left && isAdult(d.text)) {
         const until = now + CHAT_BAN_MS, n = String(peer.presence?.n || '').toLowerCase();
@@ -734,23 +1101,27 @@ function onMessage(peer, text) {
       }
       if (left) return send(peer, { t: 'msg', topic: 'fx', peer: 'server', data: { type: 's_ban', until: now + left } });
     }
-    // mensagem para uma pessoa só (convite, troca, privado): vai só para ela
-    if (d && typeof d.to === 'string') {
+    if (d.type === 'announce') d.text = String(d.text ?? '').slice(0, 120);
+    // mensagem para uma pessoa só (convite, troca, privado, golpe PvP): vai só para ela
+    if (typeof d.to === 'string') {
       const target = peers.get(d.to);
       if (target && target.sv !== peer.sv) return; // outro servidor: não alcança
+      if (target && d.type === 'v_hit' && !pvpHitOk(peer, target, d, now)) return;
+      if (target && d.type === 'v_kill' && !((peer.hitAt?.get(target.id) || 0) > now - 90000)) { segLog('pvp_abate_falso', who, { para: target.presence?.n }); return; }
+      if (target) noteTrade(peer, target, d, now);
       if (target?.linger) { if (d.type === 'v_hit') lingerHit(peer, target, d); return; }
       if (target) send(target, { t: 'msg', topic: m.topic, peer: peer.id, data: d });
       return;
     }
     // selo de GM: quem decide é o servidor (o que o jogador mandar é ignorado)
-    if (d && m.topic === 'chat') d.gm = peer.gm ? 1 : 0;
+    if (m.topic === 'chat') d.gm = peer.gm ? 1 : 0;
     // estado dos monstros de UM mapa (o anfitrião manda separado por mapa): só para quem está nele
-    if (m.topic === 'mob' && d && typeof d.ar === 'string' && d.s) {
+    if (m.topic === 'mob' && typeof d.ar === 'string' && d.s) {
       const f = frame(JSON.stringify({ t: 'msg', topic: 'mob', peer: peer.id, data: d }));
       for (const p of peers.values()) { if (p.sv !== peer.sv || p === peer || (p.presence?.ar || 'world') !== d.ar) continue; try { if (p.sock && !p.sock.destroyed) p.sock.write(f); } catch { /* ignora */ } }
       return;
     }
-    broadcast({ t: 'msg', topic: m.topic, peer: peer.id, data: m.data ?? null }, peer.sv);
+    broadcast({ t: 'msg', topic: m.topic, peer: peer.id, data: d }, peer.sv);
   }
   if (m.t === 'ping') send(peer, { t: 'pong', at: m.at });
 }
@@ -811,7 +1182,14 @@ function peersChanged(sv = 1) {
 }
 
 // limpa bloqueios vencidos
-setInterval(() => { const now = Date.now(); for (const [k, t] of chatBans) if (t < now) chatBans.delete(k); }, 60000);
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, t] of chatBans) if (t < now) chatBans.delete(k);
+  for (const [k, t] of tradeFin) if (now - t > 20 * 60000) tradeFin.delete(k);
+  for (const [k, mm] of tradeOffer) { for (const [f, o] of mm) if (now - o.t > 20 * 60000) mm.delete(f); if (!mm.size) tradeOffer.delete(k); }
+  for (const [k, f] of loginFails) if (now - f.at > LOCK_MS) loginFails.delete(k);
+  for (const [k, b] of apiBuckets) if (now - b.t > 120000) apiBuckets.delete(k);
+}, 60000);
 
 // Deploy no Render: o servidor antigo recebe SIGTERM. Avisa todo mundo ("Em atualização / manutenção")
 // e fecha em seguida; as páginas esperam o servidor novo e recarregam sozinhas.

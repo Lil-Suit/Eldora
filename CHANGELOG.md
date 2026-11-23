@@ -1,5 +1,14 @@
 # Histórico de versões
 
+## 0.10.18 — segurança e anti-trapaça
+- O servidor agora confere os saves: nível, XP e ouro não sobem mais rápido do que é possível jogando (quem joga normal não sente nada; trapaça grande é corrigida e registrada — nada é apagado e ninguém é banido automaticamente).
+- Banco, mercado, trocas e PvP conferidos no servidor (ouro do nada, item inventado no mercado, dano infinito, golpe de longe e abate falso são barrados).
+- Só o anfitrião escolhido pelo servidor pode mandar o estado dos monstros.
+- Contas: 10 senhas erradas travam a conta por 15 min; nomes internos e de GM protegidos.
+- Chat: limite contra flood, links viram [link], ninguém fala com o nome de outra pessoa; HTML em nomes é removido.
+- Cabeçalhos de segurança no site e correção de um link que derrubava o servidor.
+- GMs: /seguranca no chat mostra os últimos alertas.
+
 ## 0.10.17 — grama do Ultra sem "círculo"
 - Ultra realismo: a grama agora vai bem mais longe e vai baixando aos poucos na distância — acabou o círculo de capim em volta do personagem.
 - Nova opção em Configurações > Gráficos: "Grama e matinhos do Ultra realismo" (desligue para tirar o capim, flores e pedrinhas e deixar mais leve; o chão realista continua).
