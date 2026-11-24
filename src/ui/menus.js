@@ -12,7 +12,8 @@ import { SERVERS, getServer, setServer, serverName, fetchServers } from '../game
 // instalar como app: abre em tela cheia, sem a barra do navegador (Android/PC: pedido do Chrome; iPhone: instrução)
 function installBtn() {
   try {
-    if (window.parent !== window) return ''; // dentro do Claude: não se aplica
+    if (window.parent !== window) return '';
+    if (/[?&]app=1/.test(location.search) || String(document.referrer).startsWith('android-app://')) return ''; // já é o app (Play Store) // dentro do Claude: não se aplica
     // já está instalado (aberto pelo ícone). Tela cheia do próprio jogo no navegador NÃO conta como instalado.
     if (navigator.standalone || matchMedia('(display-mode: standalone), (display-mode: minimal-ui)').matches || (matchMedia('(display-mode: fullscreen)').matches && !document.fullscreenElement)) return '';
     return `<button class="btn" data-a="m:install">📲 Instalar o jogo</button>`; // sempre à vista (sem o pedido do Chrome, mostra como fazer)
