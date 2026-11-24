@@ -1,5 +1,8 @@
 # Histórico de versões
 
+## 0.11.4 — Livro dos Itens em tela cheia
+- Falar com o Cronista abre direto o Livro dos Itens, na tela inteira, sem a câmera no rosto do herói.
+
 ## 0.11.3 — Machado e escudo
 - Machado e clava inclinados para frente: não atravessam mais o rosto ao andar e nas animações.
 - Escudo na mão 28% menor e mais para fora do braço (não atravessa o corpo andando).

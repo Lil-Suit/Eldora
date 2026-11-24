@@ -1292,7 +1292,7 @@ export class Game {
     } else this.cam.extraDist = 0;
     // loja/conversa com NPC: câmera por cima do ombro do vendedor, olhando o rosto do herói
     const dn = this.ui.dialogNpc && this.interact.npcs[this.ui.dialogNpc];
-    if (dn && P.area === 'world' && Math.hypot(dn.pos.x - P.pos.x, dn.pos.z - P.pos.z) < 6) {
+    if (dn && dn.def?.service !== 'itens' && P.area === 'world' && Math.hypot(dn.pos.x - P.pos.x, dn.pos.z - P.pos.z) < 6) {
       if (!this.cam.shot || this.cam.shot.v !== dn.pos) { this.cam.shot = { v: dn.pos, p: P.pos }; P.faceTo(Math.atan2(dn.pos.x - P.pos.x, dn.pos.z - P.pos.z)); P.faceLock = 999; }
       document.body.classList.add('dlgshot'); P.rig.silHide = true;
     } else if (this.cam.shot) { this.cam.shot = null; P.faceLock = 0; document.body.classList.remove('dlgshot'); P.rig.silHide = false; }

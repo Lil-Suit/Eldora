@@ -29,7 +29,7 @@ function catalogView() {
     return `${head}<button class="cat-row interactive" data-a="d:view" data-v="item:${i}"><span class="cat-ico" style="color:${c}">${catIcon(e)}</span><b>${esc(e.name)}</b><small>${esc(e.kind)}</small></button>`;
   }).join('');
   return `<h3>Livro dos Itens</h3><p class="muted">Todos os equipamentos de Eldoria, do mais fraco ao mais forte. Toque em um para ver o que faz e quem solta.</p>
-    <div class="cat-list">${rows}</div><div class="row"><button class="btn" data-a="d:view" data-v="main">Voltar</button></div>`;
+    <div class="cat-list">${rows}</div>`;
 }
 function catalogItemView(idx) {
   const e = itemCatalog()[+idx];
@@ -47,6 +47,7 @@ function catalogItemView(idx) {
 export function openDialog(ui, npcId, view = 'main', keep = false) {
   if (!keep) globalThis.__eldCrumb?.('diálogo: ' + npcId + ' / ' + view, 'ui');
   const G = ui.G, def = NPCS[npcId];
+  if (def?.service === 'itens' && view === 'main') view = 'itens'; // Cronista: abre direto no Livro dos Itens
   ui.dialogNpc = npcId;
   ui.dialogView = view;
   if (!keep) { ui.dsel = null; ui.dconfirm = null; }
@@ -113,7 +114,8 @@ export function openDialog(ui, npcId, view = 'main', keep = false) {
   else if (view === 'bank') body = bankView(ui);
   else if (view === 'bau') body = dailyView(ui);
   const wide = view === 'itens' || view.startsWith('item:') || view === 'shop' || view === 'supplies' || view === 'upgrade' || view === 'market' || view === 'bank';
-  ui.el.dialog.className = 'dialog interactive' + (wide ? ' wide' : '');
+  const full = view === 'itens' || view.startsWith('item:');
+  ui.el.dialog.className = 'dialog interactive' + (full ? ' full' : wide ? ' wide' : '');
   ui.el.dialog.innerHTML = `
     <div class="dhead"><div class="dport">${NPC_ICONS[npcId] || ICONS.pessoa}</div><div><b>${esc(def.name)}</b><small>${esc(def.title)} · ${esc(def.role)}</small></div>
     <div class="dgold">${ICONS.moeda}${G.state.player.gold.toLocaleString('pt-BR')}</div><button class="jclose" data-a="d:close">${ICONS.fechar}</button></div>
