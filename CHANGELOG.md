@@ -1,5 +1,8 @@
 # Histórico de versões
 
+## 0.12.1 — Tela mais limpa
+- A barra de XP saiu da parte de baixo da tela (o XP continua no painel do personagem).
+
 ## 0.12.0 — Itens que precisam ser conquistados
 - Força dos itens: até o 10º tipo de monstro sobe de 1 em 1; depois, CADA monstro novo dá +10% (antes era ~3% no nível alto). Ex.: peitoral comum nv 122 = 326 de defesa, nv 126 = 358; nv 165 = 844.
 - Raridade no meio-termo: a cor vale uma fração do salto até o próximo monstro. Épico ≈ Comum do monstro seguinte; Mítico e Lendário passam um pouco (no máximo ~1,6 monstro).

@@ -1467,3 +1467,4 @@ body.hudedit .mobile.dim .tbtns-wrap, body.hudedit .mobile.dim .joyzone { opacit
 .dialog.full .dbody { flex: 1; overflow-y: auto; }
 .dialog.full .cat-list { max-height: none; overflow: visible; }
 body.dlgshot .dialog.full { left: max(6px, var(--sal, 0px)); right: max(6px, var(--sar, 0px)); width: auto; transform: none; }
+.hud .xpbar, .xpbar { display: none !important; } /* v0.12.1: barra de XP fora da tela (o XP continua no painel do personagem) */
