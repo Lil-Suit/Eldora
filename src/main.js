@@ -55,7 +55,10 @@ function forceFullscreen() {
   document.addEventListener('fullscreenchange', onChange);
   document.addEventListener('webkitfullscreenchange', onChange);
   // app instalado (tela inicial) já abre em tela cheia: trava a orientação logo
-  if (isFs() || matchMedia('(display-mode: fullscreen)').matches) lockLandscape();
+  // app (Play Store / ícone): tenta travar deitado já ao abrir e em todo toque, mesmo sem tela cheia
+  const isApp = /[?&]app=1/.test(location.search) || matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches;
+  if (isFs() || isApp) lockLandscape();
+  if (isApp) { document.addEventListener('pointerdown', lockLandscape, true); document.addEventListener('visibilitychange', () => { if (!document.hidden) lockLandscape(); }); }
 }
 
 function boot() {
