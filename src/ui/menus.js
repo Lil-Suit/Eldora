@@ -13,7 +13,8 @@ import { SERVERS, getServer, setServer, serverName, fetchServers } from '../game
 function installBtn() {
   try {
     if (window.parent !== window) return ''; // dentro do Claude: não se aplica
-    if (matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone) return ''; // já está instalado
+    // já está instalado (aberto pelo ícone). Tela cheia do próprio jogo no navegador NÃO conta como instalado.
+    if (navigator.standalone || matchMedia('(display-mode: standalone), (display-mode: minimal-ui)').matches || (matchMedia('(display-mode: fullscreen)').matches && !document.fullscreenElement)) return '';
     return `<button class="btn" data-a="m:install">📲 Instalar o jogo</button>`; // sempre à vista (sem o pedido do Chrome, mostra como fazer)
   } catch { /* ok */ }
   return '';
