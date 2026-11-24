@@ -1213,3 +1213,12 @@ setInterval(() => {
 }, 10000);
 
 server.listen(PORT, () => console.log(`ELDORIA ${VERSION} online na porta ${PORT} · servindo ${ROOT} · saves: ${store.kind}`));
+// "despertador": o Render grátis dorme depois de 15 min sem visitas e mostra a tela dele para quem chega.
+// O próprio servidor se visita pelo endereço público a cada 10 min, então nunca dorme. KEEP_AWAKE=0 desliga.
+{
+  const url = String(process.env.KEEP_AWAKE_URL || process.env.RENDER_EXTERNAL_URL || '').replace(/\/$/, '');
+  if (url && process.env.KEEP_AWAKE !== '0' && !process.env.REDIRECT_TO) {
+    setInterval(() => { fetch(url + '/api/status', { headers: { 'user-agent': 'eldoria-despertador' } }).catch(() => {}); }, 10 * 60 * 1000).unref?.();
+    console.log('despertador ligado:', url);
+  }
+}
