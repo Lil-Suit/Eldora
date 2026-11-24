@@ -376,7 +376,7 @@ export class Player {
       if (this.recall.t >= this.recall.dur) { this.recall = null; G.recallToVillage(); }
     }
     // aura lendária
-    if (this.rig.legendary && Math.random() < dt * 22) { // brilho lendário ao longo da arma inteira
+    if (this.rig.legendary && G.settings.particles && Math.random() < dt * 22) { // brilho lendário ao longo da arma inteira
       const w = this.rig.weapon, L = w?.userData?.fxLine;
       let tip;
       if (L) { this.rig.root.updateMatrixWorld(true); tip = w.localToWorld(new THREE.Vector3().lerpVectors(L[0], L[1], Math.random())); } else tip = this.muzzle();

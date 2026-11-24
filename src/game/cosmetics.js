@@ -58,7 +58,7 @@ export function emitCosmetics(G, pos, weapon, fxId, auraId, t, dt, mv = null) {
   const fx = WEAPON_FX[fxId];
   if (fx?.color && weapon) {
     tintWeapon(weapon, fxId);
-    const n = Math.min(3, Math.floor(dt * 30 * rate + Math.random()));
+    const n = G.settings?.particles ? Math.min(3, Math.floor(dt * 30 * rate + Math.random())) : 0; // partículas desligadas: só a cor na arma
     for (let i = 0; i < n; i++) {
       const p = weaponPoint(weapon), c = fx.color[Math.random() < 0.55 ? 0 : 1], r = Math.random();
       if (fxId === 'brasas') G.fx.emit(p.x, p.y, p.z, (r - 0.5) * 0.5, 1 + Math.random() * 1.2, (Math.random() - 0.5) * 0.5, c, 0.2 + r * 0.14, 0.6, -1.6, 1);
