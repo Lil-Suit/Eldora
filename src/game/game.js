@@ -72,7 +72,7 @@ export class Game {
     this.isTouch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
     const saved = SaveManager.readSettings();
     this.settings = Object.assign({
-      viewDist: this.isTouch ? 'curta' : 'media', ultraGrass: true, quality: this.isTouch ? 'baixa' : 'media', master: 0.8, sfx: 0.9, music: 0.45, amb: 0.6, // primeira vez: celular começa na Baixa, PC na Média (depois cada um escolhe)
+      viewDist: this.isTouch ? 'curta' : 'media', ultraGrass: true, particles: false, gameKeyboard: true, quality: this.isTouch ? 'baixa' : 'media', master: 0.8, sfx: 0.9, music: 0.45, amb: 0.6, // primeira vez: celular começa na Baixa, PC na Média (depois cada um escolhe)
       rain: true, camSens: 1, invertY: false, damageNumbers: true, hurtFx: 'auto', hurtIntensity: 0.7, pauseMenus: this.isTouch, showFps: false, autoRes: true, showPeers: true, cleanScreen: false, touchScale: 1, joyFloat: false, crosshair: false, camFollow: false,
     }, saved || {});
     // modelos 3D dos heróis: começam a carregar já na tela de título; quando chegam, trocam os bonecos antigos
@@ -81,7 +81,9 @@ export class Game {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: !this.isTouch, powerPreference: 'high-performance' });
     this.renderer.shadowMap.enabled = q.shadows;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
-    this.pixelRatio = Math.min(window.devicePixelRatio || 1, q.pixelRatio);
+    // celular: a tela já é muito densa; acima de ~1.5 o custo dobra e quase não se vê diferença (Alta/Ultra travavam em 20-30 fps)
+    const touchCap = this.isTouch && !q.nativeRes ? ({ ultra: 1.5, alta: 1.35, media: 1.25 }[this.settings.quality] || q.pixelRatio) : q.pixelRatio;
+    this.pixelRatio = Math.min(window.devicePixelRatio || 1, q.pixelRatio, touchCap);
     this.renderer.setPixelRatio(this.pixelRatio);
     this.scene = new THREE.Scene();
     this.enemyViewDist = 120;
@@ -136,6 +138,15 @@ export class Game {
     window.visualViewport?.addEventListener('resize', () => this.resize());
     window.addEventListener('orientationchange', () => setTimeout(() => this.resize(), 300));
     this.resize();
+    // proteção: se o jogo travou/fechou logo depois de abrir num gráfico pesado, abre no Baixo desta vez
+    try {
+      const GK = 'rift.gfxguard', g = localStorage.getItem(GK), heavy = ['ultra', 'alta', 'media'];
+      if (g && g === this.settings.quality && heavy.includes(g)) {
+        this.settings.quality = 'baixa'; this.saveSettings();
+        setTimeout(() => this.ui?.toastSmall?.(`Da última vez o jogo travou no gráfico ${QUALITY[g]?.label || g}: voltamos para o Baixo. Dá para mudar em Gráficos.`, 7, true), 2500);
+      }
+      if (heavy.includes(this.settings.quality)) { localStorage.setItem(GK, this.settings.quality); this._gfxGuard = 0; } else localStorage.removeItem(GK);
+    } catch {}
     this.applyQuality(); // liga os extras da qualidade salva (Ultra realismo) já na abertura
     this.lastFrame = performance.now();
     this.renderer.setAnimationLoop(() => this.frame());
@@ -1097,6 +1108,7 @@ export class Game {
   }
 
   updateFlames(dt) {
+    if (!this.settings.particles) return; // partículas desligadas: sem faíscas e fumaça de enfeite
     for (const f of this.world.flames) {
       if ((f.area || 'world') !== (this.player?.area || 'world')) continue;
       if (Math.random() < dt * (f.kind === 'fogueira' ? 30 : 10)) this.fx.emit(f.x + (Math.random() - 0.5) * 0.5, f.y, f.z + (Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.4, 2 + Math.random() * 1.5, (Math.random() - 0.5) * 0.4, Math.random() < 0.5 ? 0xffa040 : 0xffd36b, 0.35, 0.6, -0.5, 1);
@@ -1119,6 +1131,8 @@ export class Game {
     this.fpsAcc += rdt; this.fpsN++;
     if (this.fpsAcc > 0.5) {
       this.fps = this.fpsN / this.fpsAcc; this.fpsAcc = 0; this.fpsN = 0;
+      // rodou bem por ~15 s: o gráfico escolhido aguenta (tira a proteção de travamento)
+      if (this._gfxGuard !== undefined) { if (this.fps >= 8) this._gfxGuard += 0.5; if (this._gfxGuard >= 15) { try { localStorage.removeItem('rift.gfxguard'); } catch {} this._gfxGuard = undefined; } }
       if (this.settings.autoRes && this.mode === 'play') this.autoQuality(); // também no Ultra leve: só cai se travar e volta sozinha
     }
     let dt = rdt;

@@ -122,12 +122,12 @@ const FRAG_COLOR = `
     vec3 c = base;
     float dry = smoothstep(0.52, 0.8, tB2.r * 0.6 + tB1.r * 0.4) * uDry;
     c = mix(c, c * vec3(1.35, 1.12, 0.55), dry * 0.6);
-    c *= 0.78 + 0.44 * tB1.r;
+    c *= 0.88 + 0.24 * tB1.r; // manchas grandes mais suaves
     float str = tA1.r * 0.45 + tA2.r * 0.3 + tA3.r * 0.25;
-    c *= 0.5 + 0.95 * str;
+    c *= 0.74 + 0.5 * str; // grão fino com menos contraste (sem "pixelado")
     c = mix(c, c * vec3(1.3, 1.22, 0.8), smoothstep(0.72, 1.0, str) * 0.55);
     float bare = smoothstep(0.34, 0.14, str + (tB1.r - 0.5) * 0.4);
-    c = mix(c, uSoil * (0.6 + 0.8 * tA1.b), bare * 0.65);
+    c = mix(c, uSoil * (0.7 + 0.5 * tA1.b), bare * 0.32); // terra aparecendo só de leve
     col += B0.x * c; rough += B0.x * 0.93; H += B0.x * (str * 0.035);
   }
   // terra, cascalho e estrada

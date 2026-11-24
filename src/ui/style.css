@@ -1434,3 +1434,32 @@ body.hudedit .mobile.dim .tbtns-wrap, body.hudedit .mobile.dim .joyzone { opacit
 .bauday { background: #1d1a24; border: 1px solid #3a3446; border-radius: 6px; padding: 4px 2px; text-align: center; display: flex; flex-direction: column; gap: 1px; font-size: 11px; }
 .bauday b { color: var(--gold2); font-size: 11px; } .bauday span { font-weight: 700; } .bauday small { color: var(--muted); font-size: 9px; } .bauday em { color: #7dc8ff; font-style: normal; font-size: 9px; }
 .bauday.hoje { border-color: var(--gold2); box-shadow: 0 0 8px rgba(255, 211, 107, .35); } .bauday.feito { opacity: .45; }
+/* Livro dos Itens (Cronista) */
+.cat-list { max-height: 52vh; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 4px; padding-right: 4px; }
+.cat-lv { grid-column: 1 / -1; font-family: var(--serif, serif); color: var(--gold, #ffd36b); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; margin-top: 6px; border-bottom: 1px solid var(--line2, #333); }
+.cat-row { display: grid; grid-template-columns: 30px 1fr; grid-template-rows: auto auto; column-gap: 6px; align-items: center; text-align: left; padding: 4px 6px; border-radius: 8px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); color: inherit; }
+.cat-row:active { background: rgba(255,255,255,.12); }
+.cat-row b { font-size: 12px; line-height: 1.1; } .cat-row small { grid-column: 2; font-size: 10px; opacity: .7; }
+.cat-ico { grid-row: 1 / 3; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
+.cat-ico svg, .cat-ico img, .cat-ico canvas { width: 100%; height: 100%; }
+.cat-ico.big { width: 48px; height: 48px; flex: none; }
+.cat-det { display: flex; gap: 10px; align-items: center; } .cat-det h3 { margin: 0; } .cat-det small { opacity: .75; }
+.cat-sts, .cat-mobs { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0 6px; }
+.cat-st { border: 1px solid; border-radius: 6px; padding: 2px 6px; font-size: 12px; } .cat-st i { font-style: normal; font-weight: 700; }
+.cat-mob { background: rgba(255,255,255,.07); border-radius: 6px; padding: 2px 7px; font-size: 12px; }
+/* teclado do jogo (celular) */
+.gkb { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9999; background: rgba(12,12,24,.97); border-top: 1px solid var(--line2, #333); padding: 4px max(6px, var(--sar, 0px)) calc(4px + var(--sab, 0px)) max(6px, var(--sal, 0px)); display: flex; flex-direction: column; gap: 3px; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+.gkb.hidden { display: none; }
+.gkb-top { display: flex; align-items: center; gap: 8px; min-height: 26px; }
+.gkb-lbl { font-size: 11px; opacity: .6; max-width: 30%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gkb-txt { flex: 1; font-size: 14px; color: #fff; background: rgba(255,255,255,.06); border-radius: 6px; padding: 3px 8px; white-space: nowrap; overflow: hidden; direction: rtl; text-align: left; unicode-bidi: plaintext; }
+.gkb-txt i { display: inline-block; width: 1px; height: 14px; background: var(--gold, #ffd36b); vertical-align: middle; animation: gkbBlink 1s steps(1) infinite; }
+@keyframes gkbBlink { 50% { opacity: 0; } }
+.gkb-row { display: flex; gap: 3px; justify-content: center; }
+.gk { flex: 1 1 0; max-width: 9.6%; height: clamp(24px, 6.3vh, 34px); border-radius: 6px; border: none; background: #2a2b40; color: #f2ecdc; font: 600 clamp(13px, 3.6vh, 17px)/1 inherit; padding: 0; }
+.gk:active { background: #4a4b70; }
+.gk.fn { background: #1e1f30; color: #d8c8a0; font-size: 12px; max-width: 14%; }
+.gk.on { background: #6a5a2a; } .gk.ok { background: #5a4a1a; color: #ffd36b; }
+.gk.space { max-width: 46%; flex: 5 1 0; font-size: 12px; }
+.gkb.num .gk { max-width: 90px; } .gkb.num .gkb-row { gap: 4px; }
+@media (orientation: portrait) { .gk { height: 40px; } }

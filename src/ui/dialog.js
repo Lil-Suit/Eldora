@@ -11,6 +11,37 @@ import { bankView, dailyView } from './economyui.js';
 import { MARKET, expired } from '../game/market.js';
 import { CLASSES } from '../config/classes.js';
 import { DIAMONDS } from '../config/monetization.js';
+import { itemCatalog } from '../core/catalog.js';
+import { RARITIES } from '../config/balance.js';
+
+// ---------- Livro dos Itens (Cronista) ----------
+const RAR = (id) => RARITIES.find((r) => r.id === id) || RARITIES[0];
+function catIcon(e, rarity = 'comum') {
+  try { return itemIcon({ kind: 'equip', slot: e.slot, wkind: e.wkind, rarity: e.rarity || rarity, bset: e.bset, set: e.set, named: e.named, name: e.name }); } catch { return ICONS.livro; }
+}
+function catalogView() {
+  const L = itemCatalog();
+  let lastLv = -1;
+  const rows = L.map((e, i) => {
+    const head = e.level !== lastLv ? `<div class="cat-lv">Nível ${e.level}</div>` : '';
+    lastLv = e.level;
+    const c = RAR(e.rarity || 'comum').color;
+    return `${head}<button class="cat-row interactive" data-a="d:view" data-v="item:${i}"><span class="cat-ico" style="color:${c}">${catIcon(e)}</span><b>${esc(e.name)}</b><small>${esc(e.kind)}</small></button>`;
+  }).join('');
+  return `<h3>Livro dos Itens</h3><p class="muted">Todos os equipamentos de Eldoria, do mais fraco ao mais forte. Toque em um para ver o que faz e quem solta.</p>
+    <div class="cat-list">${rows}</div><div class="row"><button class="btn" data-a="d:view" data-v="main">Voltar</button></div>`;
+}
+function catalogItemView(idx) {
+  const e = itemCatalog()[+idx];
+  if (!e) return catalogView();
+  const st = e.stats.filter((x) => x.s).map((x) => `<span class="cat-st" style="border-color:${RAR(x.r).color}"><i style="color:${RAR(x.r).color}">${RAR(x.r).name}</i> ${x.s.k} ${x.s.v}</span>`).join('');
+  const mobs = e.mobs.length ? e.mobs.map((m) => `<span class="cat-mob">${esc(m)}</span>`).join('') + (e.more ? `<span class="cat-mob">+${e.more} outros</span>` : '') : '<span class="muted">Não cai de monstros.</span>';
+  return `<div class="cat-det"><span class="cat-ico big" style="color:${RAR(e.rarity || 'comum').color}">${catIcon(e)}</span><div><h3>${esc(e.name)}</h3><small>${esc(e.kind)} · a partir do nível ${e.level}</small></div></div>
+    <p class="say">${esc(e.what)}</p>
+    ${st ? `<h4>Força${e.statLv ? ` (no nível ${e.statLv})` : ` (no nível ${e.level})`}</h4><div class="cat-sts">${st}</div>` : ''}
+    <h4>Quem solta</h4><div class="cat-mobs">${mobs}</div><p class="muted">${esc(e.note || '')}</p>
+    <div class="row"><button class="btn" data-a="d:view" data-v="itens">Voltar à lista</button></div>`;
+}
 
 // Diálogo com NPCs, loja e ferraria.
 export function openDialog(ui, npcId, view = 'main', keep = false) {
@@ -49,6 +80,7 @@ export function openDialog(ui, npcId, view = 'main', keep = false) {
     if (def.service === 'bank') opts.push(`<button class="opt${G.economy?.daily?.pode ? ' ready' : ''}" data-a="d:view" data-v="bau">🎁 Baú diário${G.economy?.daily?.pode ? ' — pronto para abrir!' : ''}</button>`, `<button class="opt" data-a="d:view" data-v="bank">${ICONS.moeda} Banco: guardar, sacar e transferir ouro</button>`, `<button class="opt" data-a="diamonds">💎 Loja de Diamantes (visuais)</button>`);
     if (def.service === 'market') opts.push(`<button class="opt" data-a="d:market" data-t="buy">${ICONS.bolsa} Comprar de outros jogadores</button>`, `<button class="opt" data-a="d:market" data-t="sell">${ICONS.moeda} Vender um item (você escolhe o preço)${G.state.player.level < MARKET.minLevel ? ` — libera no nível ${MARKET.minLevel}` : ''}</button>`, `<button class="opt" data-a="d:market" data-t="mine">${ICONS.livro} Meus anúncios</button>`);
     if (def.service === 'upgrade') opts.push(`<button class="opt" data-a="d:view" data-v="upgrade">${ICONS.machado} Aprimorar equipamento</button>`);
+    if (def.service === 'itens') opts.push(`<button class="opt" data-a="d:view" data-v="itens">${ICONS.livro} Ver o Livro dos Itens (do mais fraco ao mais forte)</button>`);
     if (def.service === 'hints') opts.push(`<button class="opt" data-a="d:view" data-v="hint">${ICONS.mapa} Pedir uma pista</button>`);
     if (def.service === 'lore' || npcId === 'mestre') opts.push(`<button class="opt" data-a="d:view" data-v="lore">${ICONS.livro} Contar sobre os Selos</button>`);
     opts.push(`<button class="opt bye" data-a="d:close">Até logo</button>`);
@@ -73,12 +105,14 @@ export function openDialog(ui, npcId, view = 'main', keep = false) {
     ];
     body = `${lines.map((l) => `<p class="say">${esc(l)}</p>`).join('')}<div class="row"><button class="btn" data-a="d:view" data-v="main">Voltar</button></div>`;
   } else if (view === 'shop') body = shopView(ui);
+  else if (view === 'itens') body = catalogView();
+  else if (view.startsWith('item:')) body = catalogItemView(view.slice(5));
   else if (view === 'supplies') body = suppliesView(ui);
   else if (view === 'upgrade') body = upgradeView(ui);
   else if (view === 'market') body = marketView(ui);
   else if (view === 'bank') body = bankView(ui);
   else if (view === 'bau') body = dailyView(ui);
-  const wide = view === 'shop' || view === 'supplies' || view === 'upgrade' || view === 'market' || view === 'bank';
+  const wide = view === 'itens' || view.startsWith('item:') || view === 'shop' || view === 'supplies' || view === 'upgrade' || view === 'market' || view === 'bank';
   ui.el.dialog.className = 'dialog interactive' + (wide ? ' wide' : '');
   ui.el.dialog.innerHTML = `
     <div class="dhead"><div class="dport">${NPC_ICONS[npcId] || ICONS.pessoa}</div><div><b>${esc(def.name)}</b><small>${esc(def.title)} · ${esc(def.role)}</small></div>

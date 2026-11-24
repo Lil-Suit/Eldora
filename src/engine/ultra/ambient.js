@@ -106,6 +106,7 @@ export class Ambient {
   update(dt, camera, baseY) {
     if (!this.on) return;
     const u = this.u, G = this.G, sky = G.sky;
+    if (!G.settings?.particles) { this.points.visible = false; return; } // partículas desligadas
     let any = 0; for (const w of this.weights) any = Math.max(any, w);
     this.points.visible = any > 0.01; // (na cripta também: poeira no ar)
     if (!this.points.visible) return;

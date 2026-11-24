@@ -68,6 +68,7 @@ export function renderTitle(ui) {
       <div class="tsmall">${chars.length || G.pendingSave ? newBtn : ''}
       ${chars.length > 1 && chars.length <= 4 ? `<button class="btn" data-a="m:chars">Gerenciar</button>` : ''}
       ${installBtn()}
+      <button class="btn" data-a="m:settings" data-tab="gfx">🖥️ Gráficos: ${esc(QUALITY[G.settings.quality]?.label || 'Média')}</button>
       <button class="btn" data-a="m:settings">${ICONS.engrenagem} Configurações</button>
       <button class="btn" data-a="m:importview">${ICONS.chave} Importar código</button>
       ${G.saver.serverUser ? `<button class="btn" data-a="m:logout">Sair da conta (${esc(G.saver.serverUser)})</button>` : ''}</div>
@@ -159,9 +160,11 @@ export function renderSettings(ui, tab = 'gfx') {
     body = `<label class="srow"><span>Qualidade</span><select data-set="quality">${Object.entries(QUALITY).map(([k, q]) => `<option value="${k}" ${s.quality === k ? 'selected' : ''}>${q.label}</option>`).join('')}</select></label>
       <label class="srow"><span>Distância de visão<small>Mais curta = mais leve (desenha menos coisas longe)</small></span><select data-set="viewDist">${[['curta', 'Curta'], ['media', 'Média'], ['longa', 'Longa']].map(([k, n]) => `<option value="${k}" ${(s.viewDist || 'media') === k ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
       ${check('rain', 'Chuva', 'Desligada: quando for chover, não chove para você (fica mais leve).')}
+      ${check('particles', 'Partículas', 'Poeira, vaga-lumes, folhas no ar, faíscas de fogueira e brilhos de portal. Desligada: mais leve. (Golpes e magias continuam.)')}
       ${check('ultraGrass', 'Grama e matinhos do Ultra realismo', 'Desligada: tira o capim, flores e pedrinhas em volta (bem mais leve). O chão realista continua.')}
       ${check('autoRes', 'Resolução automática', 'Só se o jogo travar: tira as sombras e depois baixa a nitidez; volta sozinho quando melhorar. Vale também no Ultra leve.')}
       ${check('showFps', 'Mostrar FPS')}
+      ${G.isTouch ? check('gameKeyboard', 'Teclado do jogo', 'Teclado compacto do ELDORIA no lugar do teclado do celular (ocupa menos a tela).') : ''}
       <p class="muted">Baixa: sem sombras, ideal para celulares. Alta: sombras detalhadas e maior distância de visão.</p>`;
   } else if (tab === 'audio') {
     body = range('master', 'Volume geral') + range('sfx', 'Efeitos') + range('music', 'Música') + range('amb', 'Ambiente');
@@ -217,6 +220,7 @@ export function afterModal(ui, kind) {
       let v = inp.type === 'checkbox' ? inp.checked : inp.type === 'range' ? parseFloat(inp.value) : inp.value;
       G.settings[k] = v;
       if (k === 'quality' || k === 'rain' || k === 'viewDist') G.applyQuality();
+      if (k === 'quality') { try { if (['ultra', 'alta', 'media'].includes(G.settings.quality)) { localStorage.setItem('rift.gfxguard', G.settings.quality); G._gfxGuard = 0; } else { localStorage.removeItem('rift.gfxguard'); G._gfxGuard = undefined; } } catch {} }
       if (k === 'showFps') ui.el.fps.classList.toggle('hidden', !v);
       if (k === 'touchScale') ui.mobile.applyScale();
       if (k === 'hurtFx' || k === 'hurtIntensity') { ui._hurtKey = null; ui.fitHurt(); if (v !== 'off') ui.flashHurt(0.5); }

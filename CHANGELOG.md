@@ -1,5 +1,13 @@
 # Histórico de versões
 
+## 0.11.2 — Livro dos Itens, teclado do jogo e mais FPS
+- Novo NPC: Cronista Elias (norte da vila, longe dos comerciantes) com o Livro dos Itens: todos os equipamentos do mais fraco ao mais forte; tocar mostra o que faz, a força por cor e quem solta (sem porcentagens).
+- Teclado do próprio jogo no celular (compacto, com números, acentos e símbolos); pode voltar ao do celular em Configurações.
+- Opção "Partículas" (começa desligada): poeira, vaga-lumes, folhas, faíscas de fogueira e brilhos de portal.
+- Botão "Gráficos" na tela inicial; se o jogo travar logo ao abrir num gráfico pesado, na próxima vez abre no Baixo.
+- Celular: Alta/Ultra com resolução e sombra limitadas (bem mais FPS, quase sem diferença visual).
+- Ultra realismo: chão de grama com menos contraste (sem aspecto pixelado).
+
 ## 0.11.1 — Acampamentos, portais e grama
 - Acampamentos dos Ermos e dos Confins: barracas de lona, fogueira com pedras e espeto, bancos de tronco, caixotes, barris, lanternas e estandartes.
 - Portais de pedra novos (volta dos Ermos, Confins e volta dos Confins): plataforma, colunas com runas e braseiros, pedras rúnicas, anel girando e cristais flutuando.

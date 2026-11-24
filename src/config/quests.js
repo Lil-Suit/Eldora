@@ -37,6 +37,11 @@ export const NPCS = {
     role: 'Deixe um item com ela e escolha o preço: ela vende para os outros jogadores, mesmo com você offline.',
     greet: ['Cada item tem um comprador. Só precisa do preço certo.', 'Deixa comigo que eu vendo. Fico com só 5% da venda.'],
   },
+  cronista: {
+    name: 'Cronista Elias', title: 'Livro dos Itens', look: 'cronista', service: 'itens',
+    role: 'Conhece todos os equipamentos de Eldoria: o que cada um faz e quais monstros soltam.',
+    greet: ['Anoto tudo o que cai das criaturas de Eldoria. Quer dar uma olhada no meu livro?', 'Do mais simples ao mais lendário: está tudo aqui, em ordem.'],
+  },
   exploradora: {
     name: 'Exploradora Lyra', title: 'Exploradora', look: 'exploradora', service: 'hints',
     role: 'Conhece os segredos do vale e dá pistas.',

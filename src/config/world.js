@@ -172,6 +172,7 @@ export const NPC_SPAWNS = {
   banqueira:   { x: -7.6, z: 78.4, rot: -0.834 },
   leiloeira:   { x: 7.6, z: 78.4, rot: 0.834 },
   exploradora: { x: -4.5, z: 46.5, rot: Math.PI },
+  cronista:    { x: 0, z: 104, rot: Math.PI }, // Livro dos Itens: longe dos comerciantes, na parte norte da vila
   eco:         { x: -26,  z: -98.5, rot: 0 },
 };
 

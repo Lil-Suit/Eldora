@@ -90,4 +90,4 @@ export function itemIcon(entry) {
   return ICONS[map[entry.id]] || ICONS.bolsa;
 }
 
-export const NPC_ICONS = { mestre: CLASS_ICONS.mago, ferreira: ICONS.machado, mercador: ICONS.moeda, fornecedora: ICONS.pocao || ICONS.moeda, banqueira: ICONS.moeda, leiloeira: ICONS.bolsa, exploradora: ICONS.mapa, eco: ICONS.globo };
+export const NPC_ICONS = { mestre: CLASS_ICONS.mago, ferreira: ICONS.machado, mercador: ICONS.moeda, fornecedora: ICONS.pocao || ICONS.moeda, banqueira: ICONS.moeda, leiloeira: ICONS.bolsa, exploradora: ICONS.mapa, cronista: ICONS.livro, eco: ICONS.globo };

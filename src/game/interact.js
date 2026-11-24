@@ -14,6 +14,7 @@ const NPC_HERO = {
   fornecedora: { cls: 'mago', g: 'F', skin: 'mago_3', weapon: { wkind: 'orbe', rarity: 'incomum' } },
   banqueira: { cls: 'mago', g: 'F', skin: 'nobre', weapon: null },
   leiloeira: { cls: 'guerreiro', g: 'F', skin: 'patrulheiro_3', weapon: null },
+  cronista: { cls: 'mago', g: 'M', skin: 'mago', weapon: null },
   exploradora: { cls: 'arqueiro', g: 'F', skin: 'patrulheiro', weapon: { wkind: 'arco_longo', rarity: 'incomum' } },
 };
 const _cdir = new THREE.Vector3();

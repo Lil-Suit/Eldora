@@ -1,3 +1,4 @@
+import { installGameKeyboard } from './ui/keyboard.js';
 import { doSkill, doBasic } from './game/skills.js';
 import { itemIcon } from './ui/icons.js';
 import { TROPHIES } from './config/items.js';
@@ -82,6 +83,7 @@ function boot() {
     return;
   }
   window.__RIFT = G;
+  installGameKeyboard(G); // teclado do próprio jogo no celular (compacto)
   // "Instalar o jogo" (vira ícone e abre em tela cheia, sem a barra do navegador)
   addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); window.__instalar = e; if (G.mode === 'title') G.ui.showTitle(); });
   addEventListener('appinstalled', () => { window.__instalar = null; if (G.mode === 'title') G.ui.showTitle(); });

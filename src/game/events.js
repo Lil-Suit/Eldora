@@ -51,7 +51,7 @@ export function animatePortal(G, v, t, dt, color) {
   for (let i = 0; i < v.waves.length; i++) { const k = ((t * 0.6 + i / v.waves.length) % 1); v.waves[i].scale.setScalar(0.25 + k * 0.85); v.waves[i].material.opacity = 0.55 * (1 - k); }
   if (v.rune) { v.rune.material.opacity = 0.3 + Math.sin(t * 1.6) * 0.15; v.rune2.rotation.z = t * 0.4; }
   if (v.shards) for (let i = 0; i < v.shards.length; i++) { const a = t * 0.7 + (i / v.shards.length) * Math.PI * 2; v.shards[i].position.set(Math.cos(a) * 3.6, 3.4 + Math.sin(t * 1.5 + i) * 0.7, Math.sin(a) * 1.4); v.shards[i].rotation.y = t * 2 + i; }
-  if (Math.random() < dt * 14) G.fx.emit(v.mx + (Math.random() - 0.5) * 3, v.y + 1 + Math.random() * 3.6, v.mz + (Math.random() - 0.5) * 3, Math.sin(v.yaw) * 1.5, 0.6, Math.cos(v.yaw) * 1.5, color, 0.35, 0.8, 0, 0.4);
+  if (G.settings?.particles && Math.random() < dt * 14) G.fx.emit(v.mx + (Math.random() - 0.5) * 3, v.y + 1 + Math.random() * 3.6, v.mz + (Math.random() - 0.5) * 3, Math.sin(v.yaw) * 1.5, 0.6, Math.cos(v.yaw) * 1.5, color, 0.35, 0.8, 0, 0.4);
 }
 export function disposePortal(G, v) {
   if (!v) return;
