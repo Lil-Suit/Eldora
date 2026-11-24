@@ -184,7 +184,7 @@ varying vec3 vIC; varying float vT; varying float vRnd; varying float vPart; var
       .replace('#include <color_fragment>', `
         vec3 ic = vIC;
         #ifdef GRASS
-        ic *= mix(0.5, 1.1, pow(vT, 0.8));
+        ic *= mix(0.74, 1.1, pow(vT, 0.8)); // raiz quase da cor do chão: a grama "sai" do solo em vez de ficar por cima
         ic = mix(ic, ic * vec3(1.22, 1.15, 0.7), smoothstep(0.7, 1.0, vT) * 0.55);
         ic *= 0.8 + 0.4 * vRnd;
         #endif
@@ -291,7 +291,9 @@ export class GroundCover {
         const y = W.groundHeight(x, z, A.area);
         if (y < A.water + (T.name === 'pedrinhas' ? -0.05 : 0.12)) continue;
         if (blocked(x, z, T.name === 'pedrinhas' ? 0.05 : 0.15)) continue;
-        arr.push(x, y + (res.dy || 0), z, u3 * 6.2832, res.c[0], res.c[1], res.c[2], res.s, k / N, res.v || 0, res.h || 1, u2);
+        let sc = res.s, hm = res.h || 1;
+        if (T.name === 'grama' && this.densMul < 1) { sc *= 1.3; hm /= 1.3; } // celular: tufos mais largos e baixos cobrem o chão sem buracos
+        arr.push(x, y + (res.dy || 0), z, u3 * 6.2832, res.c[0], res.c[1], res.c[2], sc, k / N, res.v || 0, hm, u2);
       }
       out.push(new Float32Array(arr));
     }

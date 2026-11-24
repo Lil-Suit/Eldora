@@ -195,7 +195,6 @@ export class Player {
       if (this.barrier <= 0.5) {
         this.barrier = 0;
         G.fx.burst({ x: this.pos.x, y: this.pos.y + 1.1, z: this.pos.z }, { count: 26, color: [0xffd36b, 0xfff2c0], speed: 5, size: 0.3, life: 0.6 });
-        G.ui.toastSmall('A barreira quebrou!');
         G.audio.play('error');
       }
       G.ui.refreshHud();
@@ -311,7 +310,7 @@ export class Player {
         this.natalT -= 1;
         const cost = NT.mana + Math.min(8, this.natalHeld), mage = this.cls.resource.id === 'mana';
         if ((mage ? this.res : this.smana) >= cost) { if (mage) this.res -= cost; else this.smana -= cost; this.natalOff = false; }
-        else { if (!this.natalOff) this.G.ui.toastSmall('Sem mana: o congelamento natalino parou', 3); this.natalOff = true; }
+        else { this.natalOff = true; }
         this.natalHeld = 0; // recontado nos próximos golpes
       }
     } else this.natalT = 0;
@@ -417,7 +416,7 @@ export class Player {
     // a barreira dura no máximo 10 s (se não quebrar antes)
     if (this.barrier > 0) {
       this.barrierT = (this.barrierT ?? 10) - dt;
-      if (this.barrierT <= 0) { this.barrier = 0; this.barrierT = 0; this.G.ui.toastSmall?.('A barreira acabou'); }
+      if (this.barrierT <= 0) { this.barrier = 0; this.barrierT = 0; }
       const sec = Math.ceil(this.barrierT); if (sec !== this._bSec) { this._bSec = sec; this.G.ui.refreshHud?.(); } // contagem no ícone
     }
     const k = this.barrierMax > 0 ? this.barrier / this.barrierMax : 0;

@@ -1,5 +1,14 @@
 # Histórico de versões
 
+## 0.11.1 — Acampamentos, portais e grama
+- Acampamentos dos Ermos e dos Confins: barracas de lona, fogueira com pedras e espeto, bancos de tronco, caixotes, barris, lanternas e estandartes.
+- Portais de pedra novos (volta dos Ermos, Confins e volta dos Confins): plataforma, colunas com runas e braseiros, pedras rúnicas, anel girando e cristais flutuando.
+- Portais das fendas com braseiros, círculo de runas no chão e cristais orbitando.
+- Aviso roxo da fenda (painel e chat) só aparece para quem está perto dela (até 60 m, mesmo mapa).
+- Sem mensagens de golpe de chefe natalino, "sem mana" do congelamento e de barreira no meio da tela.
+- Ultra realismo: grama nasce de dentro do chão (raiz enterrada e da cor do solo); no celular tufos mais largos e baixos, sem buracos.
+- App da Play Store: abre deitado, sem botão "Instalar" dentro do app.
+
 ## 0.11.0 — economia nova, monstros por bioma e mundo vivo
 - Raridade de verdade: cada cor bem mais difícil; teto de raridade pela força do monstro; branco só de monstros fortes e chefes; épicos de Natal bem mais raros.
 - Bolsa começa com 10 espaços e tem teto pelo nível (ninguém perde item). Cofre do banco: +10 espaços com diamantes (50/75/100/125). Baú diário de 1 a 7 dias. Mercado sem taxa.

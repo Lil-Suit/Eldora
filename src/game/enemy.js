@@ -640,7 +640,6 @@ export class Enemy {
       case 'invocar': G.fx.ring(this.pos.x, this.pos.y, this.pos.z, 3, col, W); break;
       default: this._warn = W; break;
     }
-    if (S.name && this.def.natal) G.ui?.toastSmall?.(`${this.def.name}: ${S.name}!`, 2);
     return true;
   }
 

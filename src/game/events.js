@@ -32,14 +32,25 @@ export function buildPortal(G, x, y, z, yaw, color) {
   veil.scale.set(1.05, 1.45, 1);
   const waves = [];
   for (let i = 0; i < 3; i++) { const w = add(new THREE.RingGeometry(1.7, 2.0, 32), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.4, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false }), 0, 3.2, 0.02 + i * 0.01); w.scale.y = 1.4; waves.push(w); }
+  // enfeites: braseiros nas colunas, círculo de runas no chão, pedras e cristais que orbitam
+  const fire = new THREE.MeshBasicMaterial({ color: 0xffa850 });
+  for (const s of [-1, 1]) { add(new THREE.CylinderGeometry(0.55, 0.4, 0.4, 8), stoneD, s * 2.6, 5.1, 0); add(new THREE.ConeGeometry(0.35, 0.9, 6), fire, s * 2.6, 5.7, 0); }
+  const addMat = (c, o) => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: o, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false });
+  const rune = add(new THREE.RingGeometry(3.9, 4.3, 48), addMat(color, 0.45), 0, 0.08, 0); rune.rotation.x = -Math.PI / 2;
+  const rune2 = add(new THREE.RingGeometry(2.6, 2.75, 6), addMat(color, 0.35), 0, 0.09, 0); rune2.rotation.x = -Math.PI / 2;
+  for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2 + 0.5; if (Math.abs(Math.cos(a)) > 0.8) continue; const r = add(new THREE.BoxGeometry(0.7, 1.6, 0.4), stone, Math.cos(a) * 5, 0.8, Math.sin(a) * 5); r.rotation.y = -a; add(new THREE.BoxGeometry(0.16, 0.5, 0.16), glow, Math.cos(a) * 5.2, 1.0, Math.sin(a) * 5.2); }
+  const shards = [];
+  for (let i = 0; i < 4; i++) { const m = add(new THREE.OctahedronGeometry(0.3, 0), glow, 0, 0, 0); m.scale.y = 1.8; shards.push(m); }
   G.scene.add(group);
-  return { group, veil, waves, y, yaw, mx: x, mz: z };
+  return { group, veil, waves, rune, rune2, shards, y, yaw, mx: x, mz: z };
 }
 
 // pulsar do véu, ondas e faíscas (o mesmo no anfitrião e nos outros jogadores)
 export function animatePortal(G, v, t, dt, color) {
   v.veil.material.opacity = 0.62 + Math.sin(t * 3) * 0.12;
   for (let i = 0; i < v.waves.length; i++) { const k = ((t * 0.6 + i / v.waves.length) % 1); v.waves[i].scale.setScalar(0.25 + k * 0.85); v.waves[i].material.opacity = 0.55 * (1 - k); }
+  if (v.rune) { v.rune.material.opacity = 0.3 + Math.sin(t * 1.6) * 0.15; v.rune2.rotation.z = t * 0.4; }
+  if (v.shards) for (let i = 0; i < v.shards.length; i++) { const a = t * 0.7 + (i / v.shards.length) * Math.PI * 2; v.shards[i].position.set(Math.cos(a) * 3.6, 3.4 + Math.sin(t * 1.5 + i) * 0.7, Math.sin(a) * 1.4); v.shards[i].rotation.y = t * 2 + i; }
   if (Math.random() < dt * 14) G.fx.emit(v.mx + (Math.random() - 0.5) * 3, v.y + 1 + Math.random() * 3.6, v.mz + (Math.random() - 0.5) * 3, Math.sin(v.yaw) * 1.5, 0.6, Math.cos(v.yaw) * 1.5, color, 0.35, 0.8, 0, 0.4);
 }
 export function disposePortal(G, v) {

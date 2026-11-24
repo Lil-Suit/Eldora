@@ -498,7 +498,10 @@ export class UI {
 
   eventBanner(inst) {
     const el = this.el.event;
-    if (!inst) { el.classList.add('hidden'); return; }
+    // só aparece para quem está perto da fenda (mesma área e até ~60 m)
+    const P = this.G.player, S = inst?.site;
+    const near = inst && P && (!inst.area || inst.area === P.area) && (!S || Math.hypot(P.pos.x - S.x, P.pos.z - S.z) < 60);
+    if (!near) { el.classList.add('hidden'); return; }
     el.classList.remove('hidden');
     const html = `<b>${esc(inst.title || inst.def.name)}</b><span>${esc(inst.status || '')}</span><em>${this.G.net?.peers.size ? "Evento · todos os jogadores perto ganham" : "Evento"}</em>`;
     if (html !== this._ev) { el.innerHTML = html; this._ev = html; }
@@ -507,7 +510,13 @@ export class UI {
   alertMark(e) { this.alerts.push({ e, t: 0.9 }); }
 
   // avisos no chat (estilo Rucoy): chefes em laranja, fendas/raids em roxo
-  notice(text, kind = 'boss', title) { this.chatMessage({ name: title || (kind === 'rift' ? 'Fenda' : 'Chefe'), text, system: true, kind }); }
+  notice(text, kind = 'boss', title) {
+    if (kind === 'rift') { // aviso roxo da fenda: só para quem está perto dela
+      const P = this.G.player, inst = this.G.events?.active, S = inst?.site;
+      if (!P || (inst?.area && inst.area !== P.area) || (S && Math.hypot(P.pos.x - S.x, P.pos.z - S.z) > 60)) return;
+    }
+    this.chatMessage({ name: title || (kind === 'rift' ? 'Fenda' : 'Chefe'), text, system: true, kind });
+  }
 
   chatMessage(m) {
     const d = document.createElement('div');

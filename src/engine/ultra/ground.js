@@ -45,7 +45,7 @@ function mkRules(cfg) {
           let r = br * cfg.gMul[0], gg = bg * cfg.gMul[1], b = bb * cfg.gMul[2];
           r += (l * 1.25 - r) * dead; gg += (l * 1.2 - gg) * dead; b += (l * 0.95 - b) * dead;
           if (mu > 0.35) { r *= 0.7; gg *= 0.85; b *= 0.6; }
-          return ret(r, gg, b, 0.8 + u2 * 0.35, h);
+          return ret(r, gg, b, 0.8 + u2 * 0.35, h, 0, -0.045); // raiz um pouco enterrada
         }
         // talos secos furando a neve / na areia
         const st = (sn > 0.2 ? cfg.snowStalk * (sn < 0.92 ? 1 : 0.35) : 0) + sa * cfg.sandTuft;

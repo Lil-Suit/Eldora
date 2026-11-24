@@ -4,6 +4,7 @@ import { Batch, GEO, vcLambert, labelSprite } from './batch.js';
 import { Rng, mulberry32 } from '../core/rng.js';
 import { ERMOS, CONFINS } from '../config/world.js';
 import { W, wReset, wLerp } from './terrain.js';
+import { buildCampScene, buildFancyPortal } from './campdeco.js';
 const CONFINS_REQ = CONFINS.reqLevel;
 
 // Ermos da Fenda: segundo mapa (680x680 m), gerado por ruído. Sem cidades; só um acampamento de retorno.
@@ -182,42 +183,28 @@ export class Ermos {
     // acampamento dos exilados (ponto de retorno): fogueira, barracas, portal de volta
     const E = ERMOS.entry, ey = H(E.x, E.z);
     const camp = new Batch();
-    for (const [dx, dz, ry, c] of [[-9, -4, 0.5, 0x6a4a3a], [9, -6, -0.6, 0x5a4a6a], [-7, 8, 2.4, 0x4a5a3a]]) {
-      camp.cone(E.x + dx + OX, ey + 1.4, E.z + dz + OZ, 2.4, 2.8, c, 4, ry);
-      col.addCircle(E.x + dx + OX, E.z + dz + OZ, 2);
-    }
-    camp.cyl(E.x + OX, ey + 0.2, E.z - 3 + OZ, 1.1, 0.4, 0x4a4040, 8);
     const glow = new Batch();
-    glow.cone(E.x + OX, ey + 0.9, E.z - 3 + OZ, 0.6, 1.4, 0xffa040, 6);
-    // portal de volta (anel com espiral)
+    buildCampScene(camp, glow, col, E.x + OX, ey, E.z - 3 + OZ, [[-9, -1, 0.5, 0x6a4a3a], [9, -3, -0.6, 0x5a4a6a], [-7, 11, 2.4, 0x4a5a3a]],
+      { supplies: [[5.5, 4, 0.3], [-5, -8, 2.1]], lanterns: [[-4, 5], [4, -6], [3, 8], [-3, 14]], banners: [[6, -9, 0.2, 0x5a2a6a], [-6, 13, 1.4, 0x5a2a6a]] });
+    // portal de volta
     const pz = E.z + 14;
-    camp.box(E.x - 4 + OX, ey + 3, pz + OZ, 1, 6, 1, 0x4a4458); camp.box(E.x + 4 + OX, ey + 3, pz + OZ, 1, 6, 1, 0x4a4458);
-    camp.addGeo(GEO.torus, E.x + OX, ey + 5.6, pz + OZ, 8.5, 8.5, 5, 0, 0, 0, 0x5a5468);
-    col.addCircle(E.x - 4 + OX, pz + OZ, 0.8); col.addCircle(E.x + 4 + OX, pz + OZ, 0.8);
-    const disc = new THREE.Mesh(new THREE.CircleGeometry(3.6, 40), new THREE.MeshBasicMaterial({ color: 0x9f6bff, transparent: true, opacity: 0.6, side: THREE.DoubleSide }));
-    disc.position.set(E.x + OX, ey + 5.6, pz + OZ);
-    group.add(disc);
-    world.animated.push((t) => { disc.material.opacity = 0.45 + Math.sin(t * 2) * 0.15; disc.scale.setScalar(1 + Math.sin(t * 1.6) * 0.03); });
+    const fp = buildFancyPortal(camp, glow, col, group, E.x + OX, ey, pz + OZ, 0x9f6bff);
+    world.animated.push(fp.anim);
     world.lightSources.push({ x: E.x + OX, y: ey + 1.4, z: E.z - 3 + OZ, color: 0xffa040, intensity: 2.2, night: 7, dist: 18, flicker: true, area: 'ermos', kind: 'fogueira' });
-    { const sg = labelSprite('PLANÍCIE DO GUARDIÃO', 'Mapa 2 · portal de volta', '#9fd8ff'); sg.position.set(E.x + OX, ey + 11, pz + OZ); sg.scale.set(7, 2.2, 1); group.add(sg); }
+    { const sg = labelSprite('PLANÍCIE DO GUARDIÃO', 'Mapa 2 · portal de volta', '#9fd8ff'); sg.position.set(E.x + OX, ey + 12.8, pz + OZ); sg.scale.set(7, 2.2, 1); group.add(sg); }
     world.addInteract({ id: 'portal_volta', kind: 'portalBack', x: E.x + OX, z: pz + OZ - 1.5, r: 3.6, area: 'ermos', name: 'Portal para a Planície do Guardião' });
     // baús
     // portal para os Confins, atrás do Trono Partido
     {
       const P = ERMOS.portal, py = H(P.x, P.z);
-      ruin.box(P.x - 5 + OX, py + 3.5, P.z + OZ, 1.2, 7, 1.2, 0x3a3448); ruin.box(P.x + 5 + OX, py + 3.5, P.z + OZ, 1.2, 7, 1.2, 0x3a3448);
-      ruin.addGeo(GEO.torus, P.x + OX, py + 6.4, P.z + OZ, 10.5, 10.5, 6, 0, 0, 0, 0x4a4458);
-      col.addCircle(P.x - 5 + OX, P.z + OZ, 0.9); col.addCircle(P.x + 5 + OX, P.z + OZ, 0.9);
-      const d2 = new THREE.Mesh(new THREE.CircleGeometry(4.6, 44), new THREE.MeshBasicMaterial({ color: 0xffc46b, transparent: true, opacity: 0.6, side: THREE.DoubleSide }));
-      d2.position.set(P.x + OX, py + 6.4, P.z + OZ);
-      group.add(d2);
+      const fp2 = buildFancyPortal(ruin, glow, col, group, P.x + OX, py, P.z + OZ, 0xffc46b, 1.25);
       const beam = new THREE.Mesh(new THREE.CylinderGeometry(1, 2, 26, 12, 1, true), new THREE.MeshBasicMaterial({ color: 0xffc46b, transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending, depthWrite: false }));
       beam.position.set(P.x + OX, py + 13, P.z + OZ);
       group.add(beam);
-      world.animated.push((t) => { d2.material.opacity = 0.45 + Math.sin(t * 1.7) * 0.15; d2.scale.setScalar(1 + Math.sin(t * 1.5) * 0.03); beam.material.opacity = 0.14 + Math.sin(t * 1.3) * 0.06; });
+      world.animated.push((t) => { fp2.anim(t); beam.material.opacity = 0.14 + Math.sin(t * 1.3) * 0.06; });
       world.addInteract({ id: 'portal_confins', kind: 'portalConfins', x: P.x + OX, z: P.z + OZ + 2.5, r: 6, area: 'ermos', name: 'Portal dos Confins' });
       const sign = labelSprite('CONFINS DE ELDORIA', `Próxima região · recomendado nível ${CONFINS_REQ}`, '#ffc46b');
-      sign.position.set(P.x + OX, py + 14, P.z + OZ); group.add(sign);
+      sign.position.set(P.x + OX, py + 15.5, P.z + OZ); group.add(sign);
     }
     // Mirante dos Exilados: beirada de pedra ao norte do acampamento, de frente para o vale
     {

@@ -5,6 +5,7 @@ import { Rng, mulberry32 } from '../core/rng.js';
 import { CONFINS } from '../config/world.js';
 import { Megastructs } from './megastruct.js';
 import { W, wLerp } from './terrain.js';
+import { buildCampScene, buildFancyPortal } from './campdeco.js';
 
 // Confins de Eldoria: mapa enorme (3,7 km) gerado por ruído e carregado em blocos perto do jogador.
 const OX = CONFINS.offset.x, OZ = CONFINS.offset.z, HALF = CONFINS.half;
@@ -162,25 +163,13 @@ export class Confins {
     this.mega = new Megastructs(world);
     // posto da fronteira: fogueira, barracas e portal de volta (sempre presentes)
     const ey = confinsRawHeight(E.x, E.z), b = new Batch(), glow = new Batch(), col = world.col;
-    for (const [dx, dz, ry, c] of [[-10, -4, 0.4, 0x7a5a3a], [10, -6, -0.5, 0x5a6a8a], [-8, 9, 2.2, 0x6a5a3a], [11, 8, -2, 0x8a4a3a]]) {
-      b.cone(E.x + dx + OX, ey + 1.4, E.z + dz + OZ, 2.4, 2.8, c, 4, ry);
-      col.addCircle(E.x + dx + OX, E.z + dz + OZ, 2);
-    }
-    b.cyl(E.x + OX, ey + 0.2, E.z - 2 + OZ, 1.1, 0.4, 0x4a4040, 8);
-    glow.cone(E.x + OX, ey + 0.9, E.z - 2 + OZ, 0.6, 1.4, 0xffa040, 6);
-    // estandarte
-    b.cyl(E.x + 4 + OX, ey + 3, E.z - 12 + OZ, 0.12, 6, 0x5a4030, 6);
-    b.box(E.x + 4.9 + OX, ey + 4.8, E.z - 12 + OZ, 1.6, 2.2, 0.08, 0xd8b25a);
+    buildCampScene(b, glow, col, E.x + OX, ey, E.z - 2 + OZ, [[-10, -2, 0.4, 0x7a5a3a], [10, -4, -0.5, 0x5a6a8a], [-8, 11, 2.2, 0x6a5a3a], [11, 10, -2, 0x8a4a3a]],
+      { supplies: [[5, 4, 0.5], [-5, -9, 1.9], [6, 13, 2.6]], lanterns: [[-4, 5], [4, -7], [2, 9], [-3, 15]], banners: [[4, -10, 0, 0x2a4a6a], [-5, 14, 1.2, 0x2a4a6a]] });
     const pz = E.z + 15;
-    b.box(E.x - 4 + OX, ey + 3, pz + OZ, 1, 6, 1, 0x4a4458); b.box(E.x + 4 + OX, ey + 3, pz + OZ, 1, 6, 1, 0x4a4458);
-    b.addGeo(GEO.torus, E.x + OX, ey + 5.6, pz + OZ, 8.5, 8.5, 5, 0, 0, 0, 0x5a5468);
-    col.addCircle(E.x - 4 + OX, pz + OZ, 0.8); col.addCircle(E.x + 4 + OX, pz + OZ, 0.8);
-    const disc = new THREE.Mesh(new THREE.CircleGeometry(3.6, 40), new THREE.MeshBasicMaterial({ color: 0x6bd8ff, transparent: true, opacity: 0.6, side: THREE.DoubleSide }));
-    disc.position.set(E.x + OX, ey + 5.6, pz + OZ);
-    this.group.add(disc);
-    world.animated.push((t) => { if (!this.group.visible) return; disc.material.opacity = 0.45 + Math.sin(t * 2) * 0.15; });
+    const fp = buildFancyPortal(b, glow, col, this.group, E.x + OX, ey, pz + OZ, 0x6bd8ff);
+    world.animated.push((t) => { if (this.group.visible) fp.anim(t); });
     world.lightSources.push({ x: E.x + OX, y: ey + 1.4, z: E.z - 2 + OZ, color: 0xffa040, intensity: 2.2, night: 7, dist: 18, flicker: true, area: 'confins', kind: 'fogueira' });
-    { const sg = labelSprite('ERMOS DA FENDA', 'Portal de volta', '#e7a6ff'); sg.position.set(E.x + OX, ey + 11, pz + OZ); sg.scale.set(7, 2.2, 1); this.group.add(sg); }
+    { const sg = labelSprite('ERMOS DA FENDA', 'Portal de volta', '#e7a6ff'); sg.position.set(E.x + OX, ey + 12.8, pz + OZ); sg.scale.set(7, 2.2, 1); this.group.add(sg); }
     world.addInteract({ id: 'portal_confins_volta', kind: 'portalErmos', x: E.x + OX, z: pz + OZ - 1.5, r: 3.6, area: 'confins', name: 'Portal para os Ermos' });
     const m1 = b.build(this.mats.veg, { name: 'posto' }); if (m1) this.group.add(m1);
     const m2 = glow.build(this.mats.glow, { castShadow: false, name: 'posto-brilho' }); if (m2) this.group.add(m2);
