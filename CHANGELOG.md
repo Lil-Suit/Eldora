@@ -1,5 +1,14 @@
 # Histórico de versões
 
+## 0.11.0 — economia nova, monstros por bioma e mundo vivo
+- Raridade de verdade: cada cor bem mais difícil; teto de raridade pela força do monstro; branco só de monstros fortes e chefes; épicos de Natal bem mais raros.
+- Bolsa começa com 10 espaços e tem teto pelo nível (ninguém perde item). Cofre do banco: +10 espaços com diamantes (50/75/100/125). Baú diário de 1 a 7 dias. Mercado sem taxa.
+- Nomes de monstros curtos; versões mais fortes com o nome em outra cor (ex.: "Lobo" roxo).
+- Uma família de monstros por bioma, 12 criaturas novas e um set por bioma. As peças dos sets antigos viram as do set do bioma, com o mesmo fundo e força.
+- Monstros renascem cada um no seu tempo e ficam espalhados em grupinhos. Vale: acampamento goblin com o dobro do tamanho, lobos e esqueletos espalhados, floresta mais aberta.
+- Portal atrás do Guardião só para quem derrotou ou ajudou a derrotar (salvo no servidor).
+- Servidor confere itens, raridades, baú, cofre e portal contra trapaça.
+
 ## 0.10.18 — segurança e anti-trapaça
 - O servidor agora confere os saves: nível, XP e ouro não sobem mais rápido do que é possível jogando (quem joga normal não sente nada; trapaça grande é corrigida e registrada — nada é apagado e ninguém é banido automaticamente).
 - Banco, mercado, trocas e PvP conferidos no servidor (ouro do nada, item inventado no mercado, dano infinito, golpe de longe e abate falso são barrados).

@@ -11,7 +11,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.10.18'; // (a variável é só para testes)
+const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.11.0'; // (a variável é só para testes)
 
 // ---------- Erros do servidor → Sentry (só no Render; sem dados pessoais) ----------
 const SENTRY_DSN = process.env.SENTRY_DSN || 'https://8ffc505d8bfbef96c829cace57608900@o4512419115499520.ingest.us.sentry.io/4512419158622208';
@@ -152,7 +152,7 @@ const store = await openStore();
 // =============================================================
 const SEG = '~seg', SEG_LOG_DOC = '~seglog';
 // donos especiais de documentos: ninguém pode criar uma conta com esses nomes (ex.: "__diamantes__" lia e escrevia os diamantes de todos)
-const SPECIAL_OWNERS = new Set(['__diamantes__', '~names', '~dir', '~mail', '~market', SEG, SEG_LOG_DOC]);
+const SPECIAL_OWNERS = new Set(['__diamantes__', '~names', '~dir', '~mail', '~market', '~bau', SEG, SEG_LOG_DOC]);
 const PROD = !!(process.env.RENDER || process.env.DATABASE_URL || process.env.NODE_ENV === 'production');
 // nome de GM só se cria com GMS_REGISTRO=1 (num banco novo ou sem banco, qualquer um viraria GM criando a conta "lil")
 const nameBlocked = (name) => SPECIAL_OWNERS.has(name) || /^[_~]{2}/.test(name) || (PROD && GMS.has(name) && process.env.GMS_REGISTRO !== '1');
@@ -163,8 +163,12 @@ const toInt = (v, lo, hi, def = lo) => { const n = Math.floor(+v); return Number
 const LINK_RE = /\b(?:https?:\/\/|www\.)\S+|\b[\w-]{2,}\.(?:com|net|org|gg|io|xyz|ru|ly|link|top|tk|shop|online|site|app)(?:\.br)?\b(?:\/\S*)?/gi;
 const maskLinks = (t) => String(t).replace(LINK_RE, '[link]');
 // regras do jogo (src/core/items.js) para conferir itens do mercado; se a pasta src/ não estiver no servidor, confere só o formato
-let CORE = null;
+let CORE = null, CHK = null;
 import('../src/core/items.js').then((m) => { CORE = m; }).catch(() => console.log('[segurança] src/core/items.js não encontrado: o mercado confere só o formato dos itens'));
+// v0.12: conferência de itens (catálogo, fundo possível, nível, sets) e troca dos sets antigos — src/core/itemcheck.js
+let GD = null; // pacote 3: Portal da Fenda (liberação por personagem)
+import('../src/core/guardiao.js').then((m) => { GD = m; }).catch(() => console.log('[segurança] src/core/guardiao.js não encontrado: o portal do Guardião não é conferido'));
+import('../src/core/itemcheck.js').then((m) => { CHK = m; convertMarketOnce().catch((e) => reportError(e, 'troca do mercado')); }).catch(() => console.log('[segurança] src/core/itemcheck.js não encontrado: itens do save não são conferidos'));
 
 // ---- registro (arquivo + últimos 300 no banco, para o GM ver com /seguranca mesmo depois de reiniciar) ----
 const SEG_FILE = process.env.SEG_LOG || path.join(HERE, 'seguranca.log');
@@ -224,7 +228,8 @@ const H = 3600e3;
 function ledgerNorm(d, now = Date.now()) {
   const L = d && typeof d === 'object' ? d : {};
   const keep = (a, ms) => (Array.isArray(a) ? a.filter((x) => x && x.n > 0 && now - x.t < ms).slice(-200) : []);
-  return { ch: L.ch && typeof L.ch === 'object' ? L.ch : {}, bank: L.bank || null, deb: keep(L.deb, 6 * H), cred: keep(L.cred, 24 * H), bcred: keep(L.bcred, 24 * H), pend: keep(L.pend, H), nov: Array.isArray(L.nov) ? L.nov.filter((t) => now - t < 864e5) : [] };
+  return { ch: L.ch && typeof L.ch === 'object' ? L.ch : {}, bank: L.bank || null, deb: keep(L.deb, 6 * H), cred: keep(L.cred, 24 * H), bcred: keep(L.bcred, 24 * H), pend: keep(L.pend, H), nov: Array.isArray(L.nov) ? L.nov.filter((t) => now - t < 864e5) : [],
+    gd: L.gd && typeof L.gd === 'object' ? L.gd : {}, gdc: L.gdc && typeof L.gdc === 'object' ? L.gdc : {} }; // gd: portal do Guardião liberado (personagem → hora) · gdc: migração já conferida
 }
 const ledgerGet = async (a) => ledgerNorm(await store.getDoc(SEG, a));
 const ledgerSet = (a, L) => store.setDoc(SEG, a, L);
@@ -245,6 +250,46 @@ async function seedChars(owner, L) {
     if (!String(d.id).startsWith('rift_char_')) continue;
     try { const p = JSON.parse(d.data.json).player; L.ch[d.id.slice(10)] = { g: toInt(p.gold, 0, GOLD_MAX, 0), x: xpTotal(p.level, p.xp), l: toInt(p.level, 1, MAX_LEVEL), t: Date.now(), n: cleanStr(p.name, 16) }; } catch { /* save estranho: ignora */ }
   }
+}
+
+// ---- pacote 3: Portal da Fenda (atrás do Guardião) ----
+// Liberado para sempre para o personagem que derrotou o Guardião ou participou da luta (deu dano / curou perto da arena),
+// anotado AQUI (livro "~seg"), não só no save. Migração: na primeira vez que o livro vê o personagem depois desta versão,
+// lê o save GUARDADO no servidor (de antes da versão): chefe já morto, ou já está/esteve nos Ermos/Confins → liberado.
+async function gdMigrate(owner, cid, L) {
+  if (!GD || !cid || L.gd[cid] || L.gdc[cid]) return false;
+  let st = null;
+  try { const d = await store.getDoc(owner, 'rift_char_' + cid); st = d && typeof d.json === 'string' ? JSON.parse(d.json) : null; } catch { st = null; }
+  const now = Date.now();
+  L.gdc[cid] = now;
+  if (GD.passedBefore(st, false)) L.gd[cid] = now;
+  return true;
+}
+function gdSend(peer) { send(peer, { t: 'msg', topic: 'fx', peer: 'server', data: { type: 's_gd', ok: peer.gdOk ? 1 : 0 } }); }
+function gdLoad(peer, cid = peer.presence?.id) {
+  if (!GD || !peer.account || !cid || peer.gm || peer.bot) return;
+  acctLock(peer.account, async () => {
+    const L = await ledgerGet(peer.account);
+    if (await gdMigrate(peer.account, cid, L)) await ledgerSet(peer.account, L);
+    if (peer.presence?.id !== cid) return;
+    peer.gdOk = !!L.gd[cid]; gdSend(peer);
+    gdCheck(peer, peer.presence, Date.now()); // já está nos Ermos/Confins sem liberação?
+  }).catch(() => {});
+}
+function gdGrant(peer, why) {
+  const cid = peer.presence?.id;
+  if (!peer.account || !cid || peer.gdOk) return;
+  peer.gdOk = true; gdSend(peer);
+  acctLock(peer.account, async () => { const L = await ledgerGet(peer.account); if (!L.gd[cid]) { L.gd[cid] = Date.now(); L.gdc[cid] ||= Date.now(); await ledgerSet(peer.account, L); } }).catch(() => {});
+  segLog('guardiao_liberado', peer.account, { personagem: cleanStr(peer.presence?.n, 16), como: why }, 0);
+}
+// presença nos Ermos/Confins sem liberação: registra e manda de volta ao Vale (sem banir)
+function gdCheck(peer, pr, now) {
+  if (!GD || peer.gm || peer.bot || peer.old || !peer.account || peer.gdOk !== false || !GD.isGated(pr.ar)) return;
+  if (now - (peer.gdBackAt || 0) < 8000) return;
+  peer.gdBackAt = now;
+  segLog('portal_sem_guardiao', peer.account, { personagem: cleanStr(pr.n, 16), area: String(pr.ar).slice(0, 12) }, 5 * 60000);
+  send(peer, { t: 'msg', topic: 'fx', peer: 'server', data: { type: 's_gdvolta' } });
 }
 
 // trocas entre jogadores (o ouro passa de um para o outro pelo navegador): o servidor anota as ofertas que viu
@@ -278,6 +323,7 @@ async function checkChar(owner, id, body, write) {
   const cid = id.slice(10);
   return acctLock(owner, async () => {
     const now = Date.now(), Lg = await ledgerGet(owner), prev = Lg.ch[cid], notes = {};
+    await gdMigrate(owner, cid, Lg); // pacote 3: antes de o save novo substituir o guardado
     let lvl = toInt(p.level, 1, MAX_LEVEL), gold = toInt(p.gold, 0, GOLD_MAX, 0), fix = lvl !== p.level || gold !== p.gold;
     if (fix) notes.fora_do_limite = { nivel: p.level, ouro: p.gold };
     let tx = xpTotal(lvl, p.xp);
@@ -303,13 +349,82 @@ async function checkChar(owner, id, body, write) {
     const pts = Object.values(p.attrs || {}).reduce((a, v) => a + Math.max(0, +v || 0), 0) + Math.max(0, +p.freePoints || 0);
     if (pts > Math.floor(1.5 * (lvl - 1)) + 3 && !p.gmBoost) segLog('atributos_demais', owner, { personagem: cleanStr(p.name, 16), pontos: pts, nivel: lvl }, 30 * 60000);
     p.level = lvl; p.gold = gold;
-    if (fix) { body.json = JSON.stringify(st); segLog('save_corrigido', owner, { personagem: cleanStr(p.name, 16), ...notes }, 0); }
+    if (fix) segLog('save_corrigido', owner, { personagem: cleanStr(p.name, 16), ...notes }, 0);
+    const rev = await itemReview(owner, cid, p, prev, now); // v0.12: sets antigos trocados uma vez só + itens impossíveis
+    if (rev.changed) st.updated = Math.max(+st.updated || 0, now) + 1; // a cópia conferida do servidor vale na próxima entrada
+    if (fix || rev.changed) body.json = JSON.stringify(st);
     body.level = lvl; // o resumo (lista de personagens, ranking) segue o save conferido
-    Lg.ch[cid] = { g: gold, x: tx, l: lvl, t: now, n: cleanStr(p.name, 16) };
+    const aud = await auditItems(owner, p, prev, now, lvl);
+    Lg.ch[cid] = { g: gold, x: tx, l: lvl, t: now, n: cleanStr(p.name, 16), ...aud, cv: rev.cv };
     await ledgerSet(owner, Lg);
     for (const q of peers.values()) if (q.account === owner && q.presence?.id === cid) q.lvlCap = lvl;
     return write();
   });
+}
+
+// ---- itens do save (v0.12, pacote 2) ----
+// 1) TROCA DOS SETS ANTIGOS, UMA VEZ: cada peça de "set de monstro" vira a peça do set do bioma (mesmo fundo, mesma peça).
+//    O jogo troca ao abrir o save (v17); o servidor confere e REGISTRA: no livro (ch[personagem].cv = hora da troca) e,
+//    por conta, a chave de cada item trocado (doc "cv:<conta>": item → personagem). O mesmo item aparecendo em OUTRO
+//    personagem (cópia de save / código antigo importado) fica RETIDO; save velho do mesmo personagem é trocado de novo
+//    no lugar (é o mesmo item, nada duplica) e fica registrado.
+// 2) ITENS IMPOSSÍVEIS: fora do catálogo, raridade inventada, nível acima do possível, peça fora do lugar, set que não existe.
+//    Nada é apagado: o que dá para consertar vira o MÁXIMO POSSÍVEL; o que não dá fica RETIDO (guardado, sem uso) e registrado.
+const CV_MAX = 6000;
+const cvGet = async (a) => { const d = await store.getDoc(SEG, 'cv:' + a); return { u: d?.u && typeof d.u === 'object' ? d.u : {} }; };
+const cvSet = (a, R) => { const k = Object.keys(R.u); if (k.length > CV_MAX) for (const x of k.slice(0, k.length - CV_MAX)) delete R.u[x]; return store.setDoc(SEG, 'cv:' + a, R); };
+async function itemReview(owner, cid, p, prev, now) {
+  const out = { changed: false, cv: prev?.cv || now };
+  if (!CHK) return out;
+  const who = cleanStr(p.name, 16), refs = CHK.itemRefs(p);
+  const first = !prev?.cv, old = refs.filter((r) => CHK.isOldItem(r.it)), conv = refs.filter((r) => r.it.kind === 'equip' && r.it.conv && !CHK.isOldItem(r.it));
+  const retain = (r, why) => { r.it.retido = 1; out.changed = true; segLog('item_retido', owner, { personagem: who, item: cleanStr(r.it.name || r.it.id, 40), onde: r.where, motivo: why }, 0); };
+  if (old.length || (first && conv.length)) {
+    const R = await cvGet(owner);
+    let dup = 0, again = 0;
+    // itens que o jogo já trocou: registra na 1ª vez; o mesmo item já registrado em outro personagem é cópia
+    if (first) for (const r of conv) { const k = CHK.uidKey(r.it.uid); if (R.u[k] && R.u[k] !== cid) { retain(r, 'copia_de_item_trocado'); dup++; } else R.u[k] = cid; }
+    // itens ainda no formato antigo: o servidor troca aqui mesmo
+    for (const r of old) {
+      const k = CHK.uidKey(r.it.uid), o = R.u[k];
+      CHK.convertOldItem(r.it); out.changed = true;
+      if (o && o !== cid) { retain(r, 'troca_repetida_em_outro_personagem'); dup++; } else { if (o === cid || !first) again++; R.u[k] = cid; }
+    }
+    await cvSet(owner, R);
+    if (again) segLog('troca_repetida', owner, { personagem: who, itens: again }, 30 * 60000); // save de antes da troca subiu de novo
+    if (dup) segLog('troca_copia', owner, { personagem: who, itens: dup }, 0);
+  }
+  if (first && (old.length || conv.length)) segLog('sets_trocados', owner, { personagem: who, itens: old.length + conv.length }, 0);
+  // itens impossíveis
+  for (const r of refs) {
+    if (r.it.retido) continue;
+    const res = CHK.checkItem(r.it, { mode: 'save' });
+    if (res.ok) continue;
+    if (res.fix) { CHK.fixItem(r.it, res.problems); out.changed = true; segLog('item_corrigido', owner, { personagem: who, item: cleanStr(r.it.name || r.it.id, 40), motivo: res.problems.join(',') }, 10 * 60000); }
+    else retain(r, res.problems.join(','));
+  }
+  return out;
+}
+
+// ---- itens do save (v0.11): o servidor SÓ REGISTRA o que parece trapaça — nunca apaga item, cofre ou bolsa ----
+// cofre maior que o comprado com diamantes, bolsa crescendo acima do teto do nível e muitos vermelhos/brancos de uma vez.
+async function auditItems(owner, p, prev, now, lvl) {
+  const who = cleanStr(p.name, 16), eq = p.equipment && typeof p.equipment === 'object' ? Object.values(p.equipment) : [];
+  const inv = Array.isArray(p.inventory) ? p.inventory : [], vault = Array.isArray(p.vault) ? p.vault : [];
+  let w = 0, r = 0;
+  for (const it of [...inv, ...eq, ...vault]) if (it && it.kind === 'equip') { if (it.rarity === 'lendario') w++; else if (it.rarity === 'mitico') r++; }
+  const vl = Math.min(100000, vault.length), bag = inv.filter(Boolean).length, teto = Math.min(300, 15 + lvl);
+  const vb = Number.isFinite(prev?.vb) ? prev.vb : Math.max(COFRE.base, Math.min(vl, 120)); // 1ª vez: o tamanho que já tinha (até 120, o máximo antigo com ouro)
+  if (vl > vb) {
+    const n = (await diaGet(owner)).spent.filter((x) => x.sku === COFRE.sku).length, max = cofreMax(vb, n);
+    if (vl > max) segLog('cofre_grande', owner, { personagem: who, espacos: vl, max }, 30 * 60000);
+  }
+  if (bag > teto && Number.isFinite(prev?.bag) && bag > prev.bag) segLog('bolsa_acima_do_teto', owner, { personagem: who, itens: bag, teto, antes: prev.bag }, 30 * 60000);
+  if (prev?.t && Number.isFinite(prev.w) && now - prev.t < 6 * H) {
+    if (w - prev.w >= 2) segLog('brancos_rapido', owner, { personagem: who, brancos: `${prev.w}→${w}`, minutos: Math.round((now - prev.t) / 60000) }, 30 * 60000);
+    if (r - (prev.r || 0) >= 4) segLog('vermelhos_rapido', owner, { personagem: who, vermelhos: `${prev.r || 0}→${r}`, minutos: Math.round((now - prev.t) / 60000) }, 30 * 60000);
+  }
+  return { w, r, vb, bag };
 }
 
 // ---- banco: só sobe com correio recebido, transferência devolvida ou depósito de ouro que existe nos personagens ----
@@ -367,6 +482,7 @@ function loadOwned(peer) {
 function loadLvlCap(peer, cid = peer.presence?.id) {
   if (!peer.account || !cid || peer.gm) return;
   ledgerGet(peer.account).then((L) => { if (peer.presence?.id === cid && L.ch[cid]) peer.lvlCap = L.ch[cid].l; }).catch(() => {});
+  gdLoad(peer, cid);
 }
 function vetName(peer) {
   const n = peer.presence?.n;
@@ -540,10 +656,16 @@ async function api(req, res, p) {
     // ---- diamantes 💎: o saldo fica SÓ no servidor (o jogador não consegue escrever) ----
     if (p === '/api/dia' && req.method === 'GET') { const d = await diaGet(owner); return json(res, 200, { total: d.total, spent: d.spent, balance: diaBal(d), gm: GMS.has(String(owner).toLowerCase()) }); }
     if (p === '/api/dia/spend' && req.method === 'POST') {
-      const b = await readBody(req, 1024), sku = String(b.sku || ''), price = DIA_PRICES[sku];
+      const b = await readBody(req, 1024), sku = String(b.sku || '');
+      let price = DIA_PRICES[sku];
       if (!price) return json(res, 400, { error: 'Este item não está à venda.' });
       return diaLock(async () => {
         const d = await diaGet(owner);
+        if (sku === COFRE.sku) { // cofre do banco: o preço sobe a cada compra (50, 75, 100, 125) e para no dobro do cofre
+          const n = d.spent.filter((x) => x.sku === COFRE.sku).length;
+          if (n >= COFRE.buys) { segLog('cofre_alem_do_maximo', owner, { compras: n }, 10 * 60000); return json(res, 400, { error: 'Seu cofre já está no tamanho máximo.' }); }
+          price = COFRE.price(n);
+        }
         if (!DIA_REPEAT.has(sku) && diaOwns(d, sku)) return json(res, 200, { ok: true, owned: true, balance: diaBal(d), spent: d.spent });
         if (DIA_REQUIRES[sku] && !diaOwns(d, DIA_REQUIRES[sku])) return json(res, 400, { error: 'Compre a roupa primeiro: a cor extra vale só para quem já tem a roupa.' });
         if (sku === 'mk10' && MKT_MAX + MKT_EXTRA * d.spent.filter((x) => x.sku === 'mk10').length >= MKT_TOP) return json(res, 400, { error: `Você já tem o máximo de ${MKT_TOP} espaços de venda.` });
@@ -577,6 +699,35 @@ async function api(req, res, p) {
       if (other && other.name !== owner) return json(res, 409, { error: 'Esse e-mail já está em outra conta.' });
       await store.setEmail(owner, email);
       return json(res, 200, { ok: true, email });
+    }
+    // ---- baú diário ----
+    if (p === '/api/bau' && req.method === 'GET') {
+      const b = await bauGet(owner), hoje = bauDay(), pode = b.last !== hoje;
+      return json(res, 200, { pode, dia: pode ? bauProx(b, hoje) : b.dia, // sem poder: o dia que já abriu hoje
+        seguidos: b.last >= hoje - 1 ? b.seguidos : 0, faltaMs: bauFalta(), dias: BAU_DIAS });
+    }
+    if (p === '/api/bau/abrir' && req.method === 'POST') {
+      const body = (await readBody(req, 1024)) || {}, cid = cleanStr(body.cid, 40);
+      return acctLock(owner, async () => {
+        const now = Date.now(), hoje = bauDay(now), b = await bauGet(owner);
+        if (b.last === hoje) {
+          b.tent++; await store.setDoc(BAU, String(owner).toLowerCase(), b);
+          if (b.tent >= 3) segLog('bau_repetido', owner, { tentativas: b.tent }, 30 * 60000);
+          return json(res, 409, { error: 'Você já abriu o baú de hoje. Volte amanhã!', faltaMs: bauFalta(now) });
+        }
+        if (b.last > hoje) { segLog('bau_relogio', owner, { ultimo: b.last, hoje }, 0); return json(res, 409, { error: 'Volte amanhã!' }); }
+        const dia = bauProx(b, hoje), D = BAU_DIAS[dia - 1];
+        const Lg = await ledgerGet(owner); await seedChars(owner, Lg);
+        const lvl = toInt(Lg.ch[cid]?.l || Math.max(1, ...Object.values(Lg.ch).map((c) => c.l || 1)), 1, MAX_LEVEL, 1);
+        const ouro = Math.round(D.ouro * (1 + lvl / 10)), item = D.item && Math.random() < D.item ? pickW(BAU_RAR) : null;
+        b.seguidos = b.last === hoje - 1 ? b.seguidos + 1 : 1;
+        b.last = hoje; b.dia = dia; b.n++; b.tent = 0;
+        b.hist = b.hist.concat([{ d: hoje, dia, ouro, item, cid, t: now }]).slice(-30);
+        await store.setDoc(BAU, String(owner).toLowerCase(), b);
+        Lg.cred.push({ n: ouro, t: now, k: 'bau' }); // o ouro do baú pode aparecer no save do personagem
+        await ledgerSet(owner, Lg);
+        return json(res, 200, { ok: true, dia, seguidos: b.seguidos, ouro, pocao: D.pocao || 0, tonico: D.tonico || 0, item, faltaMs: bauFalta(now) });
+      });
     }
     // ---- Mercado dos Viajantes (no próprio servidor): anúncios de todos os jogadores ----
     if (p.startsWith('/api/market')) return market(req, res, p, owner);
@@ -699,7 +850,28 @@ const DIA_PRICES = {
 };
 // cor extra só para quem já tem a roupa
 const DIA_REQUIRES = { hs_patrulheiro_3: 'hs_patrulheiro', hs_mago_2: 'hs_mago', hs_mago_3: 'hs_mago', hs_nobre_2: 'hs_nobre', hs_nobre_3: 'hs_nobre', hs_cavaleiro_2: 'hs_cavaleiro', hs_cavaleiro_3: 'hs_cavaleiro' };
-const DIA_REPEAT = new Set(['tp3', 'tp8', 'mk10']);
+const DIA_REPEAT = new Set(['tp3', 'tp8', 'mk10', 'cofre10']);
+// cofre do banco (igual a src/config/economia.js): começa com 40, +10 por compra, até 80 (o dobro). Compra da CONTA.
+const COFRE = { sku: 'cofre10', base: 40, step: 10, buys: 4, price: (n) => 50 + 25 * n };
+DIA_PRICES[COFRE.sku] = COFRE.price(0); // preço da 1ª compra (as outras sobem: ver /api/dia/spend)
+// tamanho máximo honesto do cofre de um personagem: o que ele já tinha quando o servidor viu pela 1ª vez + compras, até o dobro
+const cofreMax = (base, n) => { const b = Math.max(COFRE.base, base || COFRE.base); return Math.max(b, Math.min(Math.max(COFRE.base * 2, b), b + COFRE.step * Math.min(COFRE.buys, n))); };
+
+// ---------- Baú diário (igual a src/config/economia.js; aqui é quem decide) ----------
+// 1 por dia por CONTA, pelo relógio do SERVIDOR no horário de Brasília (mudar o relógio do aparelho não muda nada).
+// Dias seguidos: 1 → 7 e volta ao 1; perdeu um dia, volta ao 1. O ouro entra no livro-caixa (o save pode subir esse tanto).
+const BAU = '~bau', BAU_TZ = 3 * 3600e3;
+const BAU_DIAS = [
+  { ouro: 40, pocao: 3 }, { ouro: 60, pocao: 4, tonico: 1 }, { ouro: 80, pocao: 5, tonico: 1 }, { ouro: 110, pocao: 6, tonico: 2 },
+  { ouro: 140, pocao: 7, tonico: 2, item: 0.1 }, { ouro: 180, pocao: 8, tonico: 3, item: 0.15 }, { ouro: 250, pocao: 10, tonico: 4, item: 0.3 },
+];
+const BAU_RAR = { incomum: 75, raro: 22, epico: 3 };
+const bauDay = (t = Date.now()) => Math.floor((t - BAU_TZ) / 864e5);
+const bauFalta = (t = Date.now()) => (bauDay(t) + 1) * 864e5 + BAU_TZ - t;
+const bauGet = async (a) => { const d = await store.getDoc(BAU, String(a).toLowerCase()); return { last: Number.isFinite(+d?.last) ? +d.last : -1e9, dia: toInt(d?.dia, 0, 7, 0), seguidos: toInt(d?.seguidos, 0, 1e6, 0), n: toInt(d?.n, 0, 1e7, 0), hist: Array.isArray(d?.hist) ? d.hist.slice(-30) : [], tent: toInt(d?.tent, 0, 1e6, 0) }; };
+// próximo dia da sequência (puro): ontem → continua; antes disso → volta ao 1
+const bauProx = (b, hoje) => (b.last === hoje - 1 ? (b.dia % 7) + 1 : 1);
+const pickW = (w) => { let t = 0; for (const k in w) t += w[k]; let r = Math.random() * t; for (const k in w) { r -= w[k]; if (r <= 0) return k; } return Object.keys(w).pop(); };
 // skins antigas (antes dos heróis 3D): quem comprou ganhou a roupa nova equivalente e a cor
 const DIA_LEGACY = { skin_rubi: ['hs_nobre'], skin_geada: ['hs_mago', 'hs_mago_3'], skin_abismo: ['hs_mago', 'hs_mago_2'], skin_jade: ['hs_patrulheiro', 'hs_patrulheiro_3'], skin_dragao: ['hs_cavaleiro', 'hs_cavaleiro_2'] };
 const diaOwns = (d, sku) => d.spent.some((x) => x.sku === sku || DIA_LEGACY[x.sku]?.includes(sku));
@@ -802,9 +974,23 @@ async function nameApi(req, res, p, owner) {
   });
 }
 
+// v0.12: anúncios guardados de antes da troca dos sets (itens de "set de monstro") viram a peça do set do bioma, uma vez só
+async function convertMarketOnce() {
+  if (!CHK || (await store.getDoc(SEG, 'conv:mercado'))) return;
+  let n = 0;
+  for (const d of await store.listDocs(MKT)) {
+    const l = d.data; if (!l || typeof l.item !== 'string') continue;
+    let it; try { it = JSON.parse(l.item); } catch { continue; }
+    if (!CHK.isOldItem(it) && !(it?.set && it?.src)) continue;
+    CHK.convertOldItem(it); await store.setDoc(MKT, d.id, { ...l, item: JSON.stringify(it), name: cleanStr(it.name, 60) }); n++;
+  }
+  await store.setDoc(SEG, 'conv:mercado', { t: Date.now(), n });
+  if (n) segLog('mercado_sets_trocados', 'servidor', { anuncios: n }, 0);
+}
+
 // Mercado: cada anúncio é um documento do dono especial "~market". O servidor decide quem compra
 // (uma operação por vez), então nunca vende o mesmo item duas vezes.
-const MKT = '~market', MKT_MAX = 10, MKT_DAYS = 3, MKT_FEE = 5;
+const MKT = '~market', MKT_MAX = 10, MKT_DAYS = 3, MKT_FEE = 0; // v0.11: mercado SEM taxa (quem vende recebe o preço inteiro)
 // espaços de venda: 10 de graça; cada compra de "mk10" (💎100) dá +10, até 50 no total
 const MKT_EXTRA = 10, MKT_TOP = 50;
 const mktMax = async (owner) => Math.min(MKT_TOP, MKT_MAX + MKT_EXTRA * (await diaGet(owner)).spent.filter((x) => x.sku === 'mk10').length);
@@ -823,9 +1009,11 @@ async function market(req, res, p, owner) {
       const price = Math.floor(+b.price), item = String(b.item || '');
       if (!(price >= 1 && price <= 9999999)) return json(res, 400, { error: 'Preço entre 1 e 9.999.999.' });
       if (!item || item.length > 6000) return json(res, 400, { error: 'Item inválido.' });
-      try { const it = JSON.parse(item); if (!it || !['equip', 'material', 'consumable'].includes(it.kind)) throw 0; } catch { return json(res, 400, { error: 'Item inválido.' }); }
+      try { const it = JSON.parse(item); if (!it || !['equip', 'material', 'consumable'].includes(it.kind)) throw 0; if (it.soul || it.bound) { segLog('mercado_item_preso', owner, { item: cleanStr(it.name || it.id, 40) }, 0); return json(res, 400, { error: 'Esse item é preso ao personagem.' }); } } catch { return json(res, 400, { error: 'Item inválido.' }); }
       // com as regras do jogo (src/core/items.js): item que não existe, de missão ou preso à alma não vai à venda
       if (CORE) { const ok = CORE.sanitizeEntry(item, { next: Math.random }); if (!ok || !CORE.tradable(ok)) { segLog('mercado_item_invalido', owner, { item: item.slice(0, 120) }, 0); return json(res, 400, { error: 'Item inválido.' }); } }
+      // v0.12: catálogo, fundo possível, nível, set — e item de set antigo (já devia ter sido trocado) não vai à venda
+      if (CHK && !isGmName(owner)) { const r = CHK.checkItem(item, { mode: 'market' }); if (!r.ok) { segLog('mercado_item_impossivel', owner, { item: cleanStr(r.item?.name || r.item?.id || '', 40), motivo: r.problems.join(',') }, 0); return json(res, 400, { error: r.problems.includes('set_antigo') ? 'Esse item é de antes da troca dos sets: entre no jogo de novo para ele virar a peça nova.' : 'Esse item não existe nas regras do jogo.' }); } }
       const L = await all();
       const max = await mktMax(owner);
       if (L.filter((l) => l.seller === owner && l.status === 'open').length >= max) return json(res, 400, { error: max >= MKT_TOP ? `No máximo ${MKT_TOP} anúncios por jogador.` : `Seus ${max} espaços de venda estão cheios. Compre +${MKT_EXTRA} espaços por 💎100.`, full: true, max });
@@ -1061,9 +1249,10 @@ function onMessage(peer, text) {
     const cid = typeof pr.id === 'string' && pr.id ? pr.id : null;
     if (cid && peer.presence?.id !== cid) {
       for (const o of peers.values()) if (o !== peer && o.presence?.id === cid) { send(o, { t: 'kicked' }); setTimeout(() => drop(o, !!o.linger), 50); }
-      peer.lvlCap = null; if (peer.authDone) loadLvlCap(peer, cid);
+      peer.lvlCap = null; peer.gdOk = undefined; if (peer.authDone) setTimeout(() => loadLvlCap(peer, cid), 0); // depois de guardar a presença nova
     }
     peer.presence = pr; peer.updatedAt = now;
+    gdCheck(peer, pr, now);
     // morreu no PvP enquanto estava fora (personagem ficou no mundo por causa do block): avisa ao voltar
     if (cid && pendingPvp.has(cid)) { send(peer, { t: 'pvpdead', ...pendingPvp.get(cid) }); pendingPvp.delete(cid); }
     // jogo aberto numa versão antiga (aba velha, cópia velha em cache): fica isolado e recebe "atualizar"
@@ -1102,12 +1291,27 @@ function onMessage(peer, text) {
       if (left) return send(peer, { t: 'msg', topic: 'fx', peer: 'server', data: { type: 's_ban', until: now + left } });
     }
     if (d.type === 'announce') d.text = String(d.text ?? '').slice(0, 120);
+    // pacote 3: luta contra o Guardião. Quem cura perto da arena conta como participante; quando o anfitrião anuncia
+    // a queda do Guardião, quem deu dano (lista dele) ou curou nos últimos 3 min — e está perto da arena — fica liberado.
+    if (GD && d.type === 'hl' && peer.presence && GD.nearArena(peer.presence.ar, peer.presence.x, peer.presence.z)) peer.gdHeal = now;
+    if (GD && m.topic === 'mob' && isHost && d.k !== undefined && d.gb) {
+      const c = new Set(Array.isArray(d.c) ? d.c.slice(0, 40).map(String) : []);
+      for (const q of peers.values()) {
+        if (q.sv !== peer.sv || !q.presence || q.gdOk) continue;
+        const dmg = c.has(String(q.id)), heal = now - (q.gdHeal || 0) < 180000;
+        if ((dmg || heal) && GD.nearArena(q.presence.ar, q.presence.x, q.presence.z, 90)) gdGrant(q, dmg ? 'dano' : 'cura');
+      }
+    }
     // mensagem para uma pessoa só (convite, troca, privado, golpe PvP): vai só para ela
     if (typeof d.to === 'string') {
       const target = peers.get(d.to);
       if (target && target.sv !== peer.sv) return; // outro servidor: não alcança
       if (target && d.type === 'v_hit' && !pvpHitOk(peer, target, d, now)) return;
       if (target && d.type === 'v_kill' && !((peer.hitAt?.get(target.id) || 0) > now - 90000)) { segLog('pvp_abate_falso', who, { para: target.presence?.n }); return; }
+      if (target && d.type === 'tr_off' && CHK && !peer.gm && Array.isArray(d.items)) { // v0.12: item impossível não entra na troca
+        const bad = d.items.map((x) => CHK.checkItem(String(x).slice(0, 6000), { mode: 'trade' })).find((r) => !r.ok);
+        if (bad) { segLog('troca_item_impossivel', who, { item: cleanStr(bad.item?.name || bad.item?.id || '', 40), motivo: bad.problems.join(',') }, 60000); return; }
+      }
       if (target) noteTrade(peer, target, d, now);
       if (target?.linger) { if (d.type === 'v_hit') lingerHit(peer, target, d); return; }
       if (target) send(target, { t: 'msg', topic: m.topic, peer: peer.id, data: d });
