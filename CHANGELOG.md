@@ -1,5 +1,8 @@
 # Histórico de versões
 
+## 0.11.5 — Sem barra de vida de monstro no topo
+- A barra no topo da tela agora só aparece para chefes (monstros comuns e elites não mostram mais).
+
 ## 0.11.4 — Livro dos Itens em tela cheia
 - Falar com o Cronista abre direto o Livro dos Itens, na tela inteira, sem a câmera no rosto do herói.
 

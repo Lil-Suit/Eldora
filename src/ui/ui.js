@@ -805,7 +805,7 @@ export class UI {
   updateTargetFrame() {
     const G = this.G;
     let b = this.bossE;
-    const mini = !b ? this.nearMiniBoss() : null;
+    const mini = null; // monstros comuns e elites não mostram mais a barra no topo (só chefes)
     if (!b && mini !== this._mini) { this._mini = mini; this.el.boss.classList.toggle('hidden', !mini); if (mini) { this.el.bossName.textContent = mini.def.name; this.el.bossName.style.color = tintOf(mini.def) || ''; } }
     b = b || mini;
     if (b) {
