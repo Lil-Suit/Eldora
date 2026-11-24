@@ -1,7 +1,7 @@
 import { BALANCE } from '../config/balance.js';
 import { CLASSES } from '../config/classes.js';
 import { EQUIP_SLOTS } from '../config/items.js';
-import { itemMainStat, itemTier, statsAllowed, preceOfEquipment, natalOfEquipment, setManaOf } from './items.js';
+import { itemMainStat, itemTier, tierPower, statsAllowed, preceOfEquipment, natalOfEquipment, setManaOf } from './items.js';
 
 const ATTR_KEYS = ['for', 'agi', 'int', 'vit'];
 
@@ -76,7 +76,13 @@ export function rollDamage(power, mult, critChance, critMult, rng) {
 }
 
 // quanto da defesa vale contra um atacante do nível L: um conjunto completo comum do mesmo patamar segura ~55%
-export function defenseK(level) { const T = itemTier(level || 1); return BALANCE.defenseK * 0.5 + 0.7 * 28 * (T + 1); }
+export function defenseK(level) { const T = itemTier(level || 1); return BALANCE.defenseK * 0.5 + 0.7 * 28 * tierPower(T); }
+// v0.12: as armas ficaram mais fortes nos patamares altos (+10% por monstro); a vida e a armadura dos monstros
+// sobem na mesma proporção do poder esperado do herói daquele nível (arma + atributo + nível).
+export function gearScale(level) {
+  const L = Math.max(1, level || 1), T = itemTier(L), R = 6 * L;
+  return (4 * tierPower(T) + R) / (4 * (T + 1) + R);
+}
 export function mitigate(amount, def, level) {
   const red = def / (def + defenseK(level));
   return Math.max(BALANCE.minDamage, Math.round(amount * (1 - red)));
@@ -88,7 +94,7 @@ export function mitigate(amount, def, level) {
 export function enemyArmor(def, level) {
   const A = BALANCE.armor;
   const tough = A.base + (def.def || 0) / A.defDiv;
-  return Math.round(Math.max(1, level) * A.perLevel * tough * (def.boss ? A.boss : 1) * 10) / 10;
+  return Math.round(Math.max(1, level) * A.perLevel * tough * (def.boss ? A.boss : 1) * gearScale(level) * 10) / 10;
 }
 export function armorMitigate(amount, power, armor) {
   if (!armor) return Math.max(BALANCE.minDamage, Math.round(amount));
@@ -100,18 +106,18 @@ export function armorMitigate(amount, power, armor) {
 // chefes de raid têm 60% disso (são vários por evento)
 export function bossHp(level, def = {}) {
   const L = Math.max(1, level);
-  return Math.round((8000 + 900 * L * (1 + L / 60)) * (def.eventBoss && !def.worldBoss ? 0.6 : 1) * (def.hpScale || 1));
+  return Math.round((8000 + 900 * L * (1 + L / 60)) * (def.eventBoss && !def.worldBoss ? 0.6 : 1) * (def.hpScale || 1) * gearScale(L));
 }
 
 export function enemyStats(def, level) {
   const M = BALANCE.enemyMult, big = def.boss || def.miniboss;
   const mh = big ? M.bossHp : def.elite ? M.eliteHp : M.hp, md = big ? M.bossDmg : def.elite ? M.eliteDmg : M.dmg;
-  if (def.boss) return { maxHp: Math.round(BALANCE.guardianHp), dmg: def.dmg * md, def: def.def, armor: enemyArmor(def, level) };
-  if (def.fixedHp) { const s0 = BALANCE.enemyScale; return { maxHp: def.fixedHp, dmg: def.dmg * md * (1 + s0.dmg * (level - 1)), def: def.def + s0.def * (level - 1), armor: enemyArmor(def, level) }; } // chefes de Natal: vida fixa
+  if (def.boss) return { maxHp: Math.round(BALANCE.guardianHp * gearScale(level)), dmg: def.dmg * md, def: def.def, armor: enemyArmor(def, level) };
+  if (def.fixedHp) { const s0 = BALANCE.enemyScale; return { maxHp: Math.round(def.fixedHp * gearScale(level)), dmg: def.dmg * md * (1 + s0.dmg * (level - 1)), def: def.def + s0.def * (level - 1), armor: enemyArmor(def, level) }; } // chefes de Natal: vida fixa
   const s = BALANCE.enemyScale;
   return {
     // chefes (do mundo, de raid e o Vigia): vida pela curva de chefe — quanto mais forte, MUITO mais vida
-    maxHp: big || def.eventBoss ? bossHp(level, def) : Math.round(def.hp * mh * (1 + s.hp * (level - 1))),
+    maxHp: big || def.eventBoss ? bossHp(level, def) : Math.round(def.hp * mh * (1 + s.hp * (level - 1)) * gearScale(level)),
     dmg: def.dmg * md * (1 + s.dmg * (level - 1)),
     def: def.def + s.def * (level - 1),
     armor: enemyArmor(def, level),

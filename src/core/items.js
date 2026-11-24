@@ -157,8 +157,17 @@ export function tierLevel(t) { return ITEM_TIERS[Math.max(0, Math.min(ITEM_TIERS
 // Pontos do item = (patamar do nível + 1 [+1 forjado]) × força da raridade + bônus da raridade.
 // Antes a raridade só somava +1 por degrau: no nível alto um Mítico valia quase o mesmo que um Comum.
 // Agora a raridade MULTIPLICA (Mítico ≈ +45% sobre o Comum no topo), e no começo continua fazendo diferença.
-export const RARITY_POWER = { comum: 1.0, incomum: 1.08, raro: 1.16, epico: 1.26, mitico: 1.38, lendario: 1.5 };
-export function itemPoints(ilvl, rarity, forged) { return Math.round((itemTier(ilvl) + 1 + (forged ? 1 : 0)) * (RARITY_POWER[rarity] || 1)) + (RARITY_INDEX[rarity] || 0); }
+// v0.12: força por patamar de monstro — até o 10º patamar sobe de 1 em 1; depois +10% a CADA novo monstro
+// (antes subia ~3% no nível alto: nv 122 → 126 quase não mudava). Item tem que ser conquistado.
+export function tierPower(T) { return T <= 9 ? T + 1 : 10 * Math.pow(1.1, T - 9); }
+// Raridade = fração do salto até o próximo patamar (meio-termo): Épico ≈ Comum do monstro seguinte;
+// Mítico e Lendário passam um pouco. A cor nunca vale mais que ~1,6 patamar.
+export const RARITY_STEP = { comum: 0, incomum: 0.35, raro: 0.7, epico: 1, mitico: 1.3, lendario: 1.6 };
+export const RARITY_POWER = RARITY_STEP; // (nome antigo)
+export function itemPoints(ilvl, rarity, forged) {
+  const T = itemTier(ilvl) + (forged ? 1 : 0), b = tierPower(T);
+  return Math.round((b + (tierPower(T + 1) - b) * (RARITY_STEP[rarity] || 0)) * 10) / 10;
+}
 // defesa por ponto: as peças de defesa dão 4 por ponto; as LUVAS sobem de 1 em 1 (cada uma), senão davam defesa demais
 // (a arma dá 2 de ataque por ponto)
 export const DEF_PER_POINT = { chest: 4, helm: 4, shield: 4, legs: 4, gloveL: 1, gloveR: 1, boots: 4, ring: 0, neck: 0 };
@@ -184,15 +193,15 @@ export function solidify(item) {
     const S = ITEM_SETS[base.set];
     item.set = base.set; item.boss = true; item.affixes = {};
     if (base.slot === 'back') item.cap = packCapOf(item.rarity, item.ilvl || 1, forged);
-    else if (S.defMult === 1 && DEF_PER_POINT[base.slot]) item.def = pts * DEF_PER_POINT[base.slot];
+    else if (S.defMult === 1 && DEF_PER_POINT[base.slot]) item.def = Math.max(1, Math.round(pts * DEF_PER_POINT[base.slot]));
     else if (DEF_PER_POINT[base.slot]) item.def = Math.max(1, Math.round(pts * DEF_PER_POINT[base.slot] * S.defMult));
     return item;
   }
   delete item.set; delete item.boss;
-  if (base.slot === 'weapon') item.atk = 2 * pts;
+  if (base.slot === 'weapon') item.atk = Math.max(1, Math.round(2 * pts));
   else if (base.slot === 'back') {
     item.cap = packCapOf(item.rarity, item.ilvl || 1, forged); item.affixes = {}; return item; // mochila só dá espaço
-  } else if (DEF_PER_POINT[base.slot]) item.def = pts * DEF_PER_POINT[base.slot];
+  } else if (DEF_PER_POINT[base.slot]) item.def = Math.max(1, Math.round(pts * DEF_PER_POINT[base.slot]));
   if (base.slot === 'shield') {
     // atrair monstros: só escudos épicos, lendários ou míticos
     const L = RARITY_INDEX[item.rarity] >= RARITY_INDEX.epico ? BALANCE.shieldLure[item.rarity] : null;
@@ -259,7 +268,7 @@ export function scaleNamed(item, ilvl) {
     if (n.def) item.def = Math.round(n.def * f);
   }
   // ataque/defesa seguem a mesma regra fixa dos outros itens (a amarela de um monstro = a comum do seguinte)
-  { const pts = itemPoints(L, n.rarity); if (n.atk) item.atk = 2 * pts; if (n.def && DEF_PER_POINT[n.slot]) item.def = pts * DEF_PER_POINT[n.slot]; }
+  { const pts = itemPoints(L, n.rarity); if (n.atk) item.atk = Math.max(1, Math.round(2 * pts)); if (n.def && DEF_PER_POINT[n.slot]) item.def = Math.max(1, Math.round(pts * DEF_PER_POINT[n.slot])); }
   if (n.slot !== 'weapon' && item.affixes?.hp) delete item.affixes.hp; // peças de defesa não dão vida
   item.affixes = {};
   if (!n.boss) return item; // v0.9.74: lendários com nome guardam só o efeito especial (sem atributos)

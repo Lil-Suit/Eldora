@@ -1,5 +1,11 @@
 # Histórico de versões
 
+## 0.12.0 — Itens que precisam ser conquistados
+- Força dos itens: até o 10º tipo de monstro sobe de 1 em 1; depois, CADA monstro novo dá +10% (antes era ~3% no nível alto). Ex.: peitoral comum nv 122 = 326 de defesa, nv 126 = 358; nv 165 = 844.
+- Raridade no meio-termo: a cor vale uma fração do salto até o próximo monstro. Épico ≈ Comum do monstro seguinte; Mítico e Lendário passam um pouco (no máximo ~1,6 monstro).
+- Monstros e chefes de nível alto ganham vida e armadura na mesma proporção do poder novo dos heróis (o dano deles não muda).
+- Todos os itens que você já tem são recalculados uma vez (save v18). Nada é apagado.
+
 ## 0.11.5 — Sem barra de vida de monstro no topo
 - A barra no topo da tela agora só aparece para chefes (monstros comuns e elites não mostram mais).
 
