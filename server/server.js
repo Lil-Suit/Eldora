@@ -1061,7 +1061,7 @@ function handle(req, res) {
   // app da Play Store (Trusted Web Activity): prova que o site é do app → abre em tela cheia, sem barra de endereço.
   // Configure ANDROID_PACKAGE (ex.: com.eldoria.app) e ANDROID_SHA256 (impressão digital da chave, "AA:BB:…"; várias separadas por vírgula).
   if ((req.url || '').split('?')[0] === '/.well-known/assetlinks.json') {
-    const pkg = String(process.env.ANDROID_PACKAGE || ''), fps = String(process.env.ANDROID_SHA256 || '').split(',').map((x) => x.trim()).filter(Boolean);
+    const pkg = String(process.env.ANDROID_PACKAGE || ''), fps = [...new Set([...String(process.env.ANDROID_SHA256 || '').split(','), 'FC:D3:91:1A:22:28:5B:74:62:0B:83:11:27:F8:F3:64:D0:14:A1:86:0A:E0:3C:69:37:60:CA:EF:39:68:22:F9'].map((x) => x.trim().toUpperCase()).filter(Boolean))]; // chave do app oficial (pública)
     if (!pkg || !fps.length) { res.writeHead(404); return res.end('[]'); }
     res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=300' });
     return res.end(JSON.stringify([{ relation: ['delegate_permission/common.handle_all_urls'], target: { namespace: 'android_app', package_name: pkg, sha256_cert_fingerprints: fps } }]));
