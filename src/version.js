@@ -1,2 +1,2 @@
 // Versão do jogo (a mesma do servidor). Quando o servidor responde outra versão, a página recarrega sozinha.
-export const VERSION = '0.11.2';
+export const VERSION = '0.11.3';

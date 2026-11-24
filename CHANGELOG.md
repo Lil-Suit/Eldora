@@ -1,5 +1,9 @@
 # Histórico de versões
 
+## 0.11.3 — Machado e escudo
+- Machado e clava inclinados para frente: não atravessam mais o rosto ao andar e nas animações.
+- Escudo na mão 28% menor e mais para fora do braço (não atravessa o corpo andando).
+
 ## 0.11.2 — Livro dos Itens, teclado do jogo e mais FPS
 - Novo NPC: Cronista Elias (norte da vila, longe dos comerciantes) com o Livro dos Itens: todos os equipamentos do mais fraco ao mais forte; tocar mostra o que faz, a força por cor e quem solta (sem porcentagens).
 - Teclado do próprio jogo no celular (compacto, com números, acentos e símbolos); pode voltar ao do celular em Configurações.

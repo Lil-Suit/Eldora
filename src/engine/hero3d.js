@@ -228,15 +228,20 @@ class SkinHero {
     // arco: fica num suporte que segue a palma ESQUERDA; ao atirar, o braço esquerdo estica com o arco em pé
     // e a mão direita puxa a corda até o queixo (ver archerPose)
     if (bow) { (this.bowHold ||= new THREE.Group()).add(weapon); if (!this.bowHold.parent) this.root.add(this.bowHold); }
-    else { this.handR.add(weapon); this.bowHold?.parent?.remove(this.bowHold); }
+    else {
+      this.handR.add(weapon); this.bowHold?.parent?.remove(this.bowHold);
+      // machado/clava: cabo inclinado para longe do rosto (a cabeça pesada ficava em pé na frente da cara)
+      const TILT = globalThis.__WTILT || { machado: -0.6, clava: -0.5 };
+      if (TILT[kind]) weapon.rotation.x = TILT[kind];
+    }
     this.weapon = weapon; this.weaponKind = kind; this.aimW = 0;
     this.setLeftGrip(bow || (!!eq.shield && kind !== 'montante'));
     if (eq.shield && kind !== 'montante') {
       const sh = buildWeapon('escudo', eq.shield.rarity || 'comum', { theme: gearTheme(eq.shield) });
       mergeWeapon(sh);
-      sh.scale.setScalar({ broquel: 0.75, escudo_torre: 1.3 }[eq.shield.wkind] || 1);
+      sh.scale.setScalar(({ broquel: 0.75, escudo_torre: 1.3 }[eq.shield.wkind] || 1) * 0.72); // menor: o escudo grande atravessava o corpo andando
       if (bow) this.shield = null; // arqueiro: sem escudo nas costas (o escudo continua dando defesa)
-      else { sh.position.set(0.06, -0.02, 0); sh.rotation.set(0, -Math.PI / 2, 0); this.handL.add(sh); this.shield = sh; }
+      else { sh.position.set(0.1, -0.02, 0); sh.rotation.set(0, -Math.PI / 2, 0); this.handL.add(sh); this.shield = sh; }
     } else this.shield = null;
     this.legendary = RARITY_INDEX[w?.rarity] >= 4 ? new THREE.Color(RARITIES[w.rarity]?.color || 0xffffff) : null;
     for (const h of [this.handR, this.handL, this.backSlot, this.bowHold].filter(Boolean)) h.traverse((m) => { if (m.isMesh) { m.castShadow = true; m.renderOrder = 2; } });
