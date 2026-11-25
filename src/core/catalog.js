@@ -37,9 +37,9 @@ export function itemCatalog() {
     const lv = b.minIlvl || 1, from = mobs.filter((t) => MOB_LEVELS[t] >= lv);
     out.push({
       id: 'b:' + id, name: b.name, slot: b.slot, wkind: b.kind, level: lv, kind: 'Item solto',
-      what: `${SLOT_NAMES[b.slot]}${b.cls ? ' de ' + (CLASSES[b.cls]?.name || b.cls) : ''}. A força depende do nível do monstro que soltou e da cor (raridade).`,
+      what: `${SLOT_NAMES[b.slot]}${b.cls ? ' · ' + (CLASSES[b.cls]?.name || b.cls) : ''}`,
       stats: RAR_SHOW.map((r) => ({ r, s: statOf(id, b.slot, r, lv) })),
-      mobs: uniqNames(from.map(mobName)).slice(0, 10), more: Math.max(0, uniqNames(from.map(mobName)).length - 10), note: `Cai de qualquer monstro a partir do nível ${lv}.`,
+      mobs: uniqNames(from.map(mobName)).slice(0, 10), more: Math.max(0, uniqNames(from.map(mobName)).length - 10), note: '',
     });
   }
   // 2) sets dos biomas
@@ -51,10 +51,10 @@ export function itemCatalog() {
       const fav = fam.filter((t) => S.fam[t] === p);
       out.push({
         id: `s:${bk}:${p}`, name: setPieceName({ bset: bk, slot, wkind: ITEM_BASES[base].kind }) || `${PIECE_NAMES[p]} ${S.word}`, slot, wkind: ITEM_BASES[base].kind, bset: bk,
-        level: S.levels[0], kind: S.name, what: `${PIECE_NAMES[p]} do ${S.name} (${S.bioma}). Do nível ${S.levels[0]} ao ${S.levels[1]}.`,
+        level: setReqLevel({ bset: bk, slot }) || S.levels[0], kind: S.name, what: `${PIECE_NAMES[p]} · ${S.name} (${S.bioma})`,
         stats: RAR_SHOW.map((r) => ({ r, s: statOf(base, slot, r, S.levels[1]) })), statLv: S.levels[1], req: setReqLevel({ bset: bk, slot }) || 0,
         mobs: uniqNames([...fav.map((t) => mobName(t) + ' (favorita)'), ...fam.filter((t) => !fav.includes(t)).map(mobName)]), more: 0,
-        note: 'A peça favorita de um monstro cai mais vezes dele.',
+        note: '',
       });
     }
   }
@@ -67,9 +67,9 @@ export function itemCatalog() {
       const who = bosses.filter((t) => (S.drops[t] || []).includes(slot) || (S.drops[t] || []).includes(slot.replace(/[LR]$/, '')));
       out.push({
         id: `c:${sk}:${slot}`, name: b.name, slot, wkind: b.kind, set: sk, level: lv, kind: S.name,
-        what: `${SLOT_NAMES[slot]} do ${S.name}. ${S.desc || 'O poder dela vem do efeito do conjunto completo.'}`,
+        what: `${SLOT_NAMES[slot]} · ${S.name}${S.desc ? ' — ' + S.desc : ''}`,
         stats: RAR_SHOW.map((r) => ({ r, s: statOf(base, slot, r, lv) })),
-        mobs: uniqNames((who.length ? who : bosses).map(mobName)), more: 0, note: 'Só cai de chefe.',
+        mobs: uniqNames((who.length ? who : bosses).map(mobName)), more: 0, note: '',
       });
     }
   }
@@ -85,7 +85,7 @@ export function itemCatalog() {
       id: 'n:' + id, name: n.name, slot: n.slot, wkind: n.kind, named: id, rarity: n.rarity, level: n.ilvl || 1, kind: (RARITIES.find((r) => r.id === n.rarity)?.name || 'Lendário') + ' único',
       what: `${n.effectText || ''} ${n.lore ? '“' + n.lore + '”' : ''}`.trim(),
       stats: [{ r: n.rarity, s: n.atk ? { k: 'Ataque', v: n.atk } : n.def ? { k: 'Defesa', v: n.def } : null }],
-      mobs: uniqNames(who.map(mobName)), more: 0, note: OTHER[id] || (who.length ? 'Raríssimo: só de chefe.' : 'Recompensa especial.'),
+      mobs: uniqNames(who.map(mobName)), more: 0, note: OTHER[id] || '',
     });
   }
   // do mais fraco ao mais forte: nível em que começa a cair, depois a força do comum

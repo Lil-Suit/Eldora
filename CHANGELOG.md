@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## 0.12.9
+- Livro dos Itens (Cronista): só mostra os itens, na ordem dos níveis de equipar, sem explicações.
+- Peças de set mostram o nível de equipar do set (ex.: Nível 50; luvas/botas/elmo com o nível próprio).
+- Celular: área de sombra menor para ganhar FPS.
+
 ## 0.12.8 — Machado, Banqueira e desempenho no celular
 - Machado: lâmina virada para frente/baixo (o corte desce no golpe); antes ficava para cima.
 - Banqueira abre direto no serviço, com abas Banco | Baú diário (abre no Baú quando ele está pronto). Fornecedora e Ferreiro também abrem direto.
