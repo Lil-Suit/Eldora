@@ -747,6 +747,7 @@ export class UI {
     if (G.settings.showPeers && !clean) for (const g of G.net.peers.values()) {
       if (g.pr.ar !== P.area) continue;
       // nick preso na cabeça: some de longe e diminui com a distância (tamanho fixo em relação ao personagem)
+      if (!g.rig?.root.visible || G.net.stale(g)) continue; // só de quem está no mesmo mapa e aparece na tela
       if (Math.hypot(g.pos.x - P.pos.x, g.pos.z - P.pos.z) > 32) continue;
       const s = this.project(g.pos.x, g.pos.y + 2.3, g.pos.z);
       if (!s) continue;
