@@ -1,14 +1,14 @@
 import { CLASSES } from '../config/classes.js';
 import { passedBefore } from './guardiao.js';
 import { WORLD } from '../config/world.js';
-import { generateEquipment, makeStack, solidify, scaleNamed, renameOldGear, bossGreenToBlue, convertSaveItems } from './items.js';
+import { generateEquipment, makeStack, solidify, scaleNamed, renameOldGear, bossGreenToBlue, convertSaveItems, makeSetPiece } from './items.js';
 import { Inventory } from './inventory.js';
 import { xpToNext, attrPointsTotal } from './progression.js';
 import { BALANCE, RARITIES, RARITY_INDEX, ITEM_SCALE, FORGED } from '../config/balance.js';
 import { NAMED_ITEMS, AFFIXES } from '../config/items.js';
 import { themedItemName, themeOldItem } from '../config/itemthemes.js';
 
-export const SAVE_VERSION = 19;
+export const SAVE_VERSION = 20;
 
 // Estado persistente de um novo personagem.
 export function createNewState(name, classId, rng) {
@@ -192,6 +192,13 @@ export function migrateState(s) {
     for (const k of Object.keys(p.equipment || {})) fix(p.equipment[k]);
     if (Array.isArray(p.vault)) p.vault.forEach(fix);
     s.v = 19;
+  }
+  if (s.v < 20) { // v0.12.7: peças de set com a força do set (mesmo valor nas duas luvas do mesmo set e cor)
+    const p = s.player, fix = (it) => { if (it && it.kind === 'equip' && it.bset && !it.named) makeSetPiece(it, it.bset); };
+    if (Array.isArray(p.inventory)) p.inventory.forEach(fix);
+    for (const k of Object.keys(p.equipment || {})) fix(p.equipment[k]);
+    if (Array.isArray(p.vault)) p.vault.forEach(fix);
+    s.v = 20;
   }
   // pacote 3: quem já passou do Guardião (flag antiga, está/esteve nos Ermos ou Confins) continua com o portal liberado
   s.world = s.world || {}; s.world.flags = s.world.flags || {};

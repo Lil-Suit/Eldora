@@ -123,6 +123,9 @@ export function makeSetPiece(it, b) {
   if (!it || !BIOME_SETS[b]) return it;
   it.bset = b; delete it.src;
   it.name = setPieceName(it);
+  // v0.12.7: peça de set tem a força do SET (nível do set), não do monstro que soltou: as duas luvas (e todas as peças)
+  // do mesmo set e da mesma cor dão o mesmo valor
+  if (it.kind === 'equip' && !it.named && it.ilvl !== BIOME_SETS[b].levels[1]) { it.ilvl = BIOME_SETS[b].levels[1]; solidify(it); }
   const sr = setReqLevel(it); if (sr) it.reqLevel = sr;
   return it;
 }

@@ -1,5 +1,8 @@
 # Histórico de versões
 
+## 0.12.7 — Peças do mesmo set com a mesma força
+- Peça de set tem a força do SET (nível máximo do set), não do monstro que soltou: as duas luvas do mesmo set e da mesma cor dão a mesma defesa (vale para todas as peças). Itens que você já tem são atualizados (save v20).
+
 ## 0.12.6 — Nível para equipar os sets
 - Cinzas 25 · Colheita 50 · Lodo 100 · Duna 150 · Seiva 200 · Geada 250 · Brasa 300 · Astral 350.
 - Do set 100 em diante: luvas equipam 10 níveis antes; bota e capacete 5 níveis antes; o resto no nível do set.
