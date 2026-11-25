@@ -355,7 +355,7 @@ export class Spawners {
         // chefe do bioma: nasce por sorte DENTRO da estrutura (salão do trono, frente da pirâmide, arena da caverna…)
         const bk = 'est_' + S.id + '_chefe';
         if (B.boss && ENEMIES[B.boss] && !this.dyn.has(bk)) {
-          const [bx, bz] = S.kind === 'castelo' ? [0, -22] : S.kind === 'templo' ? [0, 36] : S.kind === 'circulo' ? [0, 16] : [0, 30];
+          const [bx, bz] = S.kind === 'castelo' ? [0, -22] : S.kind === 'templo' ? [0, -20] : S.kind === 'circulo' ? [0, 16] : [0, 30];
           const L = B.levels[1] + 3;
           const g = { cfg: { id: bk, type: B.boss, count: 1, x: X + bx, z: Z + bz, r: 5, lvl: [L, L] }, area, cx: X + bx, cz: Z + bz, members: [], dyn: true, struct: S.id };
           this.dyn.set(bk, g); this.rare.push(g);

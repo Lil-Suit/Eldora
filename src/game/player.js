@@ -296,7 +296,9 @@ export class Player {
     // regeneração
     const safe = G.world.isSafe(this.pos.x, this.pos.z, this.area);
     let regen = this.stats.regen * (safe ? BALANCE.safeZoneRegenMult : 1) * (this.inCombat ? 0.35 : 1);
-    if (!this.inCombat && this.stats.effects.has('aurora')) regen += this.stats.maxHp * 0.03;
+    if (!this.inCombat && this.stats.effects.has('aurora')) regen += this.stats.maxHp * 0.004;
+    // pouco a pouco: no máximo 0,4% da vida por segundo (0,8% na vila; ~0,14% em combate)
+    regen = Math.min(regen, this.stats.maxHp * 0.004 * (safe ? 2 : 1) * (this.inCombat ? 0.35 : 1));
     this.hp = Math.min(this.stats.maxHp, this.hp + regen * dt);
     const R = this.cls.resource;
     if (R.id === 'furia') { if (!this.inCombat) this.res = Math.max(0, this.res - R.decayOutOfCombat * dt); }

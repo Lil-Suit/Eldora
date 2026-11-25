@@ -72,7 +72,7 @@ export const BALANCE = {
   // chefes raros: depois de morto, espera no mínimo wait (+waitPerLevel por nível, até waitMax) minutos;
   // depois, a cada minuto tem chance base/(1+nível/perLevel). Rei Slime ≈ 1 h em média; os mais fortes, várias horas.
   // quanto o monstro persegue antes de desistir (multiplica o 'leash' de cada monstro, mais o raio do grupo)
-  leashMult: 1.8,
+  leashMult: 3.0, // maior: monstro persegue bem mais antes de evadir
   // wild*: chefes dos Ermos e Confins — 12%/min de chance enquanto alguém está perto, 35% de já estar lá quando você chega, volta 10 min depois de morrer
   rareSpawn: { every: 60, base: 0.03, perLevel: 20, min: 0.004, wait: 20, waitPerLevel: 0.4, waitMax: 90, wildChance: 0.12, wildPresent: 0.35, wildWait: 10 },
   eventFirstDelaySec: 120,
@@ -83,7 +83,7 @@ export const BALANCE = {
   eventDurationSec: 180,
 
   respawnDelaySec: 4,
-  safeZoneRegenMult: 4,
+  safeZoneRegenMult: 2,
 };
 
 // Atributos alocáveis — cada um tem papel único (sem redundância).
@@ -113,7 +113,7 @@ export const DERIVED_INFO = {
   crit: 'Chance crítica: golpes críticos causam 160% de dano.',
   aspd: 'Velocidade de ataque: reduz o intervalo entre ataques básicos.',
   spow: 'Poder de Habilidade: multiplica o dano das habilidades numeradas.',
-  regen: 'Regeneração: vida recuperada por segundo (x4 dentro da vila).',
+  regen: 'Regeneração: vida recuperada por segundo (x2 dentro da vila).',
   cdr: 'Redução de recarga: diminui o tempo de recarga das habilidades.',
 };
 

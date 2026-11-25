@@ -241,7 +241,7 @@ class SkinHero {
       mergeWeapon(sh);
       sh.scale.setScalar(({ broquel: 0.75, escudo_torre: 1.3 }[eq.shield.wkind] || 1) * 0.72); // menor: o escudo grande atravessava o corpo andando
       if (bow) this.shield = null; // arqueiro: sem escudo nas costas (o escudo continua dando defesa)
-      else { sh.position.set(0.1, -0.02, 0); sh.rotation.set(0, -Math.PI / 2, 0); this.handL.add(sh); this.shield = sh; }
+      else { const SP = globalThis.__SHP || [-0.02, -0.02, 0]; /* escudo para fora da mão: a mão fica atrás dele */ sh.position.set(SP[0], SP[1], SP[2]); sh.rotation.set(0, -Math.PI / 2, 0); this.handL.add(sh); this.shield = sh; }
     } else this.shield = null;
     this.legendary = RARITY_INDEX[w?.rarity] >= 4 ? new THREE.Color(RARITIES[w.rarity]?.color || 0xffffff) : null;
     for (const h of [this.handR, this.handL, this.backSlot, this.bowHold].filter(Boolean)) h.traverse((m) => { if (m.isMesh) { m.castShadow = true; m.renderOrder = 2; } });

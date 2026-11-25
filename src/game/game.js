@@ -132,6 +132,8 @@ export class Game {
     this.titleT = 0;
     this.lights = [];
     for (let i = 0; i < 3; i++) { const l = new THREE.PointLight(0xffaa66, 0, 16, 1.6); this.scene.add(l); this.lights.push(l); }
+    // luz suave em cima do herói (só luz, sem tocha): à noite o personagem não some no escuro
+    this.heroLight = new THREE.PointLight(0xd8e2ff, 0, 10, 1.3); this.scene.add(this.heroLight);
     this.lightT = 0;
     this.ui = new UIClass(this);
     window.addEventListener('resize', () => this.resize());
@@ -635,7 +637,7 @@ export class Game {
       P.respawn(s.x, s.z, 'guardiao');
     } else P.respawn(WORLD.spawn.x, WORLD.spawn.z, 'world');
     this.cam.snap(P.pos);
-    for (const e of this.enemies) if (!e.dead && ['chase', 'attack', 'special', 'alert'].includes(e.state)) e.setState('return');
+    for (const e of this.enemies) if (!e.dead && ['chase', 'attack', 'special', 'alert'].includes(e.state)) e.setState(e.def.boss || e.def.miniboss ? 'idle' : 'return');
     this.ui.hideDeath();
     this.saver.requestSave('respawn');
   }
@@ -1318,6 +1320,7 @@ export class Game {
     this.sky.vista = (this.sky.vista || 0) + (vt - (this.sky.vista || 0)) * Math.min(1, dt * 1.5);
     const r = this.sky.update(dt, st.world.timeOfDay, P.pos, this.camera);
     this.night = r.night;
+    if (this.heroLight && P) { this.heroLight.position.set(P.pos.x, P.pos.y + 2.4, P.pos.z); this.heroLight.intensity = Math.max(this.night, this.sky.indoor ? 0.6 : 0) * 5; }
     if (this.leve || this.isTouch || this.settings.viewDist !== 'longa') { // nada além da neblina é desenhado (menos desenho por quadro); "Longa" no PC enxerga tudo
       const far = Math.round(this.sky.fog.far + 20);
       if (Math.abs(this.camera.far - far) > 4) { this.camera.far = far; this.camera.updateProjectionMatrix(); this.sky.fitFar(far); }

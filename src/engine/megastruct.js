@@ -222,27 +222,50 @@ function buildTemple(c) {
   sideWithGate(c, -A, A, A, A, gate, H, 3, T.wall, T.wall2); sideWithGate(c, A, -A, -A, -A, gate, H, 3, T.wall, T.wall2);
   sideWithGate(c, A, A, A, -A, gate, H, 3, T.wall, T.wall2); sideWithGate(c, -A, -A, -A, A, gate, H, 3, T.wall, T.wall2);
   for (const [x, z] of [[-A, -A], [A, -A], [A, A], [-A, A]]) { c.walls.box(c.X + x, c.y + 9, c.Z + z, 4, 18, 4, T.wall2, 0); c.walls.cone(c.X + x, c.y + 19.5, c.Z + z, 2.8, 3, T.trim, 4, Math.PI / 4); c.box(x, z, 2.2, 2.2); }
-  // pirâmide em degraus (sólida) com escadaria ao sul
-  const tiers = 6; let w = 62;
-  for (let t = 0; t < tiers; t++) { c.walls.box(c.X, c.y + 2.6 + t * 5.2, c.Z - 10, w, 5.2, w, t % 2 ? T.wall2 : T.wall, 0); w -= 9; }
-  // escadaria: rampa de 45° na face sul + degraus marcados
-  c.walls.box(c.X, c.y + 15.2, c.Z + 5.6, 14, 2, 44, T.wall2, 0, Math.PI / 4);
-  for (let k = 1; k < 15; k++) c.walls.box(c.X, c.y + k * 2.08, c.Z + 21 - k * 2.08 + 0.5, 14.4, 0.4, 1.2, T.trim, 0);
-  c.walls.box(c.X, c.y + 33.6, c.Z - 10, 8, 4, 8, T.trim, 0);
-  c.glow.addGeo(GEO.octa, c.X, c.y + 39, c.Z - 10, 3.2, 6, 3.2, 0, 0.5, 0, T.glow); c.light(0, 34, -6, T.glow, 40);
-  c.box(0, -10, 31, 31);
+  // pirâmide em degraus GRANDE, oca embaixo: entrada ao sul leva ao salão do trono da Escorpião-Rainha
+  const PZ = -14, TH = 6.5, CH = 20, DOOR = 6; // centro (z), altura do degrau, meia-largura do salão, meia-largura da porta
+  const ws = [84, 72, 60, 48, 36, 24];
+  for (let t = 0; t < ws.length; t++) {
+    const w = ws[t], h = w / 2, y = c.y + TH / 2 + t * TH, col = t % 2 ? T.wall2 : T.wall;
+    if (t >= 2) { c.walls.box(c.X, y, c.Z + PZ, w, TH, w, col, 0); continue; }
+    const th = h - CH, mid = (h + CH) / 2; // anel em volta do salão (dois degraus de altura)
+    c.walls.box(c.X, y, c.Z + PZ - mid, w, TH, th, col, 0);                       // norte
+    c.walls.box(c.X - mid, y, c.Z + PZ, th, TH, CH * 2, col, 0);                  // oeste
+    c.walls.box(c.X + mid, y, c.Z + PZ, th, TH, CH * 2, col, 0);                  // leste
+    if (t === 1) c.walls.box(c.X, y, c.Z + PZ + mid, w, TH, th, col, 0);          // sul (acima da porta)
+    else for (const sd of [-1, 1]) { const sw = h - DOOR; c.walls.box(c.X + sd * (DOOR + sw / 2), y, c.Z + PZ + mid, sw, TH, th, col, 0); }
+  }
+  // colisão só do anel de baixo (a porta fica livre)
+  { const h = ws[0] / 2, th = h - CH, mid = (h + CH) / 2, sw = h - DOOR;
+    c.box(0, PZ - mid, h, th / 2); c.box(-mid, PZ, th / 2, CH); c.box(mid, PZ, th / 2, CH);
+    for (const sd of [-1, 1]) c.box(sd * (DOOR + sw / 2), PZ + mid, sw / 2, th / 2); }
+  // portal da entrada: colunas, verga dourada e braseiros
+  const fz = PZ + ws[0] / 2;
+  for (const sd of [-1, 1]) { c.walls.box(c.X + sd * (DOOR + 1), c.y + 4, c.Z + fz + 1, 2, 8, 2, T.trim, 0); brazier(c, sd * (DOOR + 5), fz + 5, T.glow, sd < 0); }
+  c.walls.box(c.X, c.y + 8.6, c.Z + fz + 1, DOOR * 2 + 4, 1.4, 2.4, T.trim, 0);
+  c.glow.addGeo(GEO.octa, c.X, c.y + 10.6, c.Z + fz + 1.4, 1.2, 1.8, 1.2, 0, 0, 0, T.glow);
+  // salão do trono: piso, colunas, trono e luz própria
+  c.deco.box(c.X, c.y + 0.12, c.Z + PZ, CH * 2 - 0.4, 0.12, CH * 2 - 0.4, T.trim, 0);
+  for (const [x, z] of [[-12, -10], [12, -10], [-12, 8], [12, 8]]) { c.walls.box(c.X + x, c.y + TH, c.Z + PZ + z, 2.4, TH * 2, 2.4, T.wall2, 0); c.box(x, PZ + z, 1.2, 1.2); }
+  c.walls.box(c.X, c.y + 1, c.Z + PZ - 16, 8, 2, 4, T.wall2, 0); c.walls.box(c.X, c.y + 4, c.Z + PZ - 17.5, 6, 4, 1.2, T.trim, 0); c.box(0, PZ - 16, 4, 2);
+  for (const sd of [-1, 1]) brazier(c, sd * 16, PZ - 14, T.glow, false);
+  c.light(0, 8, PZ, T.glow, 34); c.light(0, 6, PZ - 14, T.glow, 22);
+  // topo
+  const topY = c.y + ws.length * TH;
+  c.walls.box(c.X, topY + 2, c.Z + PZ, 10, 4, 10, T.trim, 0);
+  c.glow.addGeo(GEO.octa, c.X, topY + 8, c.Z + PZ, 3.6, 7, 3.6, 0, 0.5, 0, T.glow); c.light(0, ws.length * TH + 4, PZ, T.glow, 44);
   // avenida de obeliscos e estátuas de escorpião
-  for (let z = 30; z < A - 8; z += 13) for (const sd of [-1, 1]) {
+  for (let z = 40; z < A - 8; z += 13) for (const sd of [-1, 1]) {
     c.walls.box(c.X + sd * 14, c.y + 5, c.Z + z, 2.2, 10, 2.2, T.wall2, 0); c.walls.cone(c.X + sd * 14, c.y + 10.8, c.Z + z, 1.6, 1.6, T.trim, 4, Math.PI / 4); c.circle(sd * 14, z, 1.6);
   }
-  for (const [x, z] of [[-44, 44], [44, 44], [-44, -60], [44, -60]]) {
+  for (const [x, z] of [[-48, 46], [48, 46], [-58, -62], [58, -62]]) {
     c.walls.box(c.X + x, c.y + 1.5, c.Z + z, 8, 3, 12, T.wall2, 0); c.walls.box(c.X + x, c.y + 4, c.Z + z - 4, 5, 3, 4, T.wall, 0);
     for (const sd of [-1, 1]) c.walls.box(c.X + x + sd * 5, c.y + 2.6, c.Z + z - 7, 1.6, 1.2, 5, T.wall, sd * 0.4);
     c.walls.box(c.X + x, c.y + 7, c.Z + z + 6, 1.4, 6, 1.4, T.wall, 0, -0.5); c.box(x, z, 4.4, 6.4);
     brazier(c, x, z + 10, T.glow, true);
   }
   // espelhos d'água
-  for (const sd of [-1, 1]) { c.walls.box(c.X + sd * 46, c.y + 0.3, c.Z + 12, 18, 0.6, 30, T.wall2, 0); c.glow.box(c.X + sd * 46, c.y + 0.55, c.Z + 12, 16, 0.2, 28, 0x3aa8b8, 0); c.box(sd * 46, 12, 9, 15); }
+  for (const sd of [-1, 1]) { c.walls.box(c.X + sd * 62, c.y + 0.3, c.Z + 8, 16, 0.6, 30, T.wall2, 0); c.glow.box(c.X + sd * 62, c.y + 0.55, c.Z + 8, 14, 0.2, 28, 0x3aa8b8, 0); c.box(sd * 62, 8, 8, 15); }
 }
 
 // ---------------- Círculo de pedras gigante (Floresta) ----------------

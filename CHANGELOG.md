@@ -1,5 +1,13 @@
 # Histórico de versões
 
+## 0.12.14
+- Pirâmide de Âmbar maior e com entrada: o salão do trono fica dentro dela, e a Escorpião-Rainha nasce lá.
+- Chefões não evadem mais nem voltam para a posição inicial.
+- Monstros perseguem bem mais antes de evadir.
+- Vida regenera pouco a pouco (no máximo 0,4% por segundo; 0,8% na vila).
+- Luz suave em cima do personagem à noite (só a luz, sem tocha).
+- Escudo mais para fora: a mão não aparece mais por cima dele.
+
 ## 0.12.13
 - Nick só aparece de quem está no mesmo mapa e com o personagem visível (nada de nick de quem está em outro mapa ou desconectando).
 

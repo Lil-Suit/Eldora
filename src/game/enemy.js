@@ -500,7 +500,9 @@ export class Enemy {
         if (this.st <= 0) { this.anim.alert = 0; this.setState('chase'); }
         break;
       case 'chase': {
-        if (!playerOk || (leashD > leash && this.tauntT <= 0)) { this.setState('return'); break; }
+        // chefões não evadem nem voltam para casa: ficam onde estão e esperam o jogador
+        if ((this.def.boss || this.def.miniboss) && !playerOk) { this.setState('idle', 2); break; }
+        if (!(this.def.boss || this.def.miniboss) && (!playerOk || (leashD > leash && this.tauntT <= 0))) { this.setState('return'); break; }
         if (this.def.warden && this.atkCd < 0.6 && this.tryWarden(d)) break;
         if (this.def.magmaSkills && this.atkCd < 0.6 && this.tryMagma(d)) break;
         if (this.def.yetiSkills && this.atkCd < 0.6 && this.tryYeti(d)) break;
