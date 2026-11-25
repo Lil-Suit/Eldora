@@ -82,7 +82,7 @@ export class Game {
     this.renderer.shadowMap.enabled = q.shadows;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
     // celular: a tela já é muito densa; acima de ~1.5 o custo dobra e quase não se vê diferença (Alta/Ultra travavam em 20-30 fps)
-    const touchCap = this.isTouch && !q.nativeRes ? ({ ultra: 1.35, alta: 1.15, media: 1.05 }[this.settings.quality] || q.pixelRatio) : q.pixelRatio;
+    const touchCap = this.isTouch && !q.nativeRes ? ({ ultra: 1.25, alta: 1.15, media: 1.05 }[this.settings.quality] || q.pixelRatio) : q.pixelRatio;
     this.pixelRatio = Math.min(window.devicePixelRatio || 1, q.pixelRatio, touchCap);
     this.renderer.setPixelRatio(this.pixelRatio);
     this.scene = new THREE.Scene();

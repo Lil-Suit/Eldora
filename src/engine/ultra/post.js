@@ -43,7 +43,7 @@ export class UltraPost {
     this.w = 0; this.h = 0; this.iw = 0; this.ih = 0;
     this._v = new THREE.Vector2(); this._v3 = new THREE.Vector3();
     this.samples = touch ? 0 : 4;
-    this.maxPix = touch ? 1.5e6 : 4.2e6; // resolução interna máxima do pós (celular de tela enorme não paga o quádruplo)
+    this.maxPix = touch ? 1.0e6 : 4.2e6; // resolução interna máxima do pós (celular de tela enorme não paga o quádruplo)
     const n = (x) => ({ value: x });
     const NS = this.touch ? 10 : 12;
     // ---------- SSAO ----------
@@ -237,7 +237,7 @@ export class UltraPost {
     this.rtRays = new THREE.WebGLRenderTarget(Math.max(1, iw >> 2), Math.max(1, ih >> 2), R8);
     this.bl = [];
     let bw = hw, bh = hh;
-    for (let i = 0; i < (this.touch ? 4 : 5); i++) { this.bl.push(new THREE.WebGLRenderTarget(bw, bh, { type: HF, depthBuffer: false })); bw = Math.max(1, bw >> 1); bh = Math.max(1, bh >> 1); }
+    for (let i = 0; i < (this.touch ? 3 : 5); i++) { this.bl.push(new THREE.WebGLRenderTarget(bw, bh, { type: HF, depthBuffer: false })); bw = Math.max(1, bw >> 1); bh = Math.max(1, bh >> 1); }
   }
 
   disposeTargets() {

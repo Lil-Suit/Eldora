@@ -219,7 +219,9 @@ export class GroundCover {
     this.world = world; this.U = U;
     this.cells = new Map(); this.sig = ''; this.tick = 0; this.camera = null; this.parent = null;
     this.frustum = new THREE.Frustum(); this.m4 = new THREE.Matrix4();
-    const T = (name, geo, cap, lod, mo) => {
+    const coarse = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+    const T = (name, geo, cap, lod0, mo) => {
+      const lod = coarse ? [lod0[0] * 0.75, lod0[1] * 0.75, lod0[2], lod0[3]] : lod0; // celular: plantinhas até 75% da distância
       const buf = new THREE.InstancedInterleavedBuffer(new Float32Array(cap * STRIDE), STRIDE, 1);
       buf.setUsage(THREE.DynamicDrawUsage);
       geo.setAttribute('iA', new THREE.InterleavedBufferAttribute(buf, 4, 0));
@@ -242,7 +244,7 @@ export class GroundCover {
     ];
     this.maxR = Math.max(...this.types.map((t) => t.lod[1]));
     // celular/tablet: metade das plantinhas (mesmo visual de longe, bem menos triângulos)
-    this.densMul = (typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches) ? 0.5 : 1;
+    this.densMul = coarse ? 0.4 : 1;
     this.meshes = this.types.map((t) => t.mesh);
   }
 

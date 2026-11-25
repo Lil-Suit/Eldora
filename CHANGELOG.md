@@ -1,5 +1,9 @@
 # Histórico de versões
 
+## 0.12.10
+- Machado na mão do herói de cabeça pra baixo (cabeça perto do chão, lâmina para fora).
+- Ultra realismo no celular mais leve: menos plantinhas e mais perto, pós-processamento em resolução menor, brilho com menos etapas, sombra menor.
+
 ## 0.12.9
 - Livro dos Itens (Cronista): só mostra os itens, na ordem dos níveis de equipar, sem explicações.
 - Peças de set mostram o nível de equipar do set (ex.: Nível 50; luvas/botas/elmo com o nível próprio).
