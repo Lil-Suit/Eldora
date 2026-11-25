@@ -123,6 +123,7 @@ export function makeSetPiece(it, b) {
   if (!it || !BIOME_SETS[b]) return it;
   it.bset = b; delete it.src;
   it.name = setPieceName(it);
+  const sr = setReqLevel(it); if (sr) it.reqLevel = sr;
   return it;
 }
 
@@ -227,7 +228,19 @@ export function solidify(item) {
   for (let i = 0; chosen.length < nAff && i < pool.length; i++) { const k = pool[(h + i * 7) % pool.length]; if (!chosen.includes(k)) chosen.push(k); }
   item.affixes = {};
   for (const k of chosen.slice(0, nAff)) item.affixes[k] = affixValue(k, lv, r.mult * (forged ? FORGED.affix : 1));
+  const sr = setReqLevel(item);
+  if (sr) item.reqLevel = sr;
   return item;
+}
+// v0.12.6: nível para EQUIPAR cada set (decisão do dono). Do set do nível 100 em diante as luvas equipam 10 níveis
+// antes e a bota e o capacete 5 níveis antes; o resto da armadura e a arma, no nível do set.
+export const SET_REQ = { ermos: 25, planicie: 50, pantano: 100, deserto: 150, floresta: 200, tundra: 250, vulcao: 300, pico: 350 };
+export function setReqLevel(it) {
+  const L = it?.bset && SET_REQ[it.bset]; if (!L) return 0;
+  if (L < 100) return L;
+  if (it.slot === 'gloveL' || it.slot === 'gloveR') return L - 10;
+  if (it.slot === 'boots' || it.slot === 'helm') return L - 5;
+  return L;
 }
 
 export function generateEquipment({ baseId, rarity, ilvl, rng, forged = null }) {

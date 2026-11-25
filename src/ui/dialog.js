@@ -36,7 +36,7 @@ function catalogItemView(idx) {
   if (!e) return catalogView();
   const st = e.stats.filter((x) => x.s).map((x) => `<span class="cat-st" style="border-color:${RAR(x.r).color}"><i style="color:${RAR(x.r).color}">${RAR(x.r).name}</i> ${x.s.k} ${x.s.v}</span>`).join('');
   const mobs = e.mobs.length ? e.mobs.map((m) => `<span class="cat-mob">${esc(m)}</span>`).join('') + (e.more ? `<span class="cat-mob">+${e.more} outros</span>` : '') : '<span class="muted">Não cai de monstros.</span>';
-  return `<div class="cat-det"><span class="cat-ico big" style="color:${RAR(e.rarity || 'comum').color}">${catIcon(e)}</span><div><h3>${esc(e.name)}</h3><small>${esc(e.kind)} · a partir do nível ${e.level}</small></div></div>
+  return `<div class="cat-det"><span class="cat-ico big" style="color:${RAR(e.rarity || 'comum').color}">${catIcon(e)}</span><div><h3>${esc(e.name)}</h3><small>${esc(e.kind)} · cai a partir do nível ${e.level}${e.req ? ` · <b>equipa no nível ${e.req}</b>` : ''}</small></div></div>
     <p class="say">${esc(e.what)}</p>
     ${st ? `<h4>Força${e.statLv ? ` (no nível ${e.statLv})` : ` (no nível ${e.level})`}</h4><div class="cat-sts">${st}</div>` : ''}
     <h4>Quem solta</h4><div class="cat-mobs">${mobs}</div><p class="muted">${esc(e.note || '')}</p>

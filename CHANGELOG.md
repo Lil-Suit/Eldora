@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## 0.12.6 — Nível para equipar os sets
+- Cinzas 25 · Colheita 50 · Lodo 100 · Duna 150 · Seiva 200 · Geada 250 · Brasa 300 · Astral 350.
+- Do set 100 em diante: luvas equipam 10 níveis antes; bota e capacete 5 níveis antes; o resto no nível do set.
+- O Livro dos Itens mostra "equipa no nível X". Itens que você já tem são atualizados (save v19). Visual dos sets não muda.
+
 ## 0.12.5 — Raros de verdade não se vendem
 - Itens Épicos (roxo), Míticos (vermelho) e Lendários (branco) não podem ser vendidos no Mercador, anunciados no mercado nem trocados (o servidor também recusa).
 

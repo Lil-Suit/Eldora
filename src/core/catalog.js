@@ -8,7 +8,7 @@ import { MOB_LEVELS } from '../config/moblevels.js';
 import { BIOME_SETS, BIOME_ORDER, SET_PIECES, PIECE_SLOTS, PIECE_NAMES, setPieceName } from '../config/biomas.js';
 import { CLASSES } from '../config/classes.js';
 import { RARITIES } from '../config/balance.js';
-import { solidify } from './items.js';
+import { solidify, SET_REQ, setReqLevel } from './items.js';
 
 const mobName = (t) => ENEMIES[t]?.name || t;
 // mesmo nome uma vez só (vários tipos de 'Lobo'/'Goblin' aparecem como um); a marca (favorita) vence
@@ -52,7 +52,7 @@ export function itemCatalog() {
       out.push({
         id: `s:${bk}:${p}`, name: setPieceName({ bset: bk, slot, wkind: ITEM_BASES[base].kind }) || `${PIECE_NAMES[p]} ${S.word}`, slot, wkind: ITEM_BASES[base].kind, bset: bk,
         level: S.levels[0], kind: S.name, what: `${PIECE_NAMES[p]} do ${S.name} (${S.bioma}). Do nível ${S.levels[0]} ao ${S.levels[1]}.`,
-        stats: RAR_SHOW.map((r) => ({ r, s: statOf(base, slot, r, S.levels[1]) })), statLv: S.levels[1],
+        stats: RAR_SHOW.map((r) => ({ r, s: statOf(base, slot, r, S.levels[1]) })), statLv: S.levels[1], req: setReqLevel({ bset: bk, slot }) || 0,
         mobs: uniqNames([...fav.map((t) => mobName(t) + ' (favorita)'), ...fam.filter((t) => !fav.includes(t)).map(mobName)]), more: 0,
         note: 'A peça favorita de um monstro cai mais vezes dele.',
       });

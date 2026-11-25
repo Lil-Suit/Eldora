@@ -8,7 +8,7 @@ import { BALANCE, RARITIES, RARITY_INDEX, ITEM_SCALE, FORGED } from '../config/b
 import { NAMED_ITEMS, AFFIXES } from '../config/items.js';
 import { themedItemName, themeOldItem } from '../config/itemthemes.js';
 
-export const SAVE_VERSION = 18;
+export const SAVE_VERSION = 19;
 
 // Estado persistente de um novo personagem.
 export function createNewState(name, classId, rng) {
@@ -185,6 +185,13 @@ export function migrateState(s) {
     for (const k of Object.keys(p.equipment || {})) fixIt(p.equipment[k]);
     if (Array.isArray(p.vault)) p.vault.forEach(fixIt);
     s.v = 18;
+  }
+  if (s.v < 19) { // v0.12.6: nível para equipar de cada set (25/50/100/150…; luvas -10, bota e capacete -5)
+    const p = s.player, fix = (it) => { if (it && it.kind === 'equip' && it.bset && !it.named) solidify(it); };
+    if (Array.isArray(p.inventory)) p.inventory.forEach(fix);
+    for (const k of Object.keys(p.equipment || {})) fix(p.equipment[k]);
+    if (Array.isArray(p.vault)) p.vault.forEach(fix);
+    s.v = 19;
   }
   // pacote 3: quem já passou do Guardião (flag antiga, está/esteve nos Ermos ou Confins) continua com o portal liberado
   s.world = s.world || {}; s.world.flags = s.world.flags || {};
