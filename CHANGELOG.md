@@ -1,5 +1,8 @@
 # Histórico de versões
 
+## 0.12.12
+- Nick dos jogadores preso na cabeça: diminui junto com o personagem quando ele está longe e some a mais de 32 m.
+
 ## 0.12.11
 - Machado volta à posição na mão, inclinado para baixo: lâmina grande para baixo, parte menor para cima.
 

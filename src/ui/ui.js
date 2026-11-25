@@ -746,8 +746,12 @@ export class UI {
     // outros jogadores
     if (G.settings.showPeers && !clean) for (const g of G.net.peers.values()) {
       if (g.pr.ar !== P.area) continue;
+      // nick preso na cabeça: some de longe e diminui com a distância (tamanho fixo em relação ao personagem)
+      if (Math.hypot(g.pos.x - P.pos.x, g.pos.z - P.pos.z) > 32) continue;
       const s = this.project(g.pos.x, g.pos.y + 2.3, g.pos.z);
       if (!s) continue;
+      const cam = G.camera.position, ref = Math.max(4, Math.hypot(cam.x - P.pos.x, cam.y - P.pos.y - 1.6, cam.z - P.pos.z));
+      const cd = Math.max(1, Math.hypot(cam.x - g.pos.x, cam.y - g.pos.y - 2.3, cam.z - g.pos.z)), ps = Math.min(1.1, ref / cd);
       const p = this.plate('p' + g.id);
       const gm = G.net.isGm(g), pk = +g.pr.pk || 0, pv = +g.pr.pv || 0, hunt = G.pvp?.isBountyTarget(g) ? 1 : 0;
       const label = `${g.pr.n || 'Viajante'}|${g.pr.l}|${g.bubble?.text || ''}|${g.isMe ? 1 : 0}|${g.pr.pt || ''}|${gm ? 1 : 0}|${pk}|${pv}|${hunt}`;
@@ -759,7 +763,8 @@ export class UI {
         p.n.className = 'pn' + (g.isMe ? ' me' : '') + (this.G.party?.isMate(g.id) ? ' team' : ''); p.last = label;
       }
       p.fill.parentElement.style.display = 'none';
-      p.el.style.transform = `translate(${s[0]}px, ${s[1]}px) translate(-50%,-100%)`;
+      p.el.style.transformOrigin = '50% 100%';
+      p.el.style.transform = `translate(${s[0]}px, ${s[1]}px) translate(-50%,-100%) scale(${ps.toFixed(3)})`;
     }
     // alertas "!"
     if (clean) this.alerts.length = 0;
@@ -776,7 +781,7 @@ export class UI {
     }
     for (const [k, p] of this.plates) {
       if (!p.used) {
-        p.el.remove(); p.el.className = 'plate'; p.fill.parentElement.style.display = ''; this.platePool.push(p.el); this.plates.delete(k);
+        p.el.remove(); p.el.className = 'plate'; p.el.style.transformOrigin = ''; p.fill.parentElement.style.display = ''; this.platePool.push(p.el); this.plates.delete(k);
       }
     }
     // anel do alvo
