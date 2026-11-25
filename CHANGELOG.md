@@ -1,5 +1,24 @@
 # Histórico de versões
 
+## 0.12.17
+- Manto do Rei: começa em cima dos ombros (gola de arminho), é grosso e se mexe como tecido (ondula parado e esvoaça andando); barra dourada na borda.
+
+## 0.12.16
+- Skin nova: Rei/Rainha (💎 500) com manto vermelho real e coroa dourada brilhante.
+- Redistribuir pontos agora custa 💎 50 (antes era ouro).
+- Segurar o "+" do atributo vai distribuindo sozinho.
+- Opção de jogar em primeira pessoa (Configurações › Controles).
+- Opção de ligar/desligar o minimapa (Configurações › Gráficos).
+- Ouro só aparece dentro da mochila (saiu do canto da tela).
+- Jornada saiu da janela do personagem e foi para o lobby (botão 📜 Jornada).
+- Espadas, montantes e adagas com lâmina de verdade: fios claros, sulco no meio e ponta afiada.
+- Enfeites do tema nas lâminas viraram desenho colado (cipó com folhinhas), sem nada flutuando.
+- Escudo no antebraço: a mão fica atrás dele.
+- Plataforma dos portais é sólida: os pés não afundam mais na pedra.
+
+## 0.12.15
+- Janela do personagem sem as abas Habilidades, Missões e Bestiário (eles já têm botão próprio e abrem sozinhos).
+
 ## 0.12.14
 - Pirâmide de Âmbar maior e com entrada: o salão do trono fica dentro dela, e a Escorpião-Rainha nasce lá.
 - Chefões não evadem mais nem voltam para a posição inicial.

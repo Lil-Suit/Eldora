@@ -182,23 +182,30 @@ class SkinHero {
       for (const mt of this.mats) if (mt.name === 'outfit') { mt.emissiveMap = t; mt.emissive.setHex(0xffd36b); mt.emissiveIntensity = 0.8; mt.userData.regal = true; mt.needsUpdate = true; }
     }).catch(() => {});
     const g = new THREE.Group(); g.name = 'manto';
-    const W = 0.56, L = 1.02, geo = new THREE.PlaneGeometry(W, L, 8, 12);
+    // manto grosso (tecido com espessura), preso em cima dos ombros, que cai até perto dos pés
+    const W = 0.6, L = 1.12, TH = 0.035, geo = new THREE.BoxGeometry(W, L, TH, 10, 16, 1);
     geo.translate(0, -L / 2, 0);
-    const p = geo.attributes.position;
+    const p = geo.attributes.position, base = new Float32Array(p.array.length);
     for (let i = 0; i < p.count; i++) {
-      const x = p.getX(i), y = p.getY(i), k = -y / L, e = (x / (W / 2)) ** 2;
-      p.setX(i, x * (1 + k * 0.45)); // abre embaixo
-      p.setZ(i, -(0.02 + k * k * 0.16) + e * (0.13 - k * 0.06)); // cai para trás e abraça os ombros
+      const x = p.getX(i), y = p.getY(i), z = p.getZ(i), k = -y / L, e = (x / (W / 2)) ** 2;
+      const top = Math.max(0, 1 - k / 0.12); // faixa de cima dobra por cima dos ombros
+      p.setX(i, x * (0.92 + k * 0.5));
+      p.setY(i, y + top * 0.05 * (1 - e));
+      p.setZ(i, z - (k * k * 0.14) + e * (0.15 - k * 0.08) + top * 0.1);
     }
+    base.set(p.array);
     geo.computeVertexNormals();
-    const cloth = new THREE.MeshStandardMaterial({ color: 0xa3121a, roughness: 0.72, side: THREE.DoubleSide });
+    // barra dourada pintada na própria borda de baixo (acompanha o tecido)
+    const cols = new Float32Array(p.count * 3), red = new THREE.Color(0x9c0f18), gold = new THREE.Color(0xffc23a);
+    for (let i = 0; i < p.count; i++) { const k = -base[i * 3 + 1] / L, c = k > 0.95 ? gold : red; cols[i * 3] = c.r; cols[i * 3 + 1] = c.g; cols[i * 3 + 2] = c.b; }
+    geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+    const cloth = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.78 });
     const cape = new THREE.Mesh(geo, cloth); cape.castShadow = true; cape.renderOrder = 2; g.add(cape);
-    // barra dourada embaixo e gola de arminho
-    const trim = new THREE.Mesh(new THREE.BoxGeometry(W * 1.45, 0.05, 0.02), new THREE.MeshStandardMaterial({ color: 0xffc94a, emissive: 0x7a5200, metalness: 0.6, roughness: 0.35 }));
-    trim.position.set(0, -L + 0.03, -0.18); g.add(trim);
-    const fur = new THREE.Mesh(new THREE.CapsuleGeometry(0.045, W * 0.78, 4, 8), new THREE.MeshStandardMaterial({ color: 0xf2efe6, roughness: 0.95 }));
-    fur.rotation.z = Math.PI / 2; fur.position.set(0, 0, 0.01); g.add(fur);
-    g.position.set(0, 1.2, -0.11);
+    cape.userData.base = base; cape.userData.L = L; cape.userData.W = W;
+    // gola de arminho em cima dos ombros
+    const fur = new THREE.Mesh(new THREE.CapsuleGeometry(0.06, W * 0.8, 4, 8), new THREE.MeshStandardMaterial({ color: 0xf2efe6, roughness: 0.95 }));
+    fur.rotation.z = Math.PI / 2; fur.position.set(0, 0.03, 0.08); g.add(fur);
+    g.position.set(0, 1.27, -0.12);
     this.root.add(g); this.regal = g; this.cape = cape;
   }
 
@@ -355,7 +362,18 @@ class SkinHero {
     const damp = (x, y, k) => x + (y - x) * (1 - Math.exp(-k * dt));
     if (this.regal) {
       const mv = Math.min(1, st.move || 0);
-      this.regal.rotation.x = damp(this.regal.rotation.x, -(0.08 + mv * 0.45 + Math.sin(t * 3.1) * 0.03 * (0.3 + mv)), 6);
+      this.regal.rotation.x = damp(this.regal.rotation.x, -(0.04 + mv * 0.3), 5);
+      // tecido vivo: ondas descendo pelo manto (mais fortes andando), a ponta balança mais que o topo
+      this._capeT = (this._capeT || 0) + dt * (1.6 + mv * 3.4);
+      const cp = this.cape, P = cp.geometry.attributes.position, B = cp.userData.base, L = cp.userData.L, W = cp.userData.W, T = this._capeT;
+      for (let i = 0, j = 0; i < P.count; i++, j += 3) {
+        const x = B[j], y = B[j + 1], k = Math.min(1, Math.max(0, -y / L)), kk = k * k;
+        const wave = Math.sin(T * 2.2 - k * 5.5 + x * 4) * 0.5 + Math.sin(T * 1.3 - k * 3 - x * 7) * 0.5;
+        P.array[j] = x + Math.sin(T * 1.7 - k * 4 + x * 3) * 0.035 * kk * (0.5 + mv);
+        P.array[j + 2] = B[j + 2] + wave * kk * (0.045 + mv * 0.09) - kk * mv * 0.22;
+      }
+      P.needsUpdate = true;
+      if ((this._capeN = (this._capeN || 0) + 1) % 2 === 0) cp.geometry.computeVertexNormals();
       for (const mt of this.mats) if (mt.userData.regal) mt.emissiveIntensity = 0.65 + Math.sin(t * 2.4) * 0.25;
     }
     if (this.familiar) { this.familiar.rotation.y += dt * 1.6; this.familiar.position.y = 1.85 + Math.sin(t * 2.3) * 0.12; this.familiarGem.rotation.y += dt * 3; }
