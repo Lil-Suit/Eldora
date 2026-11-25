@@ -230,8 +230,8 @@ class SkinHero {
     if (bow) { (this.bowHold ||= new THREE.Group()).add(weapon); if (!this.bowHold.parent) this.root.add(this.bowHold); }
     else {
       this.handR.add(weapon); this.bowHold?.parent?.remove(this.bowHold);
-      // machado/clava: cabo inclinado para longe do rosto (a cabeça pesada ficava em pé na frente da cara)
-      const TILT = globalThis.__WTILT || { machado: [0, -0.6], clava: [0, -0.5] };
+      // machado: gira no próprio cabo para a LÂMINA ficar para frente/baixo (o corte desce no golpe); antes ficava para cima
+      const TILT = globalThis.__WTILT || { machado: [0, Math.PI], clava: [0, 0] };
       if (TILT[kind]) { weapon.rotation.x = TILT[kind][0]; weapon.rotation.z = TILT[kind][1]; }
     }
     this.weapon = weapon; this.weaponKind = kind; this.aimW = 0;

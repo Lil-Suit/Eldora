@@ -109,7 +109,7 @@ export class Sky {
   // chuva inclinada pelo vento com gotas que batem no chão (respingos) e na água (ondinhas).
   setUltra(ultra, q) {
     this.ultra = !!ultra;
-    const touch = !!globalThis.__RIFT?.isTouch, sm = Math.min(q.shadowMap || 2048, touch ? 2048 : 8192), S = q.shadowExtent || 40; // celular: sombra 2048 (4096 pesava muito)
+    const touch = !!globalThis.__RIFT?.isTouch, sm = Math.min(q.shadowMap || 2048, touch ? (q.ultra ? 2048 : 1024) : 8192), S = q.shadowExtent || 40; // celular: sombra 2048 (4096 pesava muito)
     if (this.sun.shadow.mapSize.x !== sm) { this.sun.shadow.mapSize.set(sm, sm); this.sun.shadow.map?.dispose(); this.sun.shadow.map = null; }
     this.shadowExtent = S;
     Object.assign(this.sun.shadow.camera, { left: -S, right: S, top: S, bottom: -S });

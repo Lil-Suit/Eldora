@@ -82,7 +82,7 @@ export class Game {
     this.renderer.shadowMap.enabled = q.shadows;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
     // celular: a tela já é muito densa; acima de ~1.5 o custo dobra e quase não se vê diferença (Alta/Ultra travavam em 20-30 fps)
-    const touchCap = this.isTouch && !q.nativeRes ? ({ ultra: 1.5, alta: 1.35, media: 1.25 }[this.settings.quality] || q.pixelRatio) : q.pixelRatio;
+    const touchCap = this.isTouch && !q.nativeRes ? ({ ultra: 1.35, alta: 1.15, media: 1.05 }[this.settings.quality] || q.pixelRatio) : q.pixelRatio;
     this.pixelRatio = Math.min(window.devicePixelRatio || 1, q.pixelRatio, touchCap);
     this.renderer.setPixelRatio(this.pixelRatio);
     this.scene = new THREE.Scene();
@@ -1150,6 +1150,9 @@ export class Game {
     this.input.endFrame();
     if (MUNDO) return; // mundo no servidor: não desenha nada
     this.hurtFx.update(rdt, this.renderer);
+    // celular: o mapa de sombra (a cena inteira desenhada de novo do ponto de vista do sol) é refeito 1 quadro sim, 1 não
+    if (this.isTouch && this.renderer.shadowMap.enabled) { this.renderer.shadowMap.autoUpdate = false; if (((this._shf = (this._shf || 0) + 1) & 1) === 0) this.renderer.shadowMap.needsUpdate = true; }
+    else this.renderer.shadowMap.autoUpdate = true;
     { const t0 = performance.now(); if (!(this.ultra && UltraAtmos.render(this))) this.renderer.render(this.scene, this.camera); this.profAdd('desenho', performance.now() - t0); }
     // Shader nunca é jogado fora: antes, cada efeito que sumia descartava o shader e o próximo igual compilava
     // de novo — eram as "travadinhas" no meio da luta. Agora cada tipo compila uma vez só por sessão.

@@ -69,6 +69,16 @@ export function openDialog(ui, npcId, view = 'main', keep = false) {
     openDialog(ui, npcId, 'shop', keep);
     return;
   }
+  // v0.12.8: NPC de serviço abre DIRETO no serviço (sem lista de opções). Banqueira: abas Banco | Baú diário.
+  if (view === 'main' && !f.ready.length && !f.available.length && !f.active.length && ['bank', 'supplies', 'upgrade'].includes(def.service)) {
+    if (def.service === 'bank') {
+      const v = G.economy?.daily?.pode ? 'bau' : 'bank';
+      ui.bk = { v: '', q: '', res: null, to: null, tv: '', conf: false, msg: '' }; ui.bauMsg = '';
+      Promise.allSettled([G.economy.loadBank(), G.economy.checkMail(), G.economy.dailyStatus()]).then(() => { if (ui.dialogNpc === npcId && (ui.dialogView === 'bank' || ui.dialogView === 'bau')) openDialog(ui, npcId, ui.dialogView, true); });
+      openDialog(ui, npcId, v, keep); return;
+    }
+    openDialog(ui, npcId, def.service, keep); return;
+  }
   if (view === 'main') ui._shopDirect = false;
   if (view === 'main') {
     if (ui._greetNpc !== npcId) { ui._greetNpc = npcId; ui._greet = def.greet[Math.floor(Math.random() * def.greet.length)]; }
@@ -78,7 +88,7 @@ export function openDialog(ui, npcId, view = 'main', keep = false) {
     for (const id of f.active) opts.push(`<button class="opt act" data-a="d:qinfo" data-q="${id}"><b>…</b> ${esc(QUESTS[id].name)} (em andamento)</button>`);
     if (def.service === 'shop') opts.push(`<button class="opt" data-a="d:selltab" data-t="buy">${ICONS.espada || ICONS.moeda} Comprar equipamento inicial</button>`, `<button class="opt" data-a="d:selltab" data-t="eq">${ICONS.moeda} Vender meus itens</button>`);
     if (def.service === 'supplies') opts.push(`<button class="opt" data-a="d:view" data-v="supplies">${ICONS.pocao || ICONS.moeda} Comprar poções e flechas</button>`);
-    if (def.service === 'bank') opts.push(`<button class="opt${G.economy?.daily?.pode ? ' ready' : ''}" data-a="d:view" data-v="bau">🎁 Baú diário${G.economy?.daily?.pode ? ' — pronto para abrir!' : ''}</button>`, `<button class="opt" data-a="d:view" data-v="bank">${ICONS.moeda} Banco: guardar, sacar e transferir ouro</button>`, `<button class="opt" data-a="diamonds">💎 Loja de Diamantes (visuais)</button>`);
+    if (def.service === 'bank') opts.push(`<button class="opt${G.economy?.daily?.pode ? ' ready' : ''}" data-a="d:view" data-v="bau">🎁 Baú diário${G.economy?.daily?.pode ? ' — pronto para abrir!' : ''}</button>`, `<button class="opt" data-a="d:view" data-v="bank">${ICONS.moeda} Banco: guardar, sacar e transferir ouro</button>`);
     if (def.service === 'market') opts.push(`<button class="opt" data-a="d:market" data-t="buy">${ICONS.bolsa} Comprar de outros jogadores</button>`, `<button class="opt" data-a="d:market" data-t="sell">${ICONS.moeda} Vender um item (você escolhe o preço)${G.state.player.level < MARKET.minLevel ? ` — libera no nível ${MARKET.minLevel}` : ''}</button>`, `<button class="opt" data-a="d:market" data-t="mine">${ICONS.livro} Meus anúncios</button>`);
     if (def.service === 'upgrade') opts.push(`<button class="opt" data-a="d:view" data-v="upgrade">${ICONS.machado} Aprimorar equipamento</button>`);
     if (def.service === 'itens') opts.push(`<button class="opt" data-a="d:view" data-v="itens">${ICONS.livro} Ver o Livro dos Itens (do mais fraco ao mais forte)</button>`);
@@ -111,8 +121,10 @@ export function openDialog(ui, npcId, view = 'main', keep = false) {
   else if (view === 'supplies') body = suppliesView(ui);
   else if (view === 'upgrade') body = upgradeView(ui);
   else if (view === 'market') body = marketView(ui);
-  else if (view === 'bank') body = bankView(ui);
-  else if (view === 'bau') body = dailyView(ui);
+  else if (view === 'bank' || view === 'bau') {
+    const tabs = `<div class="dtabsrow"><button class="btn sm ${view === 'bank' ? 'primary' : ''}" data-a="d:view" data-v="bank">${ICONS.moeda} Banco</button><button class="btn sm ${view === 'bau' ? 'primary' : ''}" data-a="d:view" data-v="bau">🎁 Baú diário${G.economy?.daily?.pode ? ' •' : ''}</button></div>`;
+    body = tabs + (view === 'bank' ? bankView(ui) : dailyView(ui));
+  }
   const wide = view === 'itens' || view.startsWith('item:') || view === 'shop' || view === 'supplies' || view === 'upgrade' || view === 'market' || view === 'bank';
   const full = view === 'itens' || view.startsWith('item:');
   ui.el.dialog.className = 'dialog interactive' + (full ? ' full' : wide ? ' wide' : '');

@@ -1,5 +1,12 @@
 # Histórico de versões
 
+## 0.12.8 — Machado, Banqueira e desempenho no celular
+- Machado: lâmina virada para frente/baixo (o corte desce no golpe); antes ficava para cima.
+- Banqueira abre direto no serviço, com abas Banco | Baú diário (abre no Baú quando ele está pronto). Fornecedora e Ferreiro também abrem direto.
+- Loja de Diamantes só pela aba 💎 do menu do personagem (saiu da Banqueira).
+- Celular: sombra refeita em quadros alternados, mapa de sombra 1024 no Médio/Alto e resolução um pouco menor (bem mais FPS).
+- Tocar no FPS mostra o que está pesando (jogo, desenho, número de desenhos, resolução).
+
 ## 0.12.7 — Peças do mesmo set com a mesma força
 - Peça de set tem a força do SET (nível máximo do set), não do monstro que soltou: as duas luvas do mesmo set e da mesma cor dão a mesma defesa (vale para todas as peças). Itens que você já tem são atualizados (save v20).
 

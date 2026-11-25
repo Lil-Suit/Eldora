@@ -113,7 +113,7 @@ export class UI {
       <div class="zonelabel" data-el="zonelabel"></div>
       <div class="emotes interactive hidden" data-el="emotes"></div>
       <div class="photopill hidden" data-el="photopill">Modo foto · <b>P</b> para sair</div>
-      <div class="fps hidden" data-el="fps"></div>
+      <div class="fps hidden interactive" data-el="fps" data-a="fpsdet" title="Toque para ver o que pesa"></div>
       <div class="mira hidden" data-el="mira"><i></i><i></i><i></i><i></i><b></b></div>
       <div class="saved" data-el="saved">Progresso salvo</div>
     </div>
@@ -149,6 +149,7 @@ export class UI {
       else if (a === 'mount') this.G.player?.toggleMount();
       else if (a.startsWith('ec:')) ecoClick(this, a.slice(3), t);
       else if (a === 'diamonds') openDiamonds(this);
+      else if (a === 'fpsdet') this._fpsDetail = !this._fpsDetail;
       else if (a === 'skill') { this.G.input.touch.skill[+t.dataset.i] = true; }
       else if (a === 'emote') { const P = this.G.player; P.emote = t.dataset.e === 'stop' || P.emote === t.dataset.e ? null : t.dataset.e; P.anim.t = 0; this.G.audio?.play?.('click'); this.toggleEmotes(false); }
       else if (a === 'emclose') this.toggleEmotes(false);
@@ -845,7 +846,7 @@ export class UI {
       const clock = `${G.night > 0.5 ? '☾' : '☀'} ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}${G.sky.isRaining() ? ' · Chuva' : ''}`;
       if (this.el.clock.textContent !== clock) this.el.clock.textContent = clock;
       if (this.journalTab === 'map') { const mc = this.el.journal.querySelector('canvas.fullmap'); if (mc) this.map.drawFull(mc.getContext('2d'), mc.width, mc.height); }
-      if (G.settings.showFps) this.el.fps.textContent = `${Math.round(G.fps)} FPS`;
+      if (G.settings.showFps) this.el.fps.textContent = `${Math.round(G.fps)} FPS` + (this._fpsDetail ? ` · ${G.profText()} · ${Math.round(G.renderer.info.render.calls)} desenhos · ${(G.renderer.getPixelRatio()).toFixed(2)}x` : '');
     }
     if (this.modal === 'death') {
       this.deathT -= dt;
