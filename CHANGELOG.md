@@ -1,5 +1,8 @@
 # Histórico de versões
 
+## 0.12.11
+- Machado volta à posição na mão, inclinado para baixo: lâmina grande para baixo, parte menor para cima.
+
 ## 0.12.10
 - Machado na mão do herói de cabeça pra baixo (cabeça perto do chão, lâmina para fora).
 - Ultra realismo no celular mais leve: menos plantinhas e mais perto, pós-processamento em resolução menor, brilho com menos etapas, sombra menor.
