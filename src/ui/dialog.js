@@ -4,7 +4,7 @@ import { esc } from './ui.js';
 import { rewardsHtml, itemDetailHtml } from './panels.js';
 import { NPCS, QUESTS } from '../config/quests.js';
 import { CONSUMABLES, MATERIALS, EQUIP_SLOTS, SLOT_NAMES, ITEM_BASES } from '../config/items.js';
-import { generateEquipment, itemValue, upgradeCost, displayName, rarityOf, makeStack, itemMainStat, stackDef, isBound } from '../core/items.js';
+import { generateEquipment, itemValue, upgradeCost, displayName, rarityOf, makeStack, itemMainStat, stackDef, isBound, noSale } from '../core/items.js';
 import { UPGRADE, RARITY_INDEX } from '../config/balance.js';
 import { rng } from '../core/rng.js';
 import { bankView, dailyView } from './economyui.js';
@@ -206,7 +206,7 @@ function shopView(ui) {
   if (tab === 'buy') return starterBuyHtml(ui, tabs);
   const grid = list.length ? pagedGrid(ui, 'ssell' + tab, list.map((i) => slotHtml(G.inv.slots[i], `data-a="d:ssel" data-i="${i}"`, '', G).replace('class="islot', `class="islot${ui.dsel === i ? ' sel' : ''}${isBound(G.inv.slots[i]) ? ' bound' : ''}`)), 'd:', gridFit([4, 5, 6], [3, 4, 5])) : '';
   const prof = sel ? `<div class="sellprof">${itemDetailHtml(G, sel, { compare: false })}
-      ${isBound(sel) ? '<p class="muted">Chaves, itens de missão e itens únicos não podem ser vendidos.</p>' : `<button class="btn primary big" data-a="d:sell">Vender${sel.qty > 1 ? ` (x${sel.qty})` : ''} por ${ICONS.moeda}${itemValue(sel).toLocaleString('pt-BR')}</button>`}</div>`
+      ${isBound(sel) || noSale(sel) ? '<p class="muted">Chaves, itens de missão, itens únicos e itens Épicos, Míticos e Lendários não podem ser vendidos.</p>' : `<button class="btn primary big" data-a="d:sell">Vender${sel.qty > 1 ? ` (x${sel.qty})` : ''} por ${ICONS.moeda}${itemValue(sel).toLocaleString('pt-BR')}</button>`}</div>`
     : '<div class="sellprof empty"><p class="muted">Toque num item para ver o perfil e o valor de venda.</p></div>';
   return `<div class="shop sellshop"><div>${tabs}<div class="sellgrid">${grid || '<p class="muted">Nada aqui.</p>'}</div></div>${prof}</div>`;
 }
@@ -312,7 +312,7 @@ export function dialogClick(ui, a, el) {
     }
     case 'sellall': {
       const r = el.dataset.r; let total = 0, n = 0;
-      G.inv.slots.forEach((s, i) => { if (s && s.kind === 'equip' && s.rarity === r && !isBound(s)) { total += itemValue(s); G.inv.slots[i] = null; n++; } }); G.inv.compact();
+      G.inv.slots.forEach((s, i) => { if (s && s.kind === 'equip' && s.rarity === r && !isBound(s) && !noSale(s)) { total += itemValue(s); G.inv.slots[i] = null; n++; } }); G.inv.compact();
       sp.gold += total; ui.dsel = null;
       G.audio.play('coin'); ui.toastSmall(`${n} itens vendidos por ${total} ouro`);
       ui.refreshHud(); openDialog(ui, npcId, 'shop', true); G.saver.requestSave('venda');
@@ -355,6 +355,7 @@ export function dialogClick(ui, a, el) {
     case 'sell': {
       const it = G.inv.slots[ui.dsel];
       if (!it || isBound(it)) break;
+      if (noSale(it)) { ui.toastSmall('Itens Épicos, Míticos e Lendários não podem ser vendidos.'); break; }
       const v = itemValue(it);
       G.inv.removeAt(ui.dsel);
       sp.gold += v; ui.dsel = null;

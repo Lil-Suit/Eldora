@@ -197,7 +197,7 @@ export function itemDetailHtml(G, it, opts = {}) {
     ${d.desc ? `<div class="iddesc">${esc(d.desc)}</div>` : ''}
     ${d.lore ? `<div class="idlore">“${esc(d.lore)}”</div>` : ''}
     ${compare}
-    <div class="idval">${ICONS.moeda} Valor de venda: ${itemValue(it)}</div>
+    ${it.kind === 'equip' && ['epico', 'mitico', 'lendario'].includes(it.rarity) ? '<div class="idval">Não pode ser vendido nem trocado</div>' : `<div class="idval">${ICONS.moeda} Valor de venda: ${itemValue(it)}</div>`}
     ${why && opts.showWhy !== false ? `<div class="idreq bad">${esc(why)}</div>` : ''}`;
 }
 

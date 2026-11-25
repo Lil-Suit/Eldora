@@ -1,5 +1,8 @@
 # Histórico de versões
 
+## 0.12.5 — Raros de verdade não se vendem
+- Itens Épicos (roxo), Míticos (vermelho) e Lendários (branco) não podem ser vendidos no Mercador, anunciados no mercado nem trocados (o servidor também recusa).
+
 ## 0.12.4 — Paredes que somem, água e loja de diamantes
 - Em fortalezas e grutas, a pedra/parede que tapa o herói some INTEIRA (sem o círculo quadriculado); o chão nunca some.
 - Água dos Confins com a cor misturada entre os biomas (sem a linha reta entre a água azul e a roxa).

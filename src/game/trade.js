@@ -104,7 +104,7 @@ export class Trade {
   addItem(invIndex) {
     const s = this.s, it = this.G.inv.slots[invIndex];
     if (!s || !it || s.phase !== 'offer') return;
-    if (!tradable(it)) return this.G.ui.toastSmall('Chaves, itens de missão itens únicos e prêmios presos ao personagem não podem ser trocados.');
+    if (!tradable(it)) return this.G.ui.toastSmall('Chaves, itens de missão, itens únicos, prêmios presos ao personagem e itens Épicos, Míticos e Lendários não podem ser trocados.');
     if (s.mine.refs.includes(it)) return;
     if (s.mine.refs.length >= TRADE.maxItems) return this.G.ui.toastSmall(`No máximo ${TRADE.maxItems} itens por troca.`);
     s.mine.refs.push(it); s.mine.json.push(JSON.stringify(it));

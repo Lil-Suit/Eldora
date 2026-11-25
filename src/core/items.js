@@ -32,7 +32,10 @@ export function isBound(e) { return !!e && (e.kind === 'quest' || !!e.bound || !
 // não vai ao mercado, não se larga e não cai no PvP (ninguém farma baú com personagem novo para vender).
 export function isSoul(e) { return !!e && !!e.soul; }
 export function noTrade(e) { return isBound(e) || isSoul(e); }
-export function tradable(e) { return !!e && !noTrade(e) && (e.kind === 'equip' || e.kind === 'material' || e.kind === 'consumable'); }
+// v0.12.5: Épico (roxo), Mítico (vermelho) e Lendário (branco) NUNCA são vendidos: nem no Mercador, nem no mercado, nem em troca
+export const NO_SALE_RARITIES = ['epico', 'mitico', 'lendario'];
+export function noSale(e) { return !!e && e.kind === 'equip' && NO_SALE_RARITIES.includes(e.rarity); }
+export function tradable(e) { return !!e && !noTrade(e) && !noSale(e) && (e.kind === 'equip' || e.kind === 'material' || e.kind === 'consumable'); }
 export function sanitizeEntry(raw, rng) {
   let e = raw;
   if (typeof e === 'string') { if (e.length > 6000) return null; try { e = JSON.parse(e); } catch { return null; } }

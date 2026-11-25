@@ -89,7 +89,7 @@ export class Market {
     const it = G.inv.slots[invIndex];
     price = Math.floor(price);
     if (!it) return { ok: false, reason: 'Escolha um item.' };
-    if (!tradable(it)) return { ok: false, reason: 'Chaves, itens de missão itens únicos e prêmios presos ao personagem não podem ser vendidos.' };
+    if (!tradable(it)) return { ok: false, reason: 'Chaves, itens de missão, itens únicos, prêmios presos ao personagem e itens Épicos, Míticos e Lendários não podem ser vendidos.' };
     if (!(price >= 1 && price <= MARKET.maxPrice)) return { ok: false, reason: `Preço entre 1 e ${MARKET.maxPrice}.` };
     if (this.full()) { const max = this.maxListings(); return { ok: false, full: max < MARKET.top, reason: max >= MARKET.top ? `No máximo ${MARKET.top} anúncios por jogador.` : `Seus ${max} espaços de venda estão cheios. Compre +${MARKET.extra} espaços por 💎${MARKET.extraPrice}.` }; }
     this.busy = true;
