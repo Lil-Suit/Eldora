@@ -48,7 +48,7 @@ export function installGameKeyboard(G) {
   const open = (el) => {
     target = el; shift = false;
     layer = el.type === 'number' || el.type === 'tel' || el.inputMode === 'numeric' ? 'num' : 'abc';
-    render(); kb.classList.remove('hidden'); document.body.classList.add('gkb-open');
+    render(); kb.classList.remove('hidden'); document.body.classList.add('gkb-open'); requestAnimationFrame(() => document.documentElement.style.setProperty('--gkbh', kb.offsetHeight + 'px'));
   };
   const close = (blur = true) => {
     kb.classList.add('hidden'); document.body.classList.remove('gkb-open');

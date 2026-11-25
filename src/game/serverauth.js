@@ -210,7 +210,7 @@ export function renameOverlay(token, oldName, charId, why) {
     const el = document.createElement('div');
     el.className = 'loginov';
     el.innerHTML = `<form class="card loginbox"><h2>Escolha outro nome</h2>
-      <p class="muted"></p>
+      <p class="muted why"></p>
       <label>Nome novo do personagem<input name="nm" maxlength="16" autocomplete="off" required></label>
       <div class="lerr hidden"></div>
       <div class="row"><button class="btn primary" type="submit">Usar este nome</button></div></form>`;

@@ -1487,3 +1487,8 @@ body.dlgshot .dialog.full { left: max(6px, var(--sal, 0px)); right: max(6px, var
 .tjourney .tjg b { color: #fff; margin-left: 4px; }
 
 .jtabs .dtabsrow { display: flex; gap: 6px; align-items: center; padding: 0 8px; }
+/* teclado do jogo SEMPRE por cima de janelas (nome, login…): a janela sobe para caber acima dele */
+.gkb { z-index: 10050; }
+body.gkb-open .loginov { align-items: start; padding-bottom: calc(var(--gkbh, 46vh) + 8px); overflow: auto; }
+body.gkb-open .loginov .loginbox { max-height: calc(100vh - var(--gkbh, 46vh) - 20px); overflow: auto; }
+.loginbox p.muted.why { display: block !important; font-size: 13px; margin: 0; }

@@ -1,5 +1,8 @@
 # Histórico de versões
 
+## 0.12.20
+- Janela "Escolha outro nome" (e as de login): o teclado do jogo fica por cima e a janela sobe para caber acima dele; o motivo aparece também no celular deitado.
+
 ## 0.12.19
 - Atualização ao abrir o jogo: confere a versão antes de entrar e baixa a nova na hora (na tela inicial). Só quem já está jogando vê o aviso de manutenção.
 - Na tela inicial/lobby, versão nova atualiza direto, sem esperar entrar no mapa.
