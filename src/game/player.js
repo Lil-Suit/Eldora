@@ -470,7 +470,7 @@ export class Player {
     const ph = this.action?.name === 'phase' ? 0.35 : 1;
     const inv = this.invuln > 0 && this.alive && !this.moveAction ? 0.55 + Math.sin(this.anim.t * 30) * 0.25 : 1;
     for (const m of this.rig.mats) {
-      if (m.emissive) m.emissive.setRGB(f * 0.8, f * 0.15, f * 0.1);
+      if (m.emissive) { if (m.userData.regal) m.emissive.setRGB(1, 0.83 - f * 0.68, 0.42 - f * 0.32); else m.emissive.setRGB(f * 0.8, f * 0.15, f * 0.1); } // Rei: o ouro da roupa continua brilhando
       const op = Math.min(ph, inv);
       if (op < 1) { m.transparent = true; m.opacity = op; } else if (m.transparent && m.opacity !== 1) { m.opacity = 1; m.transparent = false; }
     }

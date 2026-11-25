@@ -1,5 +1,14 @@
 # Histórico de versões
 
+## 0.12.18
+- Manto do Rei refeito com física de tecido de verdade:
+  - preso em arco por cima dos ombros e atrás da nuca, seguindo o tronco (não escorrega andando);
+  - desvia do corpo (tronco, quadril, ombros, braços, pernas e cabeça): não atravessa mais o personagem;
+  - cai com o peso, abre embaixo em "A" com pregas, ondula com o vento e esvoaça andando/correndo/virando;
+  - grosso: veludo vermelho por fora, forro escuro por dentro, bordas e barra douradas, gola de arminho.
+- Coroa do Rei continua brilhando também no seu próprio personagem (antes apagava ao levar dano).
+- Miniatura nova da skin na loja.
+
 ## 0.12.17
 - Manto do Rei: começa em cima dos ombros (gola de arminho), é grosso e se mexe como tecido (ondula parado e esvoaça andando); barra dourada na borda.
 

@@ -5,6 +5,7 @@
 // rig.kind = 'skinhero' → anim.js chama rig.update(estado, dt).
 // =============================================================
 import * as THREE from 'three';
+import { RoyalCape } from './cape.js';
 import { GLTFLoader } from '../../vendor/three/addons/loaders/GLTFLoader.js';
 import { clone as skClone } from '../../vendor/three/addons/utils/SkeletonUtils.js';
 import { buildHero, buildWeapon, mergeRigColors } from './models.js';
@@ -174,39 +175,16 @@ class SkinHero {
 
   // skin de Rei/Rainha: manto vermelho nas costas + ouro da roupa (coroa) brilhando
   setRegal(on) {
-    if (this.regal) { this.regal.parent?.remove(this.regal); this.regal = null; }
+    if (this.cape) { const ix = this.mats.indexOf(this.cape.mesh.material); if (ix >= 0) this.mats.splice(ix, 1); this.cape.dispose(); this.cape = null; }
+    this.regal = !!on;
     for (const mt of this.mats) if (mt.name === 'outfit' && mt.userData.regal && !on) { mt.emissiveMap = null; mt.emissive.setHex(0); mt.emissiveIntensity = 1; mt.userData.regal = false; mt.needsUpdate = true; }
     if (!on) return;
     HERO3D.tex('rei_glow').then((t) => {
       if (!this._regalOn) return;
       for (const mt of this.mats) if (mt.name === 'outfit') { mt.emissiveMap = t; mt.emissive.setHex(0xffd36b); mt.emissiveIntensity = 0.8; mt.userData.regal = true; mt.needsUpdate = true; }
     }).catch(() => {});
-    const g = new THREE.Group(); g.name = 'manto';
-    // manto grosso (tecido com espessura), preso em cima dos ombros, que cai até perto dos pés
-    const W = 0.6, L = 1.12, TH = 0.035, geo = new THREE.BoxGeometry(W, L, TH, 10, 16, 1);
-    geo.translate(0, -L / 2, 0);
-    const p = geo.attributes.position, base = new Float32Array(p.array.length);
-    for (let i = 0; i < p.count; i++) {
-      const x = p.getX(i), y = p.getY(i), z = p.getZ(i), k = -y / L, e = (x / (W / 2)) ** 2;
-      const top = Math.max(0, 1 - k / 0.12); // faixa de cima dobra por cima dos ombros
-      p.setX(i, x * (0.92 + k * 0.5));
-      p.setY(i, y + top * 0.05 * (1 - e));
-      p.setZ(i, z - (k * k * 0.14) + e * (0.15 - k * 0.08) + top * 0.1);
-    }
-    base.set(p.array);
-    geo.computeVertexNormals();
-    // barra dourada pintada na própria borda de baixo (acompanha o tecido)
-    const cols = new Float32Array(p.count * 3), red = new THREE.Color(0x9c0f18), gold = new THREE.Color(0xffc23a);
-    for (let i = 0; i < p.count; i++) { const k = -base[i * 3 + 1] / L, c = k > 0.95 ? gold : red; cols[i * 3] = c.r; cols[i * 3 + 1] = c.g; cols[i * 3 + 2] = c.b; }
-    geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
-    const cloth = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.78 });
-    const cape = new THREE.Mesh(geo, cloth); cape.castShadow = true; cape.renderOrder = 2; g.add(cape);
-    cape.userData.base = base; cape.userData.L = L; cape.userData.W = W;
-    // gola de arminho em cima dos ombros
-    const fur = new THREE.Mesh(new THREE.CapsuleGeometry(0.06, W * 0.8, 4, 8), new THREE.MeshStandardMaterial({ color: 0xf2efe6, roughness: 0.95 }));
-    fur.rotation.z = Math.PI / 2; fur.position.set(0, 0.03, 0.08); g.add(fur);
-    g.position.set(0, 1.27, -0.12);
-    this.root.add(g); this.regal = g; this.cape = cape;
+    // manto de verdade: tecido simulado preso nos ombros que desvia do corpo (engine/cape.js)
+    if (this.model) { this.cape = new RoyalCape(this); this.model.add(this.cape.mesh); this.mats.push(this.cape.mesh.material); this.root.updateMatrixWorld(true); this.cape.calibrate(); }
   }
 
   applyTex(name) {
@@ -220,10 +198,12 @@ class SkinHero {
     const key = g + ':' + sk.id;
     if (!force && key === this._lookKey) return;
     this._lookKey = key; this.look = { g, skin: sk.id };
-    this._regalOn = !!sk.regal; if (this.model) this.setRegal(this._regalOn);
+    const regalChanged = !!sk.regal !== !!this._regalOn;
+    this._regalOn = !!sk.regal;
     const file = `${g}_${sk.outfit}`;
     const want = this._want = key;
-    if (ready[file]) { if (this._mounted !== ready[file] || force) this.mountModel(ready[file], sk.tex); else this.restoreTex(sk.tex); return; }
+    // manto do Rei liga/desliga: remonta o modelo (pose de descanso) para o manto se encaixar no peito
+    if (ready[file]) { if (this._mounted !== ready[file] || force || regalChanged) this.mountModel(ready[file], sk.tex); else this.restoreTex(sk.tex); return; }
     HERO3D.load(file).then((gl) => { if (this._want === want) this.mountModel(gl, sk.tex); }).catch(() => {});
   }
   restoreTex(tex) {
@@ -360,22 +340,7 @@ class SkinHero {
     if (!this.root.visible) return; // fora da tela/área: não gasta tempo animando
     const t = st.t || 0;
     const damp = (x, y, k) => x + (y - x) * (1 - Math.exp(-k * dt));
-    if (this.regal) {
-      const mv = Math.min(1, st.move || 0);
-      this.regal.rotation.x = damp(this.regal.rotation.x, -(0.04 + mv * 0.3), 5);
-      // tecido vivo: ondas descendo pelo manto (mais fortes andando), a ponta balança mais que o topo
-      this._capeT = (this._capeT || 0) + dt * (1.6 + mv * 3.4);
-      const cp = this.cape, P = cp.geometry.attributes.position, B = cp.userData.base, L = cp.userData.L, W = cp.userData.W, T = this._capeT;
-      for (let i = 0, j = 0; i < P.count; i++, j += 3) {
-        const x = B[j], y = B[j + 1], k = Math.min(1, Math.max(0, -y / L)), kk = k * k;
-        const wave = Math.sin(T * 2.2 - k * 5.5 + x * 4) * 0.5 + Math.sin(T * 1.3 - k * 3 - x * 7) * 0.5;
-        P.array[j] = x + Math.sin(T * 1.7 - k * 4 + x * 3) * 0.035 * kk * (0.5 + mv);
-        P.array[j + 2] = B[j + 2] + wave * kk * (0.045 + mv * 0.09) - kk * mv * 0.22;
-      }
-      P.needsUpdate = true;
-      if ((this._capeN = (this._capeN || 0) + 1) % 2 === 0) cp.geometry.computeVertexNormals();
-      for (const mt of this.mats) if (mt.userData.regal) mt.emissiveIntensity = 0.65 + Math.sin(t * 2.4) * 0.25;
-    }
+    if (this.regal) for (const mt of this.mats) if (mt.userData.regal) mt.emissiveIntensity = 0.65 + Math.sin(t * 2.4) * 0.25; // coroa brilhando
     if (this.familiar) { this.familiar.rotation.y += dt * 1.6; this.familiar.position.y = 1.85 + Math.sin(t * 2.3) * 0.12; this.familiarGem.rotation.y += dt * 3; }
     // ---- base (andar, parado, nadar...): pesos misturados à mão (troca suave entre clipes) ----
     const [bn, speed, loop] = this.baseClip(st);
@@ -425,6 +390,8 @@ class SkinHero {
     this.mixer.update(dt);
     this.legTurn(st, dt);
     if (this.weapon?.userData?.bow && this.bowHold) this.archerPose(an && an.startsWith('Pistol_Shoot') && !(st.dead > 0) ? st.p || 0 : -1, dt);
+    // manto do Rei: depois da pose final do quadro (ossos já no lugar)
+    if (this.cape) { this.root.updateMatrixWorld(true); this.cape.step(dt); }
   }
 
   // Andando para o lado ou para trás enquanto mira/ataca (o corpo fica virado para o alvo):
