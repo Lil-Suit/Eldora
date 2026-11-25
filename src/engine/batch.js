@@ -45,6 +45,11 @@ export class Batch {
     _c.set(color);
     for (let i = 0; i < n; i++) { col[i * 3] = _c.r; col[i * 3 + 1] = _c.g; col[i * 3 + 2] = _c.b; }
     g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    if (this.piece) { // centro + raio da peça (para sumir a peça INTEIRA quando tapa o herói)
+      const pc = new Float32Array(n * 4), r = 0.5 * Math.max(sx, sy, sz);
+      for (let i = 0; i < n; i++) { pc[i * 4] = x; pc[i * 4 + 1] = y; pc[i * 4 + 2] = z; pc[i * 4 + 3] = r; }
+      g.setAttribute('aPiece', new THREE.BufferAttribute(pc, 4));
+    }
     this.parts.push(g);
     return g;
   }

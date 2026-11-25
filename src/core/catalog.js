@@ -11,6 +11,8 @@ import { RARITIES } from '../config/balance.js';
 import { solidify } from './items.js';
 
 const mobName = (t) => ENEMIES[t]?.name || t;
+// mesmo nome uma vez só (vários tipos de 'Lobo'/'Goblin' aparecem como um); a marca (favorita) vence
+const uniqNames = (list) => { const seen = new Map(); for (const n of list) { const b = n.replace(' (favorita)', ''); if (!seen.has(b) || n !== b) seen.set(b, seen.has(b) && seen.get(b) !== b ? seen.get(b) : n); } return [...seen.values()]; };
 // monstros que existem no mundo e soltam equipamento
 function equipMobs() {
   return Object.keys(MOB_LEVELS).filter((t) => ENEMIES[t] && LOOT_TABLES[ENEMIES[t].loot]?.item).sort((a, b) => MOB_LEVELS[a] - MOB_LEVELS[b]);
@@ -37,7 +39,7 @@ export function itemCatalog() {
       id: 'b:' + id, name: b.name, slot: b.slot, wkind: b.kind, level: lv, kind: 'Item solto',
       what: `${SLOT_NAMES[b.slot]}${b.cls ? ' de ' + (CLASSES[b.cls]?.name || b.cls) : ''}. A força depende do nível do monstro que soltou e da cor (raridade).`,
       stats: RAR_SHOW.map((r) => ({ r, s: statOf(id, b.slot, r, lv) })),
-      mobs: from.slice(0, 10).map(mobName), more: Math.max(0, from.length - 10), note: `Cai de qualquer monstro a partir do nível ${lv}.`,
+      mobs: uniqNames(from.map(mobName)).slice(0, 10), more: Math.max(0, uniqNames(from.map(mobName)).length - 10), note: `Cai de qualquer monstro a partir do nível ${lv}.`,
     });
   }
   // 2) sets dos biomas
@@ -51,7 +53,7 @@ export function itemCatalog() {
         id: `s:${bk}:${p}`, name: setPieceName({ bset: bk, slot, wkind: ITEM_BASES[base].kind }) || `${PIECE_NAMES[p]} ${S.word}`, slot, wkind: ITEM_BASES[base].kind, bset: bk,
         level: S.levels[0], kind: S.name, what: `${PIECE_NAMES[p]} do ${S.name} (${S.bioma}). Do nível ${S.levels[0]} ao ${S.levels[1]}.`,
         stats: RAR_SHOW.map((r) => ({ r, s: statOf(base, slot, r, S.levels[1]) })), statLv: S.levels[1],
-        mobs: [...fav.map((t) => mobName(t) + ' (favorita)'), ...fam.filter((t) => !fav.includes(t)).map(mobName)], more: 0,
+        mobs: uniqNames([...fav.map((t) => mobName(t) + ' (favorita)'), ...fam.filter((t) => !fav.includes(t)).map(mobName)]), more: 0,
         note: 'A peça favorita de um monstro cai mais vezes dele.',
       });
     }
@@ -67,7 +69,7 @@ export function itemCatalog() {
         id: `c:${sk}:${slot}`, name: b.name, slot, wkind: b.kind, set: sk, level: lv, kind: S.name,
         what: `${SLOT_NAMES[slot]} do ${S.name}. ${S.desc || 'O poder dela vem do efeito do conjunto completo.'}`,
         stats: RAR_SHOW.map((r) => ({ r, s: statOf(base, slot, r, lv) })),
-        mobs: (who.length ? who : bosses).map(mobName), more: 0, note: 'Só cai de chefe.',
+        mobs: uniqNames((who.length ? who : bosses).map(mobName)), more: 0, note: 'Só cai de chefe.',
       });
     }
   }
@@ -83,12 +85,16 @@ export function itemCatalog() {
       id: 'n:' + id, name: n.name, slot: n.slot, wkind: n.kind, named: id, rarity: n.rarity, level: n.ilvl || 1, kind: (RARITIES.find((r) => r.id === n.rarity)?.name || 'Lendário') + ' único',
       what: `${n.effectText || ''} ${n.lore ? '“' + n.lore + '”' : ''}`.trim(),
       stats: [{ r: n.rarity, s: n.atk ? { k: 'Ataque', v: n.atk } : n.def ? { k: 'Defesa', v: n.def } : null }],
-      mobs: who.map(mobName), more: 0, note: OTHER[id] || (who.length ? 'Raríssimo: só de chefe.' : 'Recompensa especial.'),
+      mobs: uniqNames(who.map(mobName)), more: 0, note: OTHER[id] || (who.length ? 'Raríssimo: só de chefe.' : 'Recompensa especial.'),
     });
   }
   // do mais fraco ao mais forte: nível em que começa a cair, depois a força do comum
-  const pw = (e) => (e.stats.find((x) => x.s)?.s?.v || 0) + (e.named ? 1e4 : 0);
-  out.sort((a, b) => a.level - b.level || pw(a) - pw(b) || a.name.localeCompare(b.name));
+  // organizado: nível em que começa a cair → tipo (soltos, set do bioma, conjunto de chefe, únicos) → mesmo set junto →
+  // ordem das peças (arma, escudo, capacete, peitoral, luvas, calça, botas, anel, cordão, mochila)
+  const SLOT_ORDER = ['weapon', 'shield', 'helm', 'chest', 'gloveL', 'gloveR', 'legs', 'boots', 'ring', 'neck', 'back'];
+  const grp = (e) => (e.named ? 3 : e.set ? 2 : e.bset ? 1 : 0);
+  const so = (e) => { const i = SLOT_ORDER.indexOf(e.slot); return i < 0 ? 99 : i; };
+  out.sort((a, b) => a.level - b.level || grp(a) - grp(b) || a.kind.localeCompare(b.kind) || so(a) - so(b) || a.name.localeCompare(b.name));
   CACHE = out;
   return out;
 }

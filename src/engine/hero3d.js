@@ -231,8 +231,8 @@ class SkinHero {
     else {
       this.handR.add(weapon); this.bowHold?.parent?.remove(this.bowHold);
       // machado/clava: cabo inclinado para longe do rosto (a cabeça pesada ficava em pé na frente da cara)
-      const TILT = globalThis.__WTILT || { machado: -0.6, clava: -0.5 };
-      if (TILT[kind]) weapon.rotation.x = TILT[kind];
+      const TILT = globalThis.__WTILT || { machado: [0, -0.6], clava: [0, -0.5] };
+      if (TILT[kind]) { weapon.rotation.x = TILT[kind][0]; weapon.rotation.z = TILT[kind][1]; }
     }
     this.weapon = weapon; this.weaponKind = kind; this.aimW = 0;
     this.setLeftGrip(bow || (!!eq.shield && kind !== 'montante'));

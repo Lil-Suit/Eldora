@@ -1,5 +1,14 @@
 # Histórico de versões
 
+## 0.12.4 — Paredes que somem, água e loja de diamantes
+- Em fortalezas e grutas, a pedra/parede que tapa o herói some INTEIRA (sem o círculo quadriculado); o chão nunca some.
+- Água dos Confins com a cor misturada entre os biomas (sem a linha reta entre a água azul e a roxa).
+- Aba 💎 (Loja de Diamantes) no lado direito do menu, só com os pacotes e o pergaminho; roupas e efeitos ficam na Aparência.
+- Livro dos Itens organizado (por nível, tipo, set e peça) e sem nome de monstro repetido.
+- Monstros de bioma só soltam peças do set do bioma (nada de Capacete de Ferro de Titã).
+- O lobo roxo e azul da Fenda (Planície do Guardião) voltou com o visual antigo.
+- Machado na mão com a cabeça para cima e um pouco para fora (não atravessa o rosto nem fica de ponta-cabeça).
+
 ## 0.12.3 — Chão sem buraco e item bloqueado
 - O "buraco" que deixa ver o herói atrás das paredes não fura mais o CHÃO (aparecia uma mancha quadriculada nos pés em fortalezas e grutas).
 - Item que você não pode usar (outra classe/nível) mantém a cor da raridade, fica apagado com listras e um ⛔ (antes ficava vermelho e parecia Mítico).

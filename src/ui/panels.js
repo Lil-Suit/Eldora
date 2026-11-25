@@ -41,7 +41,7 @@ export function renderJournal(ui, tab) {
     default: break;
   }
   // atalhos que antes ficavam num menu à parte (celular): Gestos, Menu (configurações) e Painel GM
-  const extra = `<span class="jsp"></span>${ui.G.saver?.serverGm ? `<button class="jtab jx" data-a="j:gm" title="Painel GM">${ICONS.coroa || '♛'}</button>` : ''}<button class="jtab jx" data-a="j:emotes" title="Gestos">${ICONS.sorriso}</button><button class="jtab jx" data-a="j:pause" title="Menu e configurações">${ICONS.engrenagem}</button>`;
+  const extra = `<span class="jsp"></span>${ui.G.saver?.serverGm ? `<button class="jtab jx" data-a="j:gm" title="Painel GM">${ICONS.coroa || '♛'}</button>` : ''}<button class="jtab jx jdia" data-a="diamonds" title="Loja de Diamantes">💎</button><button class="jtab jx" data-a="j:emotes" title="Gestos">${ICONS.sorriso}</button><button class="jtab jx" data-a="j:pause" title="Menu e configurações">${ICONS.engrenagem}</button>`;
   const html = `<div class="jwrap"><div class="jtabs">${tabs}${extra}<button class="jclose" data-a="j:close" title="Fechar (Esc)">${ICONS.fechar}</button></div><div class="jbody ${tab}">${body}</div></div>`;
   if (tab === 'inventory') setTimeout(() => {
     const box = ui.el.journal.querySelector('.pgrid[data-k="bag"]'); if (!box) return;

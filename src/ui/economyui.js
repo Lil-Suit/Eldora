@@ -177,10 +177,9 @@ export function renderDiamonds(ui) {
     : pay === 'link' ? esc(DIAMONDS.paymentNote) : 'Compra pela loja do aplicativo.';
   return `<div class="card dshop">${head}
     <p class="tdesc">Diamantes <b>só são comprados com dinheiro real</b> e servem para <b>visuais</b> e para o <b>Pergaminho de Teleporte</b> (só conveniência) — não dão força nem vantagem. Não caem de monstros e não podem ser trocados, vendidos nem transferidos. Seu código de jogador: <b class="code">${esc(E.code())}</b></p>
-    <div class="dcols"><div><h3>Pacotes</h3><div class="dpacks">${packs}</div><small class="muted dnote">${note}</small>
+    <div class="dcols one"><div><h3>Pacotes</h3><div class="dpacks">${packs}</div><small class="muted dnote">${note}</small><small class="muted dnote">Roupas e efeitos de arma ficam na aba <b>Aparência</b>.</small>
         <h3>Pergaminho de Teleporte <small class="muted">· você tem 📜 ${G.inv.count('pergaminho_tp')}</small></h3><div class="dtp">${tp}</div></div>
-      <div><div class="dtabs"><button class="btn sm ${tab === 'skin' ? 'primary' : ''}" data-a="ec:dstab" data-t="skin">Roupas</button><button class="btn sm ${tab === 'fx' ? 'primary' : ''}" data-a="ec:dstab" data-t="fx">Efeitos da arma</button></div>
-        <div class="ditems ${tab === 'skin' ? 'sk' : ''}">${items}</div></div></div></div>`;
+    </div></div>`;
 }
 
 export function openDiamonds(ui) {

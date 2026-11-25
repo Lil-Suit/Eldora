@@ -1472,3 +1472,4 @@ body.dlgshot .dialog.full { left: max(6px, var(--sal, 0px)); right: max(6px, var
 .islot.blocked::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: repeating-linear-gradient(135deg, rgba(0,0,0,.32) 0 5px, transparent 5px 10px); }
 .islot.blocked::before { content: '⛔'; position: absolute; right: 2px; bottom: 16px; font-size: 11px; z-index: 2; filter: none; }
 .islot.blocked .lbl { color: #cfc8d8; }
+.dcols.one { grid-template-columns: 1fr !important; max-width: 620px; margin: 0 auto; } .jtab.jdia { font-size: 20px; }

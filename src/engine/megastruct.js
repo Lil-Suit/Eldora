@@ -17,18 +17,20 @@ const OX = CONFINS.offset.x, OZ = CONFINS.offset.z;
 export const SEE = { uCam: { value: new THREE.Vector3(0, -9999, 0) }, uHero: { value: new THREE.Vector3(0, -9999, 0) } };
 export function setSeeThrough(camPos, hero) { SEE.uCam.value.copy(camPos); SEE.uHero.value.set(hero.x, hero.y + 1.1, hero.z); }
 function seeThrough(mat) {
+  // v0.12.4: em vez de um círculo quadriculado, some a PEÇA inteira (pedra, parede, coluna) que está entre a câmera
+  // e o herói. Só as que tapam; o chão (peças abaixo dos pés) nunca some.
   mat.onBeforeCompile = (sh) => {
     sh.uniforms.uCam = SEE.uCam; sh.uniforms.uHero = SEE.uHero;
-    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vSeeW;')
-      .replace('#include <project_vertex>', '#include <project_vertex>\nvSeeW = (modelMatrix * vec4(transformed, 1.0)).xyz;');
-    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vSeeW; uniform vec3 uCam; uniform vec3 uHero;')
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute vec4 aPiece; varying vec4 vPiece;')
+      .replace('#include <project_vertex>', '#include <project_vertex>\nvPiece = aPiece;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec4 vPiece; uniform vec3 uCam; uniform vec3 uHero;')
       .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
-        { vec3 ab = uHero - uCam; float L = length(ab); vec3 dr = ab / max(L, 0.001); float s = dot(vSeeW - uCam, dr);
-          if (s > 0.0 && s < L - 0.7 && vSeeW.y > uHero.y - 0.85) { float r = length(vSeeW - (uCam + dr * s)); float R = mix(0.6, 2.6, clamp(s / L, 0.0, 1.0));
-            float n = fract(sin(dot(floor(gl_FragCoord.xy * 0.5), vec2(12.9898, 78.233))) * 43758.5453);
-            if (r < R - 0.5 + n * 0.5) discard; } }`);
+        { vec3 ab = uHero - uCam; float L = length(ab); vec3 dr = ab / max(L, 0.001); vec3 pc = vPiece.xyz; float s = dot(pc - uCam, dr);
+          if (vPiece.w > 0.0 && s > -vPiece.w && s < L - 0.4 && pc.y + vPiece.w * 0.5 > uHero.y - 0.6) {
+            float r = length(pc - (uCam + dr * clamp(s, 0.0, L)));
+            if (r < vPiece.w * 0.9 + 0.5) discard; } }`);
   };
-  mat.customProgramCacheKey = () => 'see-through-v2';
+  mat.customProgramCacheKey = () => 'see-piece-v1';
   return mat;
 }
 const LOAD = 330, UNLOAD = 520;
@@ -63,7 +65,7 @@ export class Megastructs {
     if (S.h === undefined) confinsRawHeight(S.x, S.z); // calcula o platô
     const ctx = {
       S, X: S.x + OX, Z: S.z + OZ, y: S.h, T: S.theme, rng: new Rng(mulberry32(hashId(S.id))),
-      walls: new Batch(), deco: new Batch(), glow: new Batch(), cols: [], lights: [],
+      walls: Object.assign(new Batch(), { piece: true }), deco: Object.assign(new Batch(), { piece: true }), glow: new Batch(), cols: [], lights: [],
     };
     const col = this.world.col;
     ctx.box = (x, z, hw, hd, rot = 0) => ctx.cols.push(col.addBox(ctx.X + x, ctx.Z + z, hw, hd, rot));

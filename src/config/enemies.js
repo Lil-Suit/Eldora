@@ -124,11 +124,11 @@ export const ENEMIES = {
     behavior: 'Tatu de couraça com cristais da Fenda nas costas. Vira uma bola e rola em linha reta: saia do caminho.',
   },
   rajado: {
-    name: 'Rajado', model: 'quad', species: 'rajado', color: 0x4a4468, glow: 0x5ef0ff, size: 1.1,
+    name: 'Lobo', nameTint: 'azul', model: 'wolf', variant: 'rift', color: 0x5a3c7a, size: 1.05, // v0.12.4: volta o visual antigo (lobo roxo e azul da Fenda)
     hp: 125, dmg: 16, def: 4, speed: 7.0, range: 2.1, atkCd: 1.2, windup: 0.3, lunge: 3.6,
     aggro: 'aggressive', detect: 18, leash: 40, assist: 14, pack: true,
     xp: 38, gold: [5, 11], loot: 'rift', staggerable: true,
-    behavior: 'Felino listrado tocado pela Fenda. Caça em bando e dá o bote de longe.',
+    behavior: 'Lobo corrompido pelas fendas. Caça em bando e dá o bote de longe.',
   },
   alpha_wolf: {
     combo: 3,

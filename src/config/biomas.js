@@ -15,7 +15,7 @@ export const PIECE_NAMES = { weapon: 'Arma', helm: 'Capacete', chest: 'Peitoral'
 export const pieceOfSlot = (slot) => (slot === 'gloveL' || slot === 'gloveR' ? 'gloves' : SET_PIECES.includes(slot) ? slot : null);
 
 // chance de um equipamento que cai ser peça do set do bioma (o resto é item solto) e peso da peça favorita
-export const SET_RULES = { chance: 0.6, fav: 0.5 };
+export const SET_RULES = { chance: 1, fav: 0.5 }; // v0.12.4: monstro de bioma só solta peças do set do bioma (estética do lugar)
 
 // fam: monstro → peça favorita. levels: faixa do set (o item nunca passa de `max`).
 // Cores (paleta) e detalhe do set: o fundo (raridade) continua na moldura/gema, como antes.

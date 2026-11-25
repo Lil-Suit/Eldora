@@ -256,7 +256,27 @@ export class Confins {
     if (U) U.chunk(c, ground, wts, x0, z0);
     const mid = biomeAt(x0 + CH / 2, z0 + CH / 2);
     if (minH < CONFINS.waterLevel) {
-      const w = new THREE.Mesh(new THREE.PlaneGeometry(CH, CH).rotateX(-Math.PI / 2), this.waterMat(mid));
+      // água normal: a cor de cada ponto vem do bioma em volta (misturada) — antes cada pedaço tinha UMA cor e aparecia
+      // uma linha reta entre a água azul e a roxa do pântano
+      const um = this.ultraWater?.(mid), lava = mid.id === 'vulcao';
+      let geo = new THREE.PlaneGeometry(CH, CH, um || lava ? 1 : 8, um || lava ? 1 : 8).rotateX(-Math.PI / 2), mat;
+      if (um || lava) mat = this.waterMat(mid);
+      else {
+        const P = geo.attributes.position, cols = new Float32Array(P.count * 3), cc = new THREE.Color(), acc = new THREE.Color(), R = 14;
+        for (let i = 0; i < P.count; i++) {
+          const lx = x0 + CH / 2 + P.getX(i), lz = z0 + CH / 2 + P.getZ(i);
+          acc.setRGB(0, 0, 0); let n = 0;
+          for (const [dx, dz] of [[0, 0], [R, 0], [-R, 0], [0, R], [0, -R], [R, R], [-R, -R], [R, -R], [-R, R]]) {
+            const b = biomeAt(lx + dx, lz + dz); if (b.id === 'vulcao') continue;
+            cc.set(b.water); acc.r += cc.r; acc.g += cc.g; acc.b += cc.b; n++;
+          }
+          if (!n) cc.set(mid.water); else cc.setRGB(acc.r / n, acc.g / n, acc.b / n);
+          cols[i * 3] = cc.r; cols[i * 3 + 1] = cc.g; cols[i * 3 + 2] = cc.b;
+        }
+        geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+        mat = this.waterMats._vc || (this.waterMats._vc = new THREE.MeshLambertMaterial({ vertexColors: true, transparent: true, opacity: 0.82 }));
+      }
+      const w = new THREE.Mesh(geo, mat);
       w.position.set(x0 + CH / 2 + OX, CONFINS.waterLevel, z0 + CH / 2 + OZ); w.renderOrder = 1; w.name = 'confins-agua';
       this.group.add(w); c.objs.push(w);
     }
