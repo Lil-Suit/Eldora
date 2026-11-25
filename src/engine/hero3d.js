@@ -169,6 +169,37 @@ class SkinHero {
     if (texName) this.applyTex(texName);
     if (this.silMat) this.addSilhouette(this.silMat);
     this._mounted = gltf;
+    this.setRegal(!!this._regalOn);
+  }
+
+  // skin de Rei/Rainha: manto vermelho nas costas + ouro da roupa (coroa) brilhando
+  setRegal(on) {
+    if (this.regal) { this.regal.parent?.remove(this.regal); this.regal = null; }
+    for (const mt of this.mats) if (mt.name === 'outfit' && mt.userData.regal && !on) { mt.emissiveMap = null; mt.emissive.setHex(0); mt.emissiveIntensity = 1; mt.userData.regal = false; mt.needsUpdate = true; }
+    if (!on) return;
+    HERO3D.tex('rei_glow').then((t) => {
+      if (!this._regalOn) return;
+      for (const mt of this.mats) if (mt.name === 'outfit') { mt.emissiveMap = t; mt.emissive.setHex(0xffd36b); mt.emissiveIntensity = 0.8; mt.userData.regal = true; mt.needsUpdate = true; }
+    }).catch(() => {});
+    const g = new THREE.Group(); g.name = 'manto';
+    const W = 0.56, L = 1.02, geo = new THREE.PlaneGeometry(W, L, 8, 12);
+    geo.translate(0, -L / 2, 0);
+    const p = geo.attributes.position;
+    for (let i = 0; i < p.count; i++) {
+      const x = p.getX(i), y = p.getY(i), k = -y / L, e = (x / (W / 2)) ** 2;
+      p.setX(i, x * (1 + k * 0.45)); // abre embaixo
+      p.setZ(i, -(0.02 + k * k * 0.16) + e * (0.13 - k * 0.06)); // cai para trás e abraça os ombros
+    }
+    geo.computeVertexNormals();
+    const cloth = new THREE.MeshStandardMaterial({ color: 0xa3121a, roughness: 0.72, side: THREE.DoubleSide });
+    const cape = new THREE.Mesh(geo, cloth); cape.castShadow = true; cape.renderOrder = 2; g.add(cape);
+    // barra dourada embaixo e gola de arminho
+    const trim = new THREE.Mesh(new THREE.BoxGeometry(W * 1.45, 0.05, 0.02), new THREE.MeshStandardMaterial({ color: 0xffc94a, emissive: 0x7a5200, metalness: 0.6, roughness: 0.35 }));
+    trim.position.set(0, -L + 0.03, -0.18); g.add(trim);
+    const fur = new THREE.Mesh(new THREE.CapsuleGeometry(0.045, W * 0.78, 4, 8), new THREE.MeshStandardMaterial({ color: 0xf2efe6, roughness: 0.95 }));
+    fur.rotation.z = Math.PI / 2; fur.position.set(0, 0, 0.01); g.add(fur);
+    g.position.set(0, 1.2, -0.11);
+    this.root.add(g); this.regal = g; this.cape = cape;
   }
 
   applyTex(name) {
@@ -182,6 +213,7 @@ class SkinHero {
     const key = g + ':' + sk.id;
     if (!force && key === this._lookKey) return;
     this._lookKey = key; this.look = { g, skin: sk.id };
+    this._regalOn = !!sk.regal; if (this.model) this.setRegal(this._regalOn);
     const file = `${g}_${sk.outfit}`;
     const want = this._want = key;
     if (ready[file]) { if (this._mounted !== ready[file] || force) this.mountModel(ready[file], sk.tex); else this.restoreTex(sk.tex); return; }
@@ -241,7 +273,7 @@ class SkinHero {
       mergeWeapon(sh);
       sh.scale.setScalar(({ broquel: 0.75, escudo_torre: 1.3 }[eq.shield.wkind] || 1) * 0.72); // menor: o escudo grande atravessava o corpo andando
       if (bow) this.shield = null; // arqueiro: sem escudo nas costas (o escudo continua dando defesa)
-      else { const SP = globalThis.__SHP || [-0.02, -0.02, 0]; /* escudo para fora da mão: a mão fica atrás dele */ sh.position.set(SP[0], SP[1], SP[2]); sh.rotation.set(0, -Math.PI / 2, 0); this.handL.add(sh); this.shield = sh; }
+      else { const SP = globalThis.__SHP || [-0.12, -0.02, 0]; /* escudo para fora da mão: a mão fica atrás dele */ sh.position.set(SP[0], SP[1], SP[2]); sh.rotation.set(0, -Math.PI / 2, 0); this.handL.add(sh); this.shield = sh; }
     } else this.shield = null;
     this.legendary = RARITY_INDEX[w?.rarity] >= 4 ? new THREE.Color(RARITIES[w.rarity]?.color || 0xffffff) : null;
     for (const h of [this.handR, this.handL, this.backSlot, this.bowHold].filter(Boolean)) h.traverse((m) => { if (m.isMesh) { m.castShadow = true; m.renderOrder = 2; } });
@@ -321,6 +353,11 @@ class SkinHero {
     if (!this.root.visible) return; // fora da tela/área: não gasta tempo animando
     const t = st.t || 0;
     const damp = (x, y, k) => x + (y - x) * (1 - Math.exp(-k * dt));
+    if (this.regal) {
+      const mv = Math.min(1, st.move || 0);
+      this.regal.rotation.x = damp(this.regal.rotation.x, -(0.08 + mv * 0.45 + Math.sin(t * 3.1) * 0.03 * (0.3 + mv)), 6);
+      for (const mt of this.mats) if (mt.userData.regal) mt.emissiveIntensity = 0.65 + Math.sin(t * 2.4) * 0.25;
+    }
     if (this.familiar) { this.familiar.rotation.y += dt * 1.6; this.familiar.position.y = 1.85 + Math.sin(t * 2.3) * 0.12; this.familiarGem.rotation.y += dt * 3; }
     // ---- base (andar, parado, nadar...): pesos misturados à mão (troca suave entre clipes) ----
     const [bn, speed, loop] = this.baseClip(st);

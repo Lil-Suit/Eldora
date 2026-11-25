@@ -79,7 +79,15 @@ export function buildCampScene(b, g, col, x, y, z, tents, opts = {}) {
 
 // portal de pedra bonito: plataforma em degraus, colunas com runas, arco, pedras rúnicas, braseiros e cristais.
 // Devolve { ring, inner, shards } para animar (giram/pulsam). parent = grupo onde os meshes animados entram.
+// degraus/plataformas onde dá para pisar: o chão sobe em cima deles (os pés não afundam na pedra)
+export const PADS = [];
+export function padHeight(x, z) {
+  let h = -Infinity;
+  for (const p of PADS) { const dx = x - p.x, dz = z - p.z; if (dx * dx + dz * dz < p.r2 && p.top > h) h = p.top; }
+  return h;
+}
 export function buildFancyPortal(b, g, col, parent, x, y, z, color, s = 1) {
+  for (const [r, top] of [[6.2 * s, y + 0.4], [5.0 * s, y + 0.65]]) if (!PADS.some((p) => p.x === x && p.z === z && p.top === top)) PADS.push({ x, z, r2: r * r, top });
   const stone = 0x4e4860, stoneD = 0x34303f, trim = 0x6a6280;
   b.cyl(x, y + 0.2, z, 6.2 * s, 0.4, stoneD, 12);
   b.cyl(x, y + 0.5, z, 5.0 * s, 0.3, stone, 12);

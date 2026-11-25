@@ -85,7 +85,7 @@ export class UI {
             <div class="buffs" data-el="buffs"></div>
           </div>
         </div>
-        <div class="goldrow"><div class="gold" data-el="gold"></div><div class="gold ammohud hidden" data-el="ammo" title="Flechas"></div></div>
+        <div class="goldrow"><div class="gold hidden" data-el="gold"></div><div class="gold ammohud hidden" data-el="ammo" title="Flechas"></div></div>
         <div class="pvpbtn interactive lock" data-el="pvpbtn" data-a="pv:cycle" title="PvP"><span class="sw">⚔</span></div>
         <div class="teamhud interactive" data-el="teamhud" data-a="team"></div>
         <div class="psel interactive hidden" data-el="psel"></div>
@@ -845,8 +845,9 @@ export class UI {
     this.miniT -= dt;
     if (this.miniT <= 0) {
       this.miniT = 0.1;
-      const c = this.el.mini;
-      this.map.drawMini(c.getContext('2d'), c.width);
+      const c = this.el.mini, mm = G.settings.minimap !== false;
+      c.parentElement.classList.toggle('off', !mm);
+      if (mm) this.map.drawMini(c.getContext('2d'), c.width);
       const tod = G.state.world.timeOfDay;
       const h = Math.floor(tod * 24), m = Math.floor((tod * 24 - h) * 60);
       const clock = `${G.night > 0.5 ? '☾' : '☀'} ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}${G.sky.isRaining() ? ' · Chuva' : ''}`;

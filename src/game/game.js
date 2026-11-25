@@ -72,7 +72,7 @@ export class Game {
     this.isTouch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
     const saved = SaveManager.readSettings();
     this.settings = Object.assign({
-      viewDist: this.isTouch ? 'curta' : 'media', ultraGrass: true, particles: false, gameKeyboard: true, quality: this.isTouch ? 'baixa' : 'media', master: 0.8, sfx: 0.9, music: 0.45, amb: 0.6, // primeira vez: celular começa na Baixa, PC na Média (depois cada um escolhe)
+      viewDist: this.isTouch ? 'curta' : 'media', ultraGrass: true, particles: false, minimap: true, firstPerson: false, gameKeyboard: true, quality: this.isTouch ? 'baixa' : 'media', master: 0.8, sfx: 0.9, music: 0.45, amb: 0.6, // primeira vez: celular começa na Baixa, PC na Média (depois cada um escolhe)
       rain: true, camSens: 1, invertY: false, damageNumbers: true, hurtFx: 'auto', hurtIntensity: 0.7, pauseMenus: this.isTouch, showFps: false, autoRes: true, showPeers: true, cleanScreen: false, touchScale: 1, joyFloat: false, crosshair: false, camFollow: false,
     }, saved || {});
     // modelos 3D dos heróis: começam a carregar já na tela de título; quando chegam, trocam os bonecos antigos
@@ -1313,6 +1313,7 @@ export class Game {
       if (mv.mag > 0.2 && P.anim.move > 0.2) this.cam.yaw = dampAngle(this.cam.yaw, P.yaw + Math.PI, 2.6 * Math.min(1, mv.mag), rdt);
     }
     this.cam.update(rdt, focus, this.world, this.ui.blocking() ? null : this.input, this.settings);
+    { const fp = (this.cam.fpK || 0) > 0.6, m = P.rig?.model || P.rig?.root; if (m && m.visible === fp) m.visible = !fp; } // 1ª pessoa: esconde o próprio corpo
     this.drawCrosshair(am);
     setSeeThrough(this.camera.position, P.pos); // castelos dos Confins: buraco só onde a parede tapa o herói
     // vista: nos mapas novos, estar no alto (morro do acampamento, cristas) abre a neblina

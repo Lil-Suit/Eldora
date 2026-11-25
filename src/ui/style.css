@@ -1475,3 +1475,13 @@ body.dlgshot .dialog.full { left: max(6px, var(--sal, 0px)); right: max(6px, var
 .dcols.one { grid-template-columns: 1fr !important; max-width: 620px; margin: 0 auto; } .jtab.jdia { font-size: 20px; }
 .dtabsrow { display: flex; gap: 6px; margin-bottom: 8px; } .dtabsrow .btn { flex: 1; }
 .fps.interactive { pointer-events: auto; font-size: 11px; max-width: 70vw; }
+
+.jtabs .jsolo { align-self: center; padding: 0 12px; font-size: 15px; color: var(--gold, #e8c46a); letter-spacing: .5px; }
+/* minimapa desligado: some o círculo, ficam nome da região, relógio e servidor */
+.minimap.off { background: none; border-color: transparent; box-shadow: none; pointer-events: none; }
+.minimap.off canvas { visibility: hidden; }
+.minimap.off .netpill, .minimap.off .zone { pointer-events: auto; }
+.tjourney { margin-top: 8px; padding: 8px 10px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); max-height: 40vh; overflow: auto; text-align: left; }
+.tjourney .tj { padding: 6px 0; border-top: 1px solid var(--line); } .tjourney .tj:first-of-type { border-top: 0; }
+.tjourney .tjg { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 2px 12px; font-size: 12px; color: var(--muted, #aab); margin-top: 3px; }
+.tjourney .tjg b { color: #fff; margin-left: 4px; }

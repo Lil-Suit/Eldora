@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { muralTextures } from './muralart.js';
 import { Ermos } from './ermos.js';
 import { Confins } from './confins.js';
+import { PADS, padHeight } from './campdeco.js';
 import { Terrain, roadDistance, PlainExt } from './terrain.js';
 import { CollisionWorld } from './colliders.js';
 import { Batch, GEO, labelSprite, vcLambert, lambert } from './batch.js';
@@ -91,8 +92,8 @@ export class World {
   // ---------- consulta de terreno ----------
   groundHeight(x, z, area = this.area) {
     if (area === 'cripta') return 0;
-    if (area === 'ermos') return this.ermos.heightAt(x, z);
-    if (area === 'confins') return this.confins.heightAt(x, z);
+    if (area === 'ermos') return Math.max(this.ermos.heightAt(x, z), PADS.length ? padHeight(x, z) : -Infinity);
+    if (area === 'confins') return Math.max(this.confins.heightAt(x, z), PADS.length ? padHeight(x, z) : -Infinity);
     if (area === 'guardiao') return this.plain.heightAt(x, z);
     let h = this.terrain.heightAt(x, z);
     if (x > BR_X0 && x < BR_X1 && z > BR_Z0 && z < BR_Z1) h = Math.max(h, bridgeDeck((z - BR_Z0) / (BR_Z1 - BR_Z0)) + 0.28);

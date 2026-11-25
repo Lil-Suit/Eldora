@@ -92,6 +92,16 @@ export class CameraRig {
       // zoom: o herói aparece da cintura para cima, com o rosto bem visível
       fov = fov0 + ((tall ? 44 : 30) - fov0) * k;
     }
+    // primeira pessoa: a câmera fica nos olhos do herói e olha para onde a câmera giraria (some com a conversa/loja)
+    this.fpK = damp(this.fpK || 0, settings?.firstPerson && !this.shot ? 1 : 0, 8, dt);
+    if (this.fpK > 0.002) {
+      const f = this.forward(), el = clamp((0.35 - this.pitch) * 1.1, -1.2, 1.1), ce = Math.cos(el);
+      const ex = focus.x + f.x * 0.25, ey = focus.y + 2.25, ez = focus.z + f.z * 0.25;
+      const k = this.fpK;
+      cx += (ex - cx) * k; cy += (ey - cy) * k; cz += (ez - cz) * k;
+      lx += (ex + f.x * ce * 10 - lx) * k; ly += (ey + Math.sin(el) * 10 - ly) * k; lz += (ez + f.z * ce * 10 - lz) * k;
+      fov = fov + (Math.max(fov, 70) - fov) * k;
+    }
     if (Math.abs(this.camera.fov - fov) > 0.01) { this.camera.fov = fov; this.camera.updateProjectionMatrix(); }
     this.camera.position.set(cx, cy, cz);
     this.camera.lookAt(lx, ly, lz);

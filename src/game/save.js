@@ -16,7 +16,9 @@ export function charIdOf(s) {
   if (!s.charId) s.charId = 'c' + (s.created || Date.now()).toString(36);
   return s.charId;
 }
-const summary = (s) => ({ id: charIdOf(s), name: s.player.name, cls: s.player.classId, level: s.player.level, t: s.updated || Date.now(), created: s.created || 0, owner: s.owner || null });
+// resumo da Jornada (aparece no lobby, não na janela do personagem)
+const journeyOf = (s) => { const st = s.player?.stats || {}; return { pt: Math.floor((st.playTime || 0) / 60), k: Object.values(st.kills || {}).reduce((a, b) => a + b, 0), b: st.bossKills || 0, c: st.chests || 0, d: st.deaths || 0, dmg: Math.round(st.damageDealt || 0), u: (s.world?.uniques || []).length, l: (s.world?.discovered || []).filter((x) => x !== 'cripta_interior').length }; };
+const summary = (s) => ({ id: charIdOf(s), name: s.player.name, cls: s.player.classId, level: s.player.level, t: s.updated || Date.now(), created: s.created || 0, owner: s.owner || null, j: journeyOf(s) });
 // mesmo personagem salvo com ids diferentes (versões antigas): mostra só o mais avançado
 function dedupe(list) {
   const best = new Map();

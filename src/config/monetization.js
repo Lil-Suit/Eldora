@@ -50,11 +50,12 @@ export const DIAMONDS = {
     fx_geada: 80, fx_ouro: 80, fx_trovao: 100, // (as auras saíram; quem comprou recebeu os diamantes de volta)
     tp3: 1, tp8: 2, // Pergaminhos de Teleporte: 3 por 💎1, 8 por 💎2 (iguais aos do servidor: server/server.js DIA_PRICES)
     mk10: 100, // +10 espaços de venda no mercado (até 50 no total)
+    respec: 50, // redistribuir os pontos de atributo (igual ao servidor)
     // skins dos heróis (modelos 3D): hs_<id> (iguais às do servidor)
     ...Object.fromEntries(Object.entries(HERO_SKINS).filter(([, s]) => s.price > 0).map(([id, s]) => ['hs_' + id, s.price])),
   },
   // podem ser comprados de novo (os visuais são 1 vez só)
-  repeat: ['tp3', 'tp8', 'mk10'],
+  repeat: ['tp3', 'tp8', 'mk10', 'respec'],
   // pacotes de Pergaminho de Teleporte: viajar para qualquer região já descoberta (conveniência, não dá força)
   scrolls: [{ sku: 'tp3', qty: 3 }, { sku: 'tp8', qty: 8, tag: '+33%' }],
 };

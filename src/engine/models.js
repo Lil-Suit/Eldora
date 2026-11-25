@@ -363,11 +363,23 @@ export function buildWeapon(kind, rarity = 'comum', opts = {}) {
   }
   let tip = new THREE.Vector3(0, 0, 0.8);
   const p = (geo, mat, sx, sy, sz, x, y, z) => part(geo, mat, sx, sy, sz, x, y, z, g);
+  // lâmina de verdade: fios claros nas bordas, sulco escuro no meio, ponta afiada e anéis no cabo
+  const edgeM = new THREE.MeshLambertMaterial({ color: steel.color.clone().lerp(new THREE.Color(0xffffff), 0.5), emissive: steel.emissive?.clone?.() || new THREE.Color(0), flatShading: true });
+  const fullM = new THREE.MeshLambertMaterial({ color: steel.color.clone().multiplyScalar(0.55), flatShading: true });
+  const blade = (w, t, z0, z1, grip) => {
+    const L = z1 - z0, zc = (z0 + z1) / 2;
+    p(G.box, steel, w * 0.64, t, L, 0, 0, zc);
+    for (const sd of [-1, 1]) p(G.box, edgeM, w * 0.18, t * 0.8, L, sd * w * 0.41, 0, zc);
+    p(G.box, fullM, w * 0.16, t * 1.08, L * 0.72, 0, 0, z0 + L * 0.42);
+    p(G.octa, steel, w, t, w * 2.2, 0, 0, z1); p(G.octa, edgeM, w * 0.55, t * 1.05, w * 1.3, 0, 0, z1 + w * 0.35);
+    for (const k of [0.3, 0.7]) p(G.cylZ, gold, grip * 1.25, grip * 1.25, 0.025, 0, 0, -0.12 * (k - 0.5) * 2);
+  };
   switch (kind) {
     case 'espada':
       p(G.cylZ, wood, 0.07, 0.07, 0.24, 0, 0, 0);
       p(G.box, gold, 0.32, 0.06, 0.07, 0, 0, 0.14);
-      p(G.box, steel, 0.1, 0.025, 0.82, 0, 0, 0.58);
+      for (const sd of [-1, 1]) p(G.sphere, gold, 0.07, 0.07, 0.07, sd * 0.17, 0, 0.14);
+      blade(0.1, 0.025, 0.17, 0.92, 0.07);
       p(G.sphere, gem, 0.08, 0.08, 0.08, 0, 0, -0.14);
       tip.set(0, 0, 1.0);
       break;
@@ -381,7 +393,8 @@ export function buildWeapon(kind, rarity = 'comum', opts = {}) {
     case 'montante':
       p(G.cylZ, wood, 0.08, 0.08, 0.36, 0, 0, -0.04);
       p(G.box, gold, 0.42, 0.07, 0.08, 0, 0, 0.18);
-      p(G.box, steel, 0.15, 0.03, 1.25, 0, 0, 0.84);
+      for (const sd of [-1, 1]) p(G.sphere, gold, 0.09, 0.09, 0.09, sd * 0.22, 0, 0.18);
+      blade(0.15, 0.03, 0.22, 1.36, 0.08);
       p(G.sphere, gem, 0.1, 0.1, 0.1, 0, 0, -0.25);
       tip.set(0, 0, 1.45);
       break;
@@ -448,7 +461,7 @@ export function buildWeapon(kind, rarity = 'comum', opts = {}) {
       break;
     case 'adaga':
       p(G.cylZ, wood, 0.06, 0.06, 0.14, 0, 0, 0);
-      p(G.box, steel, 0.06, 0.02, 0.36, 0, 0, 0.25);
+      blade(0.06, 0.02, 0.08, 0.38, 0.06);
       tip.set(0, 0, 0.45);
       break;
     case 'clava':
@@ -529,7 +542,32 @@ function motifParts(th) {
     default: return { geo: G.box, mat: glow(th.fx2), s: 0.04, tall: 2 };
   }
 }
+// lâminas (espada, montante, adaga, machado): o tema vira um desenho COLADO na lâmina (cipó com folhinhas,
+// dos dois lados), em vez de enfeites soltos que pareciam flutuar em volta da arma
+const BLADES = {
+  espada: { n: 'y', d: 0.0135, w: 0.1, z0: 0.24, z1: 0.86 },
+  montante: { n: 'y', d: 0.0165, w: 0.15, z0: 0.3, z1: 1.28 },
+  adaga: { n: 'y', d: 0.011, w: 0.06, z0: 0.12, z1: 0.34 },
+  machado: { n: 'x', d: 0.03, w: 0.26, z0: -0.29, z1: 0.01, cz: 0.66 },
+};
+function bladeInlay(g, th, B) {
+  const glowy = ['chamas', 'cristais', 'ambar', 'runas'].includes(th.motif);
+  const col = glowy ? th.fx : new THREE.Color(th.fx2 ?? th.fx).multiplyScalar(0.6); // mais escuro: o desenho aparece na lâmina
+  const mat = glowy ? new THREE.MeshBasicMaterial({ color: col }) : new THREE.MeshLambertMaterial({ color: col, flatShading: true });
+  const L = B.z1 - B.z0, mid = (B.z0 + B.z1) / 2, t = 0.006;
+  for (const s of [-1, 1]) {
+    const off = s * (B.d + t / 2);
+    if (B.n === 'y') {
+      part(G.box, mat, B.w * 0.12, t, L * 0.9, 0, off, mid, g);
+      for (let i = 0; i < 6; i++) { const sd = i % 2 ? 1 : -1, z = B.z0 + L * (0.12 + i * 0.14); const m = part(G.box, mat, B.w * 0.36, t, L * 0.05, sd * B.w * 0.2, off, z, g); m.rotation.y = sd * 0.7; }
+    } else { // machado: desenho na face da lâmina (eixo y = altura da lâmina)
+      part(G.box, mat, t, L * 0.85, B.w * 0.1, off, mid, B.cz, g);
+      for (let i = 0; i < 5; i++) { const sd = i % 2 ? 1 : -1, y = B.z0 + L * (0.15 + i * 0.17); const m = part(G.box, mat, t, L * 0.07, B.w * 0.36, off, y, B.cz + sd * B.w * 0.17, g); m.rotation.x = sd * 0.7; }
+    }
+  }
+}
 function addMotif(g, th, kind, tip) {
+  if (BLADES[kind]) return bladeInlay(g, th, BLADES[kind]);
   const T = motifParts(th);
   // pontos ao longo da arma (do cabo até a ponta), alternando os lados
   const len = Math.max(0.3, tip.length ? tip.length() : 0.8);

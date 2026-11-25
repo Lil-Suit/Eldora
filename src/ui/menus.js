@@ -57,6 +57,10 @@ export function renderTitle(ui) {
   const newBtn = chars.length || G.pendingSave
     ? `<button class="btn" data-a="m:new" ${full || loading ? 'disabled' : ''}>+ Novo personagem</button>`
     : `<button class="btn big primary" data-a="m:new" ${full || loading ? 'disabled' : ''}><span>Novo personagem</span><small>${loading ? 'Aguarde: verificando saves da sua conta' : 'Guerreiro, Arqueiro ou Mago · cada um tem seu próprio save'}</small></button>`;
+  // Jornada: estatísticas de cada personagem, aqui no lobby
+  const jr = ui._journey && chars.some((c) => c.j) ? `<div class="tjourney"><div class="tpick-h">📜 Jornada</div>${chars.filter((c) => c.j).slice(0, 4).map((c) => { const j = c.j; return `<div class="tj"><b>${esc(c.name)}</b> <small>${CLASSES[c.cls].name} · Nível ${c.level}</small>
+    <div class="tjg"><span>Tempo de jogo <b>${Math.floor(j.pt / 60)}h ${j.pt % 60}min</b></span><span>Inimigos <b>${j.k.toLocaleString('pt-BR')}</b></span><span>Chefes <b>${j.b}</b></span><span>Baús <b>${j.c}</b></span><span>Quedas <b>${j.d}</b></span><span>Dano causado <b>${j.dmg.toLocaleString('pt-BR')}</b></span><span>Itens únicos <b>${j.u}</b></span><span>Locais <b>${j.l}</b></span></div></div>`; }).join('')}</div>` : '';
+  pick += jr;
   return `<button class="trank" data-a="m:site" title="Ranking, busca de jogadores e mortes no PvP">🏆 <span>Ranking</span></button>
   <div class="titlewrap">
     <div class="logo"><span class="lt">ELDORIA</span><i class="crack"></i></div>
@@ -67,6 +71,7 @@ export function renderTitle(ui) {
       ${chars.length || G.pendingSave ? '' : newBtn}
       <div class="tsmall">${chars.length || G.pendingSave ? newBtn : ''}
       ${chars.length > 1 && chars.length <= 4 ? `<button class="btn" data-a="m:chars">Gerenciar</button>` : ''}
+      ${chars.some((c) => c.j) ? `<button class="btn" data-a="m:journey">📜 Jornada</button>` : ''}
       ${installBtn()}
       <button class="btn" data-a="m:settings" data-tab="gfx">🖥️ Gráficos: ${esc(QUALITY[G.settings.quality]?.label || 'Média')}</button>
       <button class="btn" data-a="m:settings">${ICONS.engrenagem} Configurações</button>
@@ -163,6 +168,7 @@ export function renderSettings(ui, tab = 'gfx') {
       ${check('particles', 'Partículas', 'Poeira, vaga-lumes, folhas no ar, faíscas de fogueira e brilhos de portal. Desligada: mais leve. (Golpes e magias continuam.)')}
       ${check('ultraGrass', 'Grama e matinhos do Ultra realismo', 'Desligada: tira o capim, flores e pedrinhas em volta (bem mais leve). O chão realista continua.')}
       ${check('autoRes', 'Resolução automática', 'Só se o jogo travar: tira as sombras e depois baixa a nitidez; volta sozinho quando melhorar. Vale também no Ultra leve.')}
+      ${check('minimap', 'Minimapa', 'Desligado: some o mapinha do canto (o mapa completo continua no menu).')}
       ${check('showFps', 'Mostrar FPS')}
       ${G.isTouch ? check('gameKeyboard', 'Teclado do jogo', 'Teclado compacto do ELDORIA no lugar do teclado do celular (ocupa menos a tela).') : ''}
       <p class="muted">Baixa: sem sombras, ideal para celulares. Alta: sombras detalhadas e maior distância de visão.</p>`;
@@ -173,6 +179,7 @@ export function renderSettings(ui, tab = 'gfx') {
     const rows = Object.keys(DEFAULT_BINDS).map((a) => `<div class="bind"><span>${BIND_LABELS[a]}</span><button class="btn sm ${G.input.rebinding === a ? 'wait' : ''}" data-a="m:rebind" data-k="${a}">${G.input.rebinding === a ? 'Pressione uma tecla…' : keyLabel(binds[a])}</button></div>`).join('');
     body = `<label class="srow"><span>Sensibilidade da câmera</span><input type="range" min="0.3" max="2.5" step="0.1" value="${s.camSens}" data-set="camSens"><b>${s.camSens.toFixed(1)}×</b></label>
       ${check('invertY', 'Inverter eixo vertical da câmera')}
+      ${check('firstPerson', 'Primeira pessoa', 'A câmera fica nos olhos do personagem. Arraste a tela para olhar em volta.')}
       ${check('crosshair', 'Mira de tiro (arqueiro e mago)', 'Aparece uma mira; o tiro vai para onde a câmera aponta (gire a câmera para mirar). Ela fica vermelha quando trava num monstro.')}
       ${check('camFollow', 'Câmera fixa no personagem', 'A câmera volta sozinha para as costas do herói enquanto você anda.')}
       ${G.isTouch ? `<div class="row" style="justify-content:flex-start"><button class="btn primary" data-a="m:hudedit">✥ Personalizar HUD</button><small class="muted">arraste os botões para onde quiser</small></div>` : ''}
@@ -280,6 +287,7 @@ export function menuClick(ui, a, el) {
       break;
     }
     case 'chars': ui.confirmDel = null; ui.openModal('chars'); break;
+    case 'journey': ui._journey = !ui._journey; ui.showTitle(); break;
     case 'loadchar': {
       if (ui._loading) break;
       ui._loading = true;

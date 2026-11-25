@@ -28,7 +28,9 @@ const pct = (v) => (Math.round(v * 1000) / 10).toLocaleString('pt-BR') + '%';
 const fmt = (v) => (Math.round(v * 10) / 10).toLocaleString('pt-BR');
 
 export function renderJournal(ui, tab) {
-  const tabs = JOURNAL_TABS.map(([id, n, ic]) => `<button class="jtab ${id === tab ? 'on' : ''}" data-a="j:tab" data-tab="${id}">${ICONS[ic]}<span>${n}</span></button>`).join('');
+  // Habilidades, Missões e Bestiário têm botão próprio: abrem sozinhos, sem as abas do personagem
+  const SOLO = ['skills', 'quests', 'bestiary'];
+  const tabs = SOLO.includes(tab) ? `<b class="jsolo">${JOURNAL_TABS.find((t) => t[0] === tab)[1]}</b>` : JOURNAL_TABS.filter(([id]) => !SOLO.includes(id)).map(([id, n, ic]) => `<button class="jtab ${id === tab ? 'on' : ''}" data-a="j:tab" data-tab="${id}">${ICONS[ic]}<span>${n}</span></button>`).join('');
   let body = '';
   switch (tab) {
     case 'inventory': body = inventory(ui); break;
@@ -242,11 +244,7 @@ function character(ui) {
     ['Red. de recarga', pct(st.cdr), DERIVED_INFO.cdr],
     ['Vel. de movimento', fmt(st.moveSpeed) + ' m/s', ''],
   ].map(([n, v, tip]) => `<div title="${esc(tip)}"><span>${n}</span><b>${v}</b></div>`).join('');
-  const s = sp.stats;
-  const kills = Object.values(s.kills).reduce((a, b) => a + b, 0);
-  const pt = Math.floor(s.playTime / 60);
-  const uniques = G.state.world.uniques.length, totalU = Object.values(NAMED_ITEMS).filter((n) => n.unique).length;
-  const respecCost = 20 * sp.level;
+  const respecCost = DIAMONDS.prices.respec || 50;
   const allocated = Object.values(sp.attrs).reduce((a, b) => a + b, 0);
   return `
     <div class="charhead">
@@ -257,20 +255,9 @@ function character(ui) {
     </div>
     <div class="charcols">
       <div class="ccol"><h3>Atributos</h3>${attrs}
-        ${allocated > 0 ? `<button class="btn sm" data-a="j:respec">Redistribuir (${respecCost} ouro)</button>` : ''}
+        ${allocated > 0 ? `<button class="btn sm" data-a="j:respec">Redistribuir (💎 ${respecCost})</button>` : ''}
       </div>
       <div class="ccol"><h3>Estatísticas</h3><div class="derived">${derived}</div></div>
-      <div class="ccol"><h3>Jornada</h3><div class="derived">
-          <div><span>Tempo de jogo</span><b>${Math.floor(pt / 60)}h ${pt % 60}min</b></div>
-          <div><span>Inimigos derrotados</span><b>${kills}</b></div>
-          <div><span>Chefes derrotados</span><b>${s.bossKills}</b></div>
-          <div><span>Baús abertos</span><b>${s.chests}</b></div>
-          <div><span>Quedas</span><b>${s.deaths}</b></div>
-          <div><span>Dano causado</span><b>${Math.round(s.damageDealt).toLocaleString('pt-BR')}</b></div>
-          <div><span>Itens únicos</span><b>${uniques}/${totalU}</b></div>
-          <div><span>Locais descobertos</span><b>${G.state.world.discovered.filter((d) => d !== 'cripta_interior').length}/13</b></div>
-        </div>
-      </div>
     </div>`;
 }
 
@@ -503,15 +490,19 @@ export function journalClick(ui, a, el) {
       G.saver.requestSave('atributo');
       break;
     }
-    case 'respec': {
-      const cost = 20 * sp.level;
-      if (sp.gold < cost) { ui.toastSmall('Ouro insuficiente.'); G.audio.play('error'); break; }
-      sp.gold -= cost;
-      const n = Object.values(sp.attrs).reduce((x, y) => x + y, 0);
-      sp.attrs = { for: 0, agi: 0, int: 0, vit: 0 };
-      sp.freePoints += n;
-      G.player.recompute();
-      ui.renderJournal(); ui.refreshHud();
+    case 'respec': { // custa diamantes (gastos e conferidos no servidor)
+      if (ui._respecBusy) break;
+      ui._respecBusy = true;
+      G.economy.buyWithDiamonds('respec').then((r) => {
+        ui._respecBusy = false;
+        if (!r.ok) { ui.toastSmall(r.reason || 'Não foi possível redistribuir.'); G.audio.play('error'); return; }
+        const n = Object.values(sp.attrs).reduce((x, y) => x + y, 0);
+        sp.attrs = { for: 0, agi: 0, int: 0, vit: 0 };
+        sp.freePoints += n;
+        G.player.recompute(); G.audio.play('ui');
+        ui.renderJournal(); ui.refreshHud();
+        G.saver.requestSave('redistribuir');
+      });
       break;
     }
     case 'qsel': ui.qsel = el.dataset.q; ui.renderJournal(); break;
@@ -526,4 +517,22 @@ export function journalClick(ui, a, el) {
       break;
     default: break;
   }
+}
+
+// segurar o "+" do atributo: vai distribuindo sozinho (sem precisar ficar tocando)
+if (typeof document !== 'undefined' && !globalThis.__holdPlus) {
+  globalThis.__holdPlus = true;
+  let tm = null, k = null, n = 0;
+  const stop = () => { clearTimeout(tm); tm = null; k = null; };
+  const tick = () => {
+    const b = k && document.querySelector(`.plus[data-a="j:attr"][data-k="${k}"]`);
+    if (!b) return stop();
+    b.click(); n++;
+    tm = setTimeout(tick, n < 8 ? 110 : n < 30 ? 60 : 30); // acelera quanto mais segura
+  };
+  document.addEventListener('pointerdown', (e) => {
+    const b = e.target.closest?.('.plus[data-a="j:attr"]'); if (!b) return;
+    stop(); k = b.dataset.k; n = 0; tm = setTimeout(tick, 380);
+  }, true);
+  for (const ev of ['pointerup', 'pointercancel', 'blur']) addEventListener(ev, stop, true);
 }

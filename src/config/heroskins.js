@@ -19,6 +19,7 @@ export const HERO_SKINS = {
   cavaleiro:     { name: 'Cavaleiro', nameF: 'Cavaleira', outfit: 'knight', g: ['M', 'F'], price: 250, desc: 'Armadura de placas, elmo fechado com chifres e ombreiras de espinhos.' },
   cavaleiro_2:   { name: 'Cavaleiro · Dourado', nameF: 'Cavaleira · Dourada', outfit: 'knight_open', tex: 'knight_2', g: ['M', 'F'], price: 125, requires: 'cavaleiro', desc: 'A armadura de cavaleiro dourada, sem elmo.' },
   cavaleiro_3:   { name: 'Cavaleiro · Aço', nameF: 'Cavaleira · Aço', outfit: 'knight_open', tex: 'knight_3', g: ['M', 'F'], price: 125, requires: 'cavaleiro', desc: 'A armadura de cavaleiro de aço, sem elmo.' },
+  rei:           { name: 'Rei', nameF: 'Rainha', outfit: 'noble', tex: 'rei', regal: true, g: ['M', 'F'], price: 500, desc: 'Manto vermelho real nas costas e coroa dourada brilhante.' },
 };
 export const SKIN_ORDER = Object.keys(HERO_SKINS);
 export const skuOf = (id) => 'hs_' + id;
