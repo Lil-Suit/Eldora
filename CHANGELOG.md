@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## 0.12.19
+- Atualização ao abrir o jogo: confere a versão antes de entrar e baixa a nova na hora (na tela inicial). Só quem já está jogando vê o aviso de manutenção.
+- Na tela inicial/lobby, versão nova atualiza direto, sem esperar entrar no mapa.
+- Cronista Elias: abas Itens, Missões, Bestiário e Habilidades no mesmo lugar.
+
 ## 0.12.18
 - Manto do Rei refeito com física de tecido de verdade:
   - preso em arco por cima dos ombros e atrás da nuca, seguindo o tronco (não escorrega andando);

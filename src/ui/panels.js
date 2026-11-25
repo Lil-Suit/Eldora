@@ -1,3 +1,4 @@
+import { cronistaTabs } from './dialog.js';
 import { VERSION } from '../version.js';
 import { ICONS, SKILL_ICONS, CLASS_ICONS, itemIcon } from './icons.js';
 import { esc } from './ui.js';
@@ -30,7 +31,7 @@ const fmt = (v) => (Math.round(v * 10) / 10).toLocaleString('pt-BR');
 export function renderJournal(ui, tab) {
   // Habilidades, Missões e Bestiário têm botão próprio: abrem sozinhos, sem as abas do personagem
   const SOLO = ['skills', 'quests', 'bestiary'];
-  const tabs = SOLO.includes(tab) ? `<b class="jsolo">${JOURNAL_TABS.find((t) => t[0] === tab)[1]}</b>` : JOURNAL_TABS.filter(([id]) => !SOLO.includes(id)).map(([id, n, ic]) => `<button class="jtab ${id === tab ? 'on' : ''}" data-a="j:tab" data-tab="${id}">${ICONS[ic]}<span>${n}</span></button>`).join('');
+  const tabs = SOLO.includes(tab) ? cronistaTabs(tab, true) : JOURNAL_TABS.filter(([id]) => !SOLO.includes(id)).map(([id, n, ic]) => `<button class="jtab ${id === tab ? 'on' : ''}" data-a="j:tab" data-tab="${id}">${ICONS[ic]}<span>${n}</span></button>`).join('');
   let body = '';
   switch (tab) {
     case 'inventory': body = inventory(ui); break;
@@ -423,6 +424,7 @@ export function journalClick(ui, a, el) {
       const c = ui.el.journal.querySelector('canvas.fullmap'); if (c) M.drawFull(c.getContext('2d'), c.width, c.height);
       break;
     }
+    case 'cronista': ui.closeJournal(); ui.openDialog(ui.cronistaNpc || 'cronista'); break; // volta para o Livro dos Itens
     case 'tab': if (el.dataset.tab === 'map') ui.map.view = null; ui.journalTab = el.dataset.tab; ui.sel = null; ui.renderJournal(); G.bus.emit('panel', el.dataset.tab); G.audio.play('ui'); break;
     case 'close': ui.closeJournal(); break;
     case 'desel': ui.sel = null; ui.confirmDrop = null; ui.renderJournal(); break;

@@ -4,6 +4,31 @@ import { VERSION } from '../version.js';
 // - quando o servidor vai reiniciar (deploy no Render), ele avisa "manutenção" pelo WebSocket;
 // - a página mostra "Em atualização / manutenção", salva, espera o servidor novo responder e recarrega sozinha;
 // - de tempos em tempos também confere /api/status: se a versão mudou, faz o mesmo.
+// recarrega já com a versão nova (no máximo 2 tentativas por versão, para nunca ficar recarregando sem parar)
+function quickReload(v) {
+  let n = 0; try { const o = JSON.parse(sessionStorage.getItem('eld_upd') || '{}'); n = o.v === v ? o.n : 0; sessionStorage.setItem('eld_upd', JSON.stringify({ v, n: n + 1 })); } catch { /* ok */ }
+  if (n >= 2) return false;
+  const el = document.createElement('div'); el.className = 'maint';
+  el.innerHTML = '<div class="mbox"><b>Atualizando o jogo…</b><small>Baixando a versão nova.</small><div class="spin"></div></div>';
+  document.body.appendChild(el);
+  location.reload();
+  return true;
+}
+
+// Ao abrir o jogo: confere a versão do servidor ANTES de entrar (o celular pode ter aberto a cópia antiga guardada).
+// Versão nova → recarrega na hora, ainda na tela inicial (nada de atualizar depois de entrar no mapa).
+export async function bootCheck() {
+  if (typeof location === 'undefined' || !/^https?:$/.test(location.protocol)) return false;
+  try {
+    const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 3500);
+    const r = await fetch('/api/status', { cache: 'no-store', signal: ctl.signal }); clearTimeout(to);
+    if (!r.ok) return false;
+    const s = await r.json();
+    if (s.versao && s.versao !== VERSION) return quickReload(s.versao);
+  } catch { /* servidor dormindo/sem rede: segue com a cópia; o conferidor de sempre atualiza depois */ }
+  return false;
+}
+
 export function startUpdater(G) {
   if (typeof location === 'undefined' || !/^https?:$/.test(location.protocol)) return null;
   let el = null, busy = false, poll = null, gaveUp = false;
@@ -30,6 +55,7 @@ export function startUpdater(G) {
       try {
         const s = await status();
         if (s.versao && s.versao !== VERSION) {
+          if (G.mode !== 'play') { clearInterval(poll); quickReload(s.versao); return; } // ainda no lobby: atualiza direto
           show();
           if (Date.now() - t0 < minMs) return;
           clearInterval(poll);
@@ -51,10 +77,13 @@ export function startUpdater(G) {
   };
   const check = async () => {
     if (busy) return;
-    try { const s = await status(); if (s.versao && s.versao !== VERSION) waitNew(800); } catch { /* sem servidor próprio */ }
+    try {
+      const s = await status();
+      if (s.versao && s.versao !== VERSION) { if (G.mode !== 'play') quickReload(s.versao); else waitNew(800); } // no lobby: direto; jogando: aviso
+    } catch { /* sem servidor próprio */ }
   };
   window.addEventListener('eldoria-maint', () => waitNew());
   setInterval(check, 45000);
-  setTimeout(check, 8000);
+  setTimeout(check, 1500);
   return { maintenance: () => waitNew(), check };
 }

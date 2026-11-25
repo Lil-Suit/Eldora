@@ -62,7 +62,9 @@ function forceFullscreen() {
   if (isApp) { document.addEventListener('pointerdown', lockLandscape, true); document.addEventListener('visibilitychange', () => { if (!document.hidden) lockLandscape(); }); }
 }
 
-function boot() {
+async function boot() {
+  // versão nova no servidor? atualiza antes de mostrar o jogo (sem esperar entrar no mapa)
+  try { const U = await import('./game/updater.js'); if (await U.bootCheck()) return; } catch { /* segue */ }
   telemetry.init(() => {
     const G = window.__RIFT; if (!G) return {};
     return {

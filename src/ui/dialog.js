@@ -19,6 +19,11 @@ const RAR = (id) => RARITIES.find((r) => r.id === id) || RARITIES[0];
 function catIcon(e, rarity = 'comum') {
   try { return itemIcon({ kind: 'equip', slot: e.slot, wkind: e.wkind, rarity: e.rarity || rarity, bset: e.bset, set: e.set, named: e.named, name: e.name }); } catch { return ICONS.livro; }
 }
+// Cronista: Itens, Missões, Bestiário e Habilidades no mesmo lugar (as 3 últimas abrem o painel do diário sozinho)
+export function cronistaTabs(on, journal = false) {
+  const T = [['itens', '📖 Itens'], ['quests', 'Missões'], ['bestiary', 'Bestiário'], ['skills', 'Habilidades']];
+  return `<div class="dtabsrow">${T.map(([k, n]) => `<button class="btn sm ${k === on ? 'primary' : ''}" data-a="${k === 'itens' ? (journal ? 'j:cronista' : 'd:view') : journal ? 'j:tab' : 'd:jr'}" ${k === 'itens' ? 'data-v="itens"' : journal ? `data-tab="${k}"` : `data-t="${k}"`}>${n}</button>`).join('')}</div>`;
+}
 function catalogView() {
   const L = itemCatalog();
   let lastLv = -1;
@@ -28,7 +33,7 @@ function catalogView() {
     const c = RAR(e.rarity || 'comum').color;
     return `${head}<button class="cat-row interactive" data-a="d:view" data-v="item:${i}"><span class="cat-ico" style="color:${c}">${catIcon(e)}</span><b>${esc(e.name)}</b><small>${esc(e.kind)}</small></button>`;
   }).join('');
-  return `<h3>Livro dos Itens</h3><p class="muted">Todos os equipamentos de Eldoria, do mais fraco ao mais forte. Toque em um para ver o que faz e quem solta.</p>
+  return `${cronistaTabs('itens')}<h3>Livro dos Itens</h3>
     <div class="cat-list">${rows}</div>`;
 }
 function catalogItemView(idx) {
@@ -253,6 +258,7 @@ export function dialogClick(ui, a, el) {
   const G = ui.G, sp = G.state.player, npcId = ui.dialogNpc;
   switch (a) {
     case 'close': ui.closeDialog(); break;
+    case 'jr': ui.cronistaNpc = npcId; ui.closeDialog(); ui.togglePanel(el.dataset.t); break; // Cronista → Missões/Bestiário/Habilidades
     case 'view':
       if (el.dataset.v === 'bank') { ui.bk = { v: '', q: '', res: null, to: null, tv: '', conf: false, msg: '' }; Promise.allSettled([G.economy.loadBank(), G.economy.checkMail()]).then(() => { if (ui.dialogView === 'bank') openDialog(ui, npcId, 'bank', true); }); }
       if (el.dataset.v === 'bau') { ui.bauMsg = ''; G.economy.dailyStatus().then(() => { if (ui.dialogView === 'bau') openDialog(ui, npcId, 'bau', true); }); }
