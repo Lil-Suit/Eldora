@@ -312,7 +312,6 @@ body.photo .mobile .tbtns-wrap, body.photo .mobile .joyzone { opacity: 0; }
 .islot.sel { box-shadow: 0 0 0 2px var(--gold2); border-color: var(--gold2); }
 .islot.r-epico { box-shadow: 0 0 8px -3px var(--c); }
 .islot.r-lendario, .islot.r-mitico { box-shadow: 0 0 12px -2px var(--c); }
-.islot.blocked { background: radial-gradient(circle at 50% 30%, rgba(255,70,70,.28), #1a0f16 75%); }
 .islot.blocked i { opacity: .55; }
 .islot.forged::after { content: ''; position: absolute; inset: 0; border-radius: 8px; box-shadow: inset 0 0 0 1.5px rgba(255,140,70,.75); pointer-events: none; }
 .better, em.better { position: absolute; right: 2px; top: 1px; font-style: normal; font-size: clamp(9px, calc(var(--slot, 48px) * .24), 13px); color: var(--good); filter: drop-shadow(0 1px 1px #000); }
@@ -729,7 +728,6 @@ body.touch .lootfeed { bottom: 300px; }
 .buff.safe { font-size: 9.5px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; height: 16px; border-radius: 4px; pointer-events: none; cursor: default; }
 .pn.me .peer { opacity: .7; font-style: italic; }
 .empty-detail .better-demo svg, .empty-detail .tri { font-size: inherit; width: .9em; height: .9em; opacity: 1; }
-.islot.blocked .lbl { background: rgba(130, 24, 24, .88); color: #ffc2bb; border-top-color: rgba(255, 90, 80, .6); }
 @media (max-height: 560px) {
   .dialog.wide { max-height: 96vh; bottom: 2px; width: min(940px, 98vw); }
   .shop { gap: 10px; }
@@ -749,7 +747,6 @@ img.px { width: 100%; height: 100%; image-rendering: pixelated; image-rendering:
 /* fundo do espaço na cor da raridade (bem visível, estilo cartucho) */
 .islot:not(.empty) { background: linear-gradient(180deg, color-mix(in srgb, var(--c, #555) 55%, #191628) 0%, color-mix(in srgb, var(--c, #555) 32%, #120f1e) 100%); border: 2px solid color-mix(in srgb, var(--c, #555) 85%, #000); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12), inset 0 -3px 0 rgba(0,0,0,.25); border-radius: 7px; }
 .islot.r-comum { --c: #7d8494; }
-.islot.blocked { background: linear-gradient(180deg, #5a2026, #2a1016) !important; }
 .islot.sel { box-shadow: 0 0 0 2px var(--gold2), inset 0 0 0 1px rgba(255,255,255,.2) !important; border-color: var(--gold2); }
 .islot.r-lendario:not(.sel), .islot.r-mitico:not(.sel) { box-shadow: 0 0 10px -1px var(--c), inset 0 0 0 1px rgba(255,255,255,.18); }
 /* Mercado dos Viajantes */
@@ -1468,3 +1465,10 @@ body.hudedit .mobile.dim .tbtns-wrap, body.hudedit .mobile.dim .joyzone { opacit
 .dialog.full .cat-list { max-height: none; overflow: visible; }
 body.dlgshot .dialog.full { left: max(6px, var(--sal, 0px)); right: max(6px, var(--sar, 0px)); width: auto; transform: none; }
 .hud .xpbar, .xpbar { display: none !important; } /* v0.12.1: barra de XP fora da tela (o XP continua no painel do personagem) */
+
+/* item que você não pode usar (outra classe / nível): mantém a COR DA RARIDADE (o vermelho era confundido com Mítico)
+   e fica apagado, com listras cinza e um ⛔ no canto */
+.islot.blocked { filter: saturate(.45) brightness(.8); }
+.islot.blocked::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: repeating-linear-gradient(135deg, rgba(0,0,0,.32) 0 5px, transparent 5px 10px); }
+.islot.blocked::before { content: '⛔'; position: absolute; right: 2px; bottom: 16px; font-size: 11px; z-index: 2; filter: none; }
+.islot.blocked .lbl { color: #cfc8d8; }

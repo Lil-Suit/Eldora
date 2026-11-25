@@ -24,11 +24,11 @@ function seeThrough(mat) {
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vSeeW; uniform vec3 uCam; uniform vec3 uHero;')
       .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
         { vec3 ab = uHero - uCam; float L = length(ab); vec3 dr = ab / max(L, 0.001); float s = dot(vSeeW - uCam, dr);
-          if (s > 0.0 && s < L - 0.7) { float r = length(vSeeW - (uCam + dr * s)); float R = mix(0.6, 2.6, clamp(s / L, 0.0, 1.0));
+          if (s > 0.0 && s < L - 0.7 && vSeeW.y > uHero.y - 0.85) { float r = length(vSeeW - (uCam + dr * s)); float R = mix(0.6, 2.6, clamp(s / L, 0.0, 1.0));
             float n = fract(sin(dot(floor(gl_FragCoord.xy * 0.5), vec2(12.9898, 78.233))) * 43758.5453);
             if (r < R - 0.5 + n * 0.5) discard; } }`);
   };
-  mat.customProgramCacheKey = () => 'see-through-v1';
+  mat.customProgramCacheKey = () => 'see-through-v2';
   return mat;
 }
 const LOAD = 330, UNLOAD = 520;

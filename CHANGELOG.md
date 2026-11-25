@@ -1,5 +1,9 @@
 # Histórico de versões
 
+## 0.12.3 — Chão sem buraco e item bloqueado
+- O "buraco" que deixa ver o herói atrás das paredes não fura mais o CHÃO (aparecia uma mancha quadriculada nos pés em fortalezas e grutas).
+- Item que você não pode usar (outra classe/nível) mantém a cor da raridade, fica apagado com listras e um ⛔ (antes ficava vermelho e parecia Mítico).
+
 ## 0.12.2 — Partículas da arma
 - Com "Partículas" desligada, a arma não solta mais brilho (aura lendária/mítica e efeito de arma da loja); a cor na arma continua.
 

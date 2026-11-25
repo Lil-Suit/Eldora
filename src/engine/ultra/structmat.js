@@ -453,7 +453,7 @@ const VERT_MAIN = /* glsl */`
 
 const SEE_FRAG = /* glsl */`
   { vec3 ab = uHero - uCam; float L = length(ab); vec3 dr = ab / max(L, 0.001); float s = dot(vUW - uCam, dr);
-    if (s > 0.0 && s < L - 0.7) { float r = length(vUW - (uCam + dr * s)); float R = mix(0.6, 2.6, clamp(s / L, 0.0, 1.0));
+    if (s > 0.0 && s < L - 0.7 && vUW.y > uHero.y - 0.85) { float r = length(vUW - (uCam + dr * s)); float R = mix(0.6, 2.6, clamp(s / L, 0.0, 1.0));
       float n = fract(sin(dot(floor(gl_FragCoord.xy * 0.5), vec2(12.9898, 78.233))) * 43758.5453);
       if (r < R - 0.5 + n * 0.5) discard; } }
 `;
