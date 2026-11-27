@@ -11,7 +11,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.12.22'; // (a variável é só para testes)
+const VERSION = process.env.ELDORIA_FAKE_VERSION || '0.12.23'; // (a variável é só para testes)
 
 // ---------- Erros do servidor → Sentry (só no Render; sem dados pessoais) ----------
 const SENTRY_DSN = process.env.SENTRY_DSN || 'https://8ffc505d8bfbef96c829cace57608900@o4512419115499520.ingest.us.sentry.io/4512419158622208';
@@ -846,12 +846,12 @@ const DIA_PRICES = {
   tp3: 1, tp8: 2, // Pergaminhos de Teleporte: 3 por 💎1, 8 por 💎2 (pode comprar de novo)
   // skins dos heróis (iguais a src/config/heroskins.js): roupa e as cores extras (metade do preço)
   hs_campones_2: 50, hs_patrulheiro: 100, hs_patrulheiro_3: 50, hs_mago: 150, hs_mago_2: 75, hs_mago_3: 75,
-  hs_nobre: 200, hs_nobre_2: 100, hs_nobre_3: 100, hs_cavaleiro: 250, hs_cavaleiro_2: 125, hs_cavaleiro_3: 125,
+  hs_cavaleiro: 250, hs_cavaleiro_2: 125, hs_cavaleiro_3: 125,
   hs_rei: 500, // Rei/Rainha: manto vermelho + coroa dourada brilhante
   respec: 50, // redistribuir os pontos de atributo (pode comprar de novo)
 };
 // cor extra só para quem já tem a roupa
-const DIA_REQUIRES = { hs_patrulheiro_3: 'hs_patrulheiro', hs_mago_2: 'hs_mago', hs_mago_3: 'hs_mago', hs_nobre_2: 'hs_nobre', hs_nobre_3: 'hs_nobre', hs_cavaleiro_2: 'hs_cavaleiro', hs_cavaleiro_3: 'hs_cavaleiro' };
+const DIA_REQUIRES = { hs_patrulheiro_3: 'hs_patrulheiro', hs_mago_2: 'hs_mago', hs_mago_3: 'hs_mago', hs_cavaleiro_2: 'hs_cavaleiro', hs_cavaleiro_3: 'hs_cavaleiro' };
 const DIA_REPEAT = new Set(['tp3', 'tp8', 'mk10', 'cofre10', 'respec']);
 // cofre do banco (igual a src/config/economia.js): começa com 40, +10 por compra, até 80 (o dobro). Compra da CONTA.
 const COFRE = { sku: 'cofre10', base: 40, step: 10, buys: 4, price: (n) => 50 + 25 * n };
@@ -875,7 +875,7 @@ const bauGet = async (a) => { const d = await store.getDoc(BAU, String(a).toLowe
 const bauProx = (b, hoje) => (b.last === hoje - 1 ? (b.dia % 7) + 1 : 1);
 const pickW = (w) => { let t = 0; for (const k in w) t += w[k]; let r = Math.random() * t; for (const k in w) { r -= w[k]; if (r <= 0) return k; } return Object.keys(w).pop(); };
 // skins antigas (antes dos heróis 3D): quem comprou ganhou a roupa nova equivalente e a cor
-const DIA_LEGACY = { skin_rubi: ['hs_nobre'], skin_geada: ['hs_mago', 'hs_mago_3'], skin_abismo: ['hs_mago', 'hs_mago_2'], skin_jade: ['hs_patrulheiro', 'hs_patrulheiro_3'], skin_dragao: ['hs_cavaleiro', 'hs_cavaleiro_2'] };
+const DIA_LEGACY = { skin_rubi: [], skin_geada: ['hs_mago', 'hs_mago_3'], skin_abismo: ['hs_mago', 'hs_mago_2'], skin_jade: ['hs_patrulheiro', 'hs_patrulheiro_3'], skin_dragao: ['hs_cavaleiro', 'hs_cavaleiro_2'] };
 const diaOwns = (d, sku) => d.spent.some((x) => x.sku === sku || DIA_LEGACY[x.sku]?.includes(sku));
 async function diaGet(name) { const d = await store.getDoc(DIA_OWNER, String(name).toLowerCase()); return { total: Math.max(0, Math.floor(+d?.total || 0)), spent: Array.isArray(d?.spent) ? d.spent : [], log: Array.isArray(d?.log) ? d.log : [] }; }
 // itens que saíram do jogo: o que foi gasto neles volta para o saldo (as auras, v0.9.92)

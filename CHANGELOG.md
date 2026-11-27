@@ -1,5 +1,8 @@
 # Histórico de versões
 
+## 0.12.23
+- Skins Nobre, Nobre · Gelo e Nobre · Esmeralda saíram da Aparência e da loja (ficaram parecidas com o Rei). Continuam só nos NPCs da cidade.
+
 ## 0.12.22
 - Miniatura da skin Rei/Rainha no mesmo estilo das outras (retrato de frente, fundo azul).
 

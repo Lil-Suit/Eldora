@@ -384,7 +384,7 @@ function appearance(ui) {
   const G = ui.G, C = G.cosmetics;
   const section = (kind, title) => {
     const g = C.gender();
-    const cards = Object.entries(COSMETIC_SETS[kind]).filter(([, d]) => C.fits(d)).map(([id, d]) => {
+    const cards = Object.entries(COSMETIC_SETS[kind]).filter(([, d]) => C.fits(d) && !d.npc).map(([id, d]) => {
       const un = C.isUnlocked(d), on = C.equipped(kind) === id, prem = d.unlock.type === 'premium', base = !un && C.needsBase?.(d);
       let action;
       if (on) action = '<span class="eqd">Em uso</span>';

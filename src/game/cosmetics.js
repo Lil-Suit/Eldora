@@ -6,11 +6,11 @@ import { HERO_SKINS, skuOf } from '../config/heroskins.js';
 
 // skins dos heróis (modelos 3D): a padrão é grátis, as outras na Loja de Diamantes
 const HERO_SKIN_SET = Object.fromEntries(Object.entries(HERO_SKINS).map(([id, s]) => [id, {
-  ...s, hero: true, unlock: s.price > 0 ? { type: 'premium', sku: skuOf(id) } : { type: 'free' },
+  ...s, hero: true, unlock: s.npc ? { type: 'npc' } : s.price > 0 ? { type: 'premium', sku: skuOf(id) } : { type: 'free' },
 }]));
 // quem tinha comprado um visual antigo ganha uma skin nova parecida
 // skins antigas compradas antes dos heróis 3D: valem a roupa nova equivalente e a cor (igual ao servidor)
-const LEGACY = { skin_rubi: ['nobre'], skin_geada: ['mago', 'mago_3'], skin_abismo: ['mago', 'mago_2'], skin_jade: ['patrulheiro', 'patrulheiro_3'], skin_dragao: ['cavaleiro', 'cavaleiro_2'] };
+const LEGACY = { skin_rubi: [], skin_geada: ['mago', 'mago_3'], skin_abismo: ['mago', 'mago_2'], skin_jade: ['patrulheiro', 'patrulheiro_3'], skin_dragao: ['cavaleiro', 'cavaleiro_2'] };
 export const COSMETIC_SETS = { skin: HERO_SKIN_SET, fx: WEAPON_FX }; // (auras removidas)
 const DEFAULTS = { skin: 'campones', fx: 'nenhum' };
 
@@ -111,7 +111,7 @@ export class Cosmetics {
 
   equip(kind, id) {
     const def = COSMETIC_SETS[kind][id];
-    if (!def || !this.isUnlocked(def) || !this.fits(def)) return false;
+    if (!def || def.npc || !this.isUnlocked(def) || !this.fits(def)) return false; // roupas só de NPC não se equipam
     this.data[kind] = id;
     this.apply();
     this.G.saver.requestSave('aparência');
@@ -120,7 +120,7 @@ export class Cosmetics {
 
   apply() {
     const rig = this.G.player?.rig; if (!rig) return;
-    let id = this.equipped('skin'); if (!this.fits(HERO_SKIN_SET[id] || {})) id = 'campones';
+    let id = this.equipped('skin'); if (!this.fits(HERO_SKIN_SET[id] || {}) || HERO_SKIN_SET[id]?.npc) id = 'campones';
     applySkin(rig, id, this.gender());
   }
 
