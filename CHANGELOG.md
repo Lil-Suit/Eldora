@@ -1,5 +1,8 @@
 # Histórico de versões
 
+## 0.12.22
+- Miniatura da skin Rei/Rainha no mesmo estilo das outras (retrato de frente, fundo azul).
+
 ## 0.12.21
 - Configurações › Controles: Distância da câmera (de 6 m a 22 m, fica salva). Primeira pessoa continua na mesma aba.
 - Escudo mais perto das costas da mão.
