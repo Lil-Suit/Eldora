@@ -177,7 +177,8 @@ export function renderSettings(ui, tab = 'gfx') {
   } else if (tab === 'ctrl') {
     const binds = G.input.binds;
     const rows = Object.keys(DEFAULT_BINDS).map((a) => `<div class="bind"><span>${BIND_LABELS[a]}</span><button class="btn sm ${G.input.rebinding === a ? 'wait' : ''}" data-a="m:rebind" data-k="${a}">${G.input.rebinding === a ? 'Pressione uma tecla…' : keyLabel(binds[a])}</button></div>`).join('');
-    body = `<label class="srow"><span>Sensibilidade da câmera</span><input type="range" min="0.3" max="2.5" step="0.1" value="${s.camSens}" data-set="camSens"><b>${s.camSens.toFixed(1)}×</b></label>
+    body = `<label class="srow"><span>Distância da câmera</span><input type="range" min="6" max="22" step="0.5" value="${G.cam.dist}" data-set="camDist"><b>${Math.round(G.cam.dist)} m</b></label>
+      <label class="srow"><span>Sensibilidade da câmera</span><input type="range" min="0.3" max="2.5" step="0.1" value="${s.camSens}" data-set="camSens"><b>${s.camSens.toFixed(1)}×</b></label>
       ${check('invertY', 'Inverter eixo vertical da câmera')}
       ${check('firstPerson', 'Primeira pessoa', 'A câmera fica nos olhos do personagem. Arraste a tela para olhar em volta.')}
       ${check('crosshair', 'Mira de tiro (arqueiro e mago)', 'Aparece uma mira; o tiro vai para onde a câmera aponta (gire a câmera para mirar). Ela fica vermelha quando trava num monstro.')}
@@ -228,11 +229,12 @@ export function afterModal(ui, kind) {
       G.settings[k] = v;
       if (k === 'quality' || k === 'rain' || k === 'viewDist') G.applyQuality();
       if (k === 'quality') { try { if (['ultra', 'alta', 'media'].includes(G.settings.quality)) { localStorage.setItem('rift.gfxguard', G.settings.quality); G._gfxGuard = 0; } else { localStorage.removeItem('rift.gfxguard'); G._gfxGuard = undefined; } } catch {} }
+      if (k === 'camDist') G.cam.dist = Math.max(G.cam.minDist, Math.min(G.cam.maxDist, v)); // perto ↔ longe, com limite
       if (k === 'showFps') ui.el.fps.classList.toggle('hidden', !v);
       if (k === 'touchScale') ui.mobile.applyScale();
       if (k === 'hurtFx' || k === 'hurtIntensity') { ui._hurtKey = null; ui.fitHurt(); if (v !== 'off') ui.flashHurt(0.5); }
       G.saveSettings();
-      if (inp.type === 'range') { const b = inp.parentElement.querySelector('b'); if (b) b.textContent = k === 'camSens' ? v.toFixed(1) + '×' : Math.round((v / parseFloat(inp.max)) * 100) + '%'; }
+      if (inp.type === 'range') { const b = inp.parentElement.querySelector('b'); if (b) b.textContent = k === 'camSens' ? v.toFixed(1) + '×' : k === 'camDist' ? Math.round(v) + ' m' : Math.round((v / parseFloat(inp.max)) * 100) + '%'; }
     };
     inp.addEventListener(inp.type === 'range' ? 'input' : 'change', handler);
   }

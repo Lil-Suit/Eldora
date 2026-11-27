@@ -109,6 +109,7 @@ export class Game {
     this.input.onLockFail = () => this.ui?.toastSmall?.('Não deu para prender o mouse aqui. Clique no jogo de novo, ou gire a câmera segurando o botão direito.', 5);
     this.input.onLockChange = (on) => { if (on && !this._lockHint) { this._lockHint = true; this.ui?.toastSmall?.('Mouse preso na câmera · Caps Lock solta o mouse'); } };
     this.cam = new CameraRig(this.camera);
+    if (this.settings?.camDist) this.cam.dist = Math.max(this.cam.minDist, Math.min(this.cam.maxDist, +this.settings.camDist)); // distância escolhida nas configurações
     RoyalCape.eye = this.camera.position; // manto do Rei: detalhe pela distância da câmera
     this.saver = new SaveManager(this);
     this.market = new Market(this);

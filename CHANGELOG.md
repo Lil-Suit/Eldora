@@ -1,5 +1,9 @@
 # Histórico de versões
 
+## 0.12.21
+- Configurações › Controles: Distância da câmera (de 6 m a 22 m, fica salva). Primeira pessoa continua na mesma aba.
+- Escudo mais perto das costas da mão.
+
 ## 0.12.20
 - Janela "Escolha outro nome" (e as de login): o teclado do jogo fica por cima e a janela sobe para caber acima dele; o motivo aparece também no celular deitado.
 
