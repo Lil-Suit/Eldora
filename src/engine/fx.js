@@ -40,7 +40,7 @@ export class FX {
       arrow: new THREE.CylinderGeometry(0.022, 0.022, 1.05, 6).rotateX(Math.PI / 2),
       arrowTip: new THREE.ConeGeometry(0.075, 0.26, 4).rotateX(Math.PI / 2).scale(1, 0.38, 1).translate(0, 0, 0.64),
       arrowNeck: new THREE.CylinderGeometry(0.03, 0.026, 0.07, 6).rotateX(Math.PI / 2).translate(0, 0, 0.5),
-      arrowVane: new THREE.BoxGeometry(0.008, 0.075, 0.22).translate(0, 0.055, -0.4),
+      arrowVane: new THREE.BoxGeometry(0.008, 0.09, 0.26).translate(0, 0.062, -0.38),
       arrowGlow: new THREE.SphereGeometry(0.12, 8, 6).scale(0.8, 0.8, 1.9).translate(0, 0, 0.55),
       orb: new THREE.SphereGeometry(0.22, 10, 8),
       rock: new THREE.DodecahedronGeometry(0.2, 0),
@@ -198,60 +198,154 @@ export class FX {
   // Arco do golpe. dh = diferença de altura do chão à frente (inclina o arco acompanhando o morro).
   // Golpe de lâmina: meia-lua brilhante que VARRE o arco (ponta branca, rastro da cor sumindo),
   // inclinada como um golpe de espada de verdade, com faíscas saindo da ponta.
+  // textura do corte: meia-lua macia (borda de fora afiada e brilhante, por dentro esfumada) com riscos de velocidade
+  slashTex() {
+    if (this._slashTex !== undefined) return this._slashTex;
+    if (typeof document === 'undefined') return (this._slashTex = null);
+    const W = 256, H = 64, c = document.createElement('canvas'); c.width = W; c.height = H;
+    const x = c.getContext('2d'), img = x.createImageData(W, H), d = img.data;
+    let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    const streak = new Float32Array(H); for (let j = 0; j < H; j++) streak[j] = 0.55 + 0.45 * rnd();
+    for (let j = 0; j < H; j++) {
+      const v = j / (H - 1); // 0 = dentro, 1 = fio da lâmina
+      const edge = Math.exp(-Math.pow((v - 0.86) / 0.07, 2)); // fio fino e forte
+      const body = Math.pow(Math.max(0, v), 1.3) * (1 - Math.pow(Math.max(0, (v - 0.9) / 0.1), 2)) * 0.95; // corpo do corte mais cheio
+      for (let i = 0; i < W; i++) {
+        const u = i / (W - 1); // 0 = ponta (onde a lâmina está), 1 = cauda
+        const tail = Math.pow(1 - u, 1.15) * Math.min(1, u * 25 + 0.25);
+        const sl = 0.7 + 0.3 * Math.sin(u * 40 + streak[j] * 30) * streak[j];
+        const a = Math.min(1, (edge * (0.6 + 0.4 * (1 - u)) + body * sl) * tail);
+        const w = Math.min(1, edge * 1.3 * (1 - u * 0.6)); // fio quase branco, o resto fica da cor do golpe
+        const k = (j * W + i) * 4;
+        d[k] = 255 * a; d[k + 1] = 255 * Math.min(1, a * (0.35 + 0.65 * w)); d[k + 2] = 255 * w * a; d[k + 3] = 255;
+      }
+    }
+    x.putImageData(img, 0, 0);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.flipY = false; // linha 0 = dentro do arco, última = fio
+    return (this._slashTex = t);
+  }
+
+  // Arco do golpe. dh = diferença de altura do chão à frente (inclina o arco acompanhando o morro).
+  // Golpe de lâmina: meia-lua com fio branco e afiado que VARRE o arco, rastro macio da cor do golpe sumindo
+  // para trás com riscos de velocidade, clarão na ponta e faíscas. Inclinado como golpe de espada de verdade.
   slash(x, y, z, yaw, radius, arcDeg, color = 0xffe2a0, dur = 0.22, dh = 0, heavy = false) {
-    const arc = (arcDeg * Math.PI) / 180, trail = Math.min(arc * 0.75, 2.4), N = 22;
-    const r0 = radius * 0.35, r1 = radius * 0.8, r2 = radius * 1.02;
-    const pos = new Float32Array((N + 1) * 3 * 3), col = new Float32Array((N + 1) * 3 * 3), idx = [];
-    const c = new THREE.Color(color), hot = new THREE.Color(0xffffff);
+    const arc = (arcDeg * Math.PI) / 180, trail = Math.min(arc * 0.8, 2.6), N = 28;
+    const r0 = radius * 0.3, r2 = radius * 1.04;
+    const tex = this.slashTex();
+    const pos = new Float32Array((N + 1) * 2 * 3), uv = new Float32Array((N + 1) * 2 * 2), idx = [];
     for (let i = 0; i <= N; i++) {
-      const u = i / N, ang = -u * trail, fade = Math.pow(1 - u, 1.4);
-      [[r0, 0], [r1, 0.75], [r2, 1]].forEach(([r, w], j) => {
-        const k = (i * 3 + j) * 3;
-        pos[k] = Math.sin(ang) * r; pos[k + 1] = 0; pos[k + 2] = Math.cos(ang) * r;
-        const cc = j === 2 ? hot : c, f = fade * w * (j === 2 ? 1 : 0.85);
-        col[k] = cc.r * f; col[k + 1] = cc.g * f; col[k + 2] = cc.b * f;
+      const u = i / N, ang = -u * trail;
+      [[r0, 0], [r2, 1]].forEach(([r, v], j) => {
+        const k = i * 2 + j;
+        pos[k * 3] = Math.sin(ang) * r; pos[k * 3 + 1] = 0; pos[k * 3 + 2] = Math.cos(ang) * r;
+        uv[k * 2] = u; uv[k * 2 + 1] = v;
       });
-      if (i < N) for (let j = 0; j < 2; j++) { const a0 = i * 3 + j, b0 = (i + 1) * 3 + j; idx.push(a0, b0, a0 + 1, b0, b0 + 1, a0 + 1); }
+      if (i < N) { const a0 = i * 2, b0 = (i + 1) * 2; idx.push(a0, b0, a0 + 1, b0, b0 + 1, a0 + 1); }
     }
     const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.setIndex(idx);
-    const mat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); geo.setIndex(idx);
+    const c = new THREE.Color(color);
+    const tint = c.clone().lerp(new THREE.Color(0xffffff), 0.15);
+    const mat = new THREE.MeshBasicMaterial({ map: tex, color: tint, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+    if (!tex) { mat.map = null; mat.opacity = 0.7; }
     const sweep = new THREE.Group(), tiltG = new THREE.Group(), g = new THREE.Group();
     const m = new THREE.Mesh(geo, mat); sweep.add(m); tiltG.add(sweep); g.add(tiltG);
-    // Ultra: o corte ganha "corpo" — um brilho largo por fora e uma lâmina fina por dentro, um pouco acima/abaixo
-    let mat2 = null;
-    if (this.ultra) {
-      mat2 = mat.clone();
-      const outer = new THREE.Mesh(geo, mat2); outer.scale.set(1.13, 1, 1.13); outer.position.y = 0.09;
-      const inner = new THREE.Mesh(geo, mat2); inner.scale.set(0.9, 1, 0.9); inner.position.y = -0.08;
-      sweep.add(outer, inner);
-    }
+    // corpo do golpe: um brilho largo e fraco por fora + um segundo fio logo abaixo (dá espessura de "onda de ar")
+    const mat2 = mat.clone();
+    const outer = new THREE.Mesh(geo, mat2); outer.scale.set(1.1, 1, 1.1); outer.position.y = 0.06; sweep.add(outer);
+    let mat3 = null;
+    if (this.ultra) { mat3 = mat.clone(); const inner = new THREE.Mesh(geo, mat3); inner.scale.set(0.93, 1, 0.93); inner.position.y = -0.07; sweep.add(inner); }
+    // clarão macio que corre junto com a ponta da lâmina
+    const flare = this.spr(color, 0.9); flare.scale.setScalar(radius * 0.55); flare.position.set(0, 0, r2 * 0.97); sweep.add(flare);
+    const flare2 = this.spr(0xffffff, 0.9); flare2.scale.setScalar(radius * 0.22); flare2.position.set(0, 0, r2 * 0.97); sweep.add(flare2);
     const pitch = Math.max(-0.7, Math.min(0.7, Math.atan2(dh || 0, radius * 0.8)));
     this._slashN = (this._slashN || 0) + 1;
     const side = this._slashN % 2 ? 1 : -1;
     tiltG.rotation.x = -pitch;
     tiltG.rotation.z = heavy ? 0 : side * (arcDeg >= 300 ? 0.08 : 0.38); // golpe na diagonal (alterna os lados)
-    if (heavy) tiltG.rotation.x = -pitch - 0.0;
     g.position.set(x, y + (heavy ? 0.9 : 1.05), z);
     g.rotation.y = yaw;
     const from = side > 0 ? arc / 2 : -arc / 2, to = -from + (side > 0 ? trail : -trail) * 0.5;
     if (side < 0) sweep.scale.x = -1; // varre da direita para a esquerda no golpe seguinte
     const tip = new THREE.Vector3();
-    return this._add(g, dur * 1.25, (f, k) => {
-      const e = 1 - Math.pow(1 - Math.min(1, k * 1.35), 3);
-      sweep.rotation.y = side > 0 ? from - (from - to) * e - 0 : -(from - (from - to) * e);
-      mat.opacity = k < 0.6 ? 1 : 1 - (k - 0.6) / 0.4;
-      if (mat2) mat2.opacity = mat.opacity * 0.42;
-      const sc = 0.92 + k * 0.12; g.scale.set(sc, 1, sc);
-      if (k < 0.75 && Math.random() < 0.9) { // faíscas na ponta da lâmina
+    return this._add(g, dur * 1.3, (f, k) => {
+      const e = 1 - Math.pow(1 - Math.min(1, k * 1.4), 3);
+      sweep.rotation.y = side > 0 ? from - (from - to) * e : -(from - (from - to) * e);
+      const op = k < 0.55 ? 1 : Math.max(0, 1 - (k - 0.55) / 0.45);
+      mat.opacity = op; mat2.opacity = op * 0.3; if (mat3) mat3.opacity = op * 0.5;
+      flare.material.opacity = 0.75 * op * (1 - k * 0.5); flare2.material.opacity = op * (k < 0.7 ? 1 : 0);
+      const sc = 0.94 + k * 0.1; g.scale.set(sc, 1, sc);
+      if (k < 0.72 && Math.random() < 0.85) { // faíscas soltando do fio da lâmina
         m.updateWorldMatrix(true, false); tip.set(0, 0, r2 * 0.95).applyMatrix4(m.matrixWorld);
-        this.emit(tip.x, tip.y, tip.z, (Math.random() - 0.5) * 2, Math.random() * 1.5, (Math.random() - 0.5) * 2, Math.random() < 0.5 ? 0xffffff : color, 0.16, 0.3, 4, 2);
-        if (this.ultra) { // mais faíscas e um clarão macio seguindo a ponta
-          this.emit(tip.x, tip.y, tip.z, 0, 0, 0, color, 0.55, 0.16, 0, 0);
-          for (let q = 0; q < 2; q++) this.emit(tip.x, tip.y, tip.z, (Math.random() - 0.5) * 4, Math.random() * 2.5, (Math.random() - 0.5) * 4, q ? 0xffffff : color, 0.1, 0.4, 7, 1.5);
+        this.emit(tip.x, tip.y, tip.z, (Math.random() - 0.5) * 2.4, Math.random() * 1.6, (Math.random() - 0.5) * 2.4, Math.random() < 0.5 ? 0xffffff : color, 0.13, 0.32, 5, 2);
+        if (this.ultra) for (let q = 0; q < 2; q++) this.emit(tip.x, tip.y, tip.z, (Math.random() - 0.5) * 4.5, Math.random() * 2.6, (Math.random() - 0.5) * 4.5, q ? 0xffffff : color, 0.09, 0.42, 8, 1.5);
+      }
+    }, { onEnd: () => { geo.dispose(); mat.dispose(); mat2.dispose(); mat3?.dispose(); flare.material.dispose?.(); flare2.material.dispose?.(); } });
+  }
+
+  // rastro de fita (sempre virado para a câmera): mais grosso e macio que uma linha de 1 pixel
+  // mesma interface do streak: push(x,y,z) a cada quadro e end() quando acaba
+  ribbon(color = 0xffffff, n = 18, width = 0.14) {
+    const cam = this.camera;
+    if (!cam) return this.streak(color, n);
+    const pts = new Float32Array(n * 3), pos = new Float32Array(n * 2 * 3), col = new Float32Array(n * 2 * 3), idx = [];
+    const c = new THREE.Color(color), w = new THREE.Color(0xffffff);
+    for (let i = 0; i < n; i++) {
+      const k = 1 - i / (n - 1), a = Math.pow(k, 1.3);
+      const cc = c.clone().lerp(w, Math.pow(k, 4) * 0.7).multiplyScalar(a);
+      for (let j = 0; j < 2; j++) { const q = (i * 2 + j) * 3; col[q] = cc.r; col[q + 1] = cc.g; col[q + 2] = cc.b; }
+      if (i < n - 1) { const a0 = i * 2, b0 = (i + 1) * 2; idx.push(a0, b0, a0 + 1, b0, b0 + 1, a0 + 1); }
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3).setUsage(THREE.DynamicDrawUsage));
+    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    g.setIndex(idx);
+    const mesh = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    mesh.frustumCulled = false; mesh.renderOrder = 5;
+    this.scene.add(mesh);
+    const d = new THREE.Vector3(), v = new THREE.Vector3(), o = new THREE.Vector3();
+    let filled = 0, scale = 1;
+    const build = () => {
+      for (let i = 0; i < n; i++) {
+        const i0 = Math.max(0, i - 1), i1 = Math.min(n - 1, i + 1);
+        d.set(pts[i1 * 3] - pts[i0 * 3], pts[i1 * 3 + 1] - pts[i0 * 3 + 1], pts[i1 * 3 + 2] - pts[i0 * 3 + 2]);
+        v.set(cam.position.x - pts[i * 3], cam.position.y - pts[i * 3 + 1], cam.position.z - pts[i * 3 + 2]);
+        o.crossVectors(d, v); const L = o.length();
+        if (L < 1e-6) o.set(0, 1, 0); else o.multiplyScalar(1 / L);
+        const hw = width * 0.5 * scale * (1 - i / (n - 1) * 0.75); // afina para trás
+        for (let j = 0; j < 2; j++) {
+          const s = j ? hw : -hw, q = (i * 2 + j) * 3;
+          pos[q] = pts[i * 3] + o.x * s; pos[q + 1] = pts[i * 3 + 1] + o.y * s; pos[q + 2] = pts[i * 3 + 2] + o.z * s;
         }
       }
-    }, { onEnd: () => { geo.dispose(); mat.dispose(); mat2?.dispose(); } });
+      g.attributes.position.needsUpdate = true;
+    };
+    const S = { line: mesh, n, push: (x, y, z) => {
+      pts.copyWithin(3, 0, (n - 1) * 3);
+      pts[0] = x; pts[1] = y; pts[2] = z;
+      if (filled < n) { for (let i = filled; i < n; i++) { pts[i * 3] = x; pts[i * 3 + 1] = y; pts[i * 3 + 2] = z; } filled++; }
+      build();
+    }, end: () => this._add(mesh, 0.22, (f, k) => {
+      const hx = pts[0], hy = pts[1], hz = pts[2];
+      for (let i = 1; i < n; i++) { pts[i * 3] += (hx - pts[i * 3]) * k; pts[i * 3 + 1] += (hy - pts[i * 3 + 1]) * k; pts[i * 3 + 2] += (hz - pts[i * 3 + 2]) * k; }
+      scale = 1 - k; build(); mesh.material.opacity = 1 - k;
+    }, { order: 5, onEnd: () => { g.dispose(); mesh.material.dispose(); } }) };
+    return S;
+  }
+
+  // flecha acertando: estilhaços de madeira, faíscas da cor do disparo, anel de choque e um clarão rápido
+  arrowHit(x, y, z, color = 0xe8f6ff, dirX = 0, dirZ = 0, heavy = false) {
+    const n = this.leve ? 4 : this.ultra ? 10 : 7;
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * 6.28, sp = 2 + Math.random() * 3.5;
+      this.emit(x, y, z, Math.cos(a) * sp - dirX * 2, Math.random() * 2.5 + 0.5, Math.sin(a) * sp - dirZ * 2, i % 3 ? color : 0xffffff, 0.1 + Math.random() * 0.08, 0.28 + Math.random() * 0.2, 9, 2.5);
+    }
+    for (let i = 0; i < (this.leve ? 2 : 4); i++) this.emit(x, y, z, (Math.random() - 0.5) * 3 - dirX * 1.5, Math.random() * 2.2, (Math.random() - 0.5) * 3 - dirZ * 1.5, 0xc9a46a, 0.09, 0.45, 12, 1); // lascas de madeira
+    const fl = this.spr(color, 1); fl.position.set(x, y, z); fl.scale.setScalar(heavy ? 1.6 : 1.05);
+    const fw = this.spr(0xffffff, 1); fw.position.set(x, y, z); fw.scale.setScalar(heavy ? 0.7 : 0.45);
+    const g = new THREE.Group(); g.add(fl, fw);
+    this._add(g, 0.16, (f, k) => { fl.material.opacity = 1 - k; fw.material.opacity = 1 - k; const s = 1 + k * 0.8; fl.scale.setScalar((heavy ? 1.6 : 1.05) * s); }, { onEnd: () => { fl.material.dispose?.(); fw.material.dispose?.(); } });
+    if (this.ultra || heavy) this.shock(x, y - 0.4, z, heavy ? 1.3 : 0.8, color, 0.22, 0.7);
   }
 
   // Aviso no chão: anel externo + preenchimento que cresce até o momento do impacto
@@ -543,8 +637,10 @@ export class FX {
     let M = this._am.get(c);
     if (!M) {
       const col = new THREE.Color(c);
-      M = { shaft: new THREE.MeshBasicMaterial({ color: 0xc9a46a }), head: new THREE.MeshBasicMaterial({ color: new THREE.Color(0xe9eef2).lerp(col, 0.3) }),
-        vane: new THREE.MeshBasicMaterial({ color: col.clone().lerp(new THREE.Color(0xffffff), 0.25), side: THREE.DoubleSide }), glow: this.addMat(c, 0.55) };
+      // madeira e aço recebem luz (antes eram chapados); a ponta brilha um pouco da cor do disparo
+      M = { shaft: new THREE.MeshLambertMaterial({ color: 0xb98a52, emissive: 0x2a1a0a }),
+        head: new THREE.MeshPhongMaterial({ color: new THREE.Color(0xd9e2ea).lerp(col, 0.25), emissive: col.clone().multiplyScalar(0.25), specular: 0xffffff, shininess: 90 }),
+        vane: new THREE.MeshLambertMaterial({ color: col.clone().lerp(new THREE.Color(0xffffff), 0.3), emissive: col.clone().multiplyScalar(0.3), side: THREE.DoubleSide }), glow: this.addMat(c, 0.6) };
       for (const m of Object.values(M)) m.userData.keep = true;
       this._am.set(c, M);
     }
@@ -625,6 +721,7 @@ export class FX {
   }
 
   update(dt, camera) {
+    if (camera) this.camera = camera;
     // partículas
     const p = this.p;
     let lo = MAXP, hi = -1; // faixa mexida neste quadro: só ela sobe para a placa de vídeo

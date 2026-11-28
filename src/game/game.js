@@ -1,3 +1,4 @@
+import { ultraMob } from '../engine/ultra/mobs.js';
 import { RoyalCape } from '../engine/cape.js';
 import { Teleports, safeSpot } from './teleport.js';
 import { Pvp } from './pvp.js';
@@ -45,6 +46,7 @@ import { QUESTS } from '../config/quests.js';
 import { CONSUMABLES, MOUNT_ITEMS, ITEM_SETS, setBaseFor } from '../config/items.js';
 import { rollLoot, makeStack, scaleNamed } from '../core/items.js';
 import * as UltraAtmos from '../engine/ultra/atmos.js';
+globalThis.__UA = UltraAtmos; // (ferramentas de vídeo/teste: desenhar o Ultra quadro a quadro)
 import { MUNDO } from './mundo.js';
 
 class Bus {
@@ -228,6 +230,7 @@ export class Game {
     if (this.world?.uniforms?.uUltra) this.world.uniforms.uUltra.value = ultra ? 1 : 0;
     this.world?.setUltra?.(ultra);
     UltraAtmos.setUltra(this, ultra);
+    for (const e of this.enemies || []) if (e.rig) ultraMob(e.rig, ultra, this.renderer); // monstros ultra realistas
     if (this.world?.waterMat) this.world.waterMat.shininess = ultra ? 220 : 70;
     if (q.shadows) this.sky.sun.castShadow = true; // o ajuste automático pode ter desligado
     if (this.renderer.shadowMap.enabled !== q.shadows || this.renderer.shadowMap.type !== type) {

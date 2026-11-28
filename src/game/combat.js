@@ -178,7 +178,7 @@ export function spawnProjectile(G, p) {
   // rastro fino de vento (flechas) ou de energia (magias)
   if (p.owner === 'player' && p.kind === 'flecha') {
     const sc = p.kind === 'flecha' ? (p.trail ? p.color : 0xe8f6ff) : p.kind === 'fogo' ? 0xffa040 : (p.color ?? 0xc79bff);
-    proj.streak = G.fx.streak(sc, (p.kind === 'flecha' ? 16 : 10) + (G.ultra ? 10 : 0));
+    proj.streak = G.fx.ribbon(sc, 16 + (G.ultra ? 8 : 0), G.ultra ? 0.16 : 0.11); // rastro de fita macio (antes linha de 1 pixel)
     proj.streak.push(p.x, p.y, p.z);
   }
   G.projectiles.push(proj);
@@ -273,7 +273,7 @@ function endProjectile(G, p, impact) {
   p.alive = false;
   if (p.streak) { p.streak.end(); p.streak = null; }
   if (p.onEnd) { try { p.onEnd(p); } catch { /* ok */ } }
-  if (impact && p.kind === 'flecha' && p.owner === 'player') G.fx.burst({ x: p.x, y: p.y, z: p.z }, { count: 5, color: [0xffffff, 0xd8c8a0], speed: 3, size: 0.14, life: 0.22, gravity: 6, up: 1 });
+  if (impact && p.kind === 'flecha' && p.owner === 'player') G.fx.arrowHit(p.x, p.y, p.z, p.trail || p.color || 0xe8f6ff, p.vx / (p.speed || 1), p.vz / (p.speed || 1), (p.mult || 1) > 1.6);
   if (impact && p.onEnd) { if (p.fxCap && G.net) G.net.capture(() => p.onEnd(p)); else p.onEnd(p); }
   else if (impact && p.kind !== 'flecha') G.fx.burst({ x: p.x, y: p.y, z: p.z }, { count: 6, color: p.color || 0xffffff, speed: 3, size: 0.25, life: 0.3 });
 }

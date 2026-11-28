@@ -1,3 +1,4 @@
+import { ultraMob } from '../engine/ultra/mobs.js';
 import { BALANCE } from '../config/balance.js';
 import { LOOT_TABLES } from '../config/items.js';
 import { LootSystem } from './loot.js';
@@ -75,6 +76,7 @@ export class Enemy {
     this.patrolR = o.patrolR ?? 6;
     this.spawner = o.spawner || null;
     this.rig = buildEnemyModel(this.def);
+    if (G.ultra) ultraMob(this.rig, true, G.renderer); // Ultra realismo: pele, pelo, pedra e metal de verdade
     G.scene.add(this.rig.root);
     this.radius = this.def.model === 'boss' ? 2.4 : this.def.model === 'golem' || this.def.model === 'treant' ? 0.75 * this.def.size : this.def.model === 'titan' ? 0.42 * this.def.size : this.def.model === 'wolf' ? 0.7 * this.def.size : this.def.model === 'quad' ? 0.62 * (this.def.size || 1) : this.def.model === 'medusa' ? 0.6 * (this.def.size || 1) : 0.5 * (this.def.size || 1);
     this.pos = new THREE.Vector3(o.x, G.world.groundHeight(o.x, o.z, this.area), o.z);

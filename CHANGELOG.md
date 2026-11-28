@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## 0.12.24
+- Ultra realismo nos monstros (todos): material físico com sombreado liso, detalhe de pele/pelo, pedra/osso e metal preso ao corpo, relevo, reflexo do céu e luz de borda; gosmas com aspecto de gelatina molhada. Liga e desliga junto com o Ultra.
+- Corte da espada novo: meia-lua com fio branco afiado, rastro macio da cor do golpe com riscos de velocidade, clarão na ponta e faíscas.
+- Flechas: madeira e ponta de aço com luz, penas maiores, rastro de fita macio (antes uma linha fina) e impacto com faíscas, lascas e clarão.
+
 ## 0.12.23
 - Skins Nobre, Nobre · Gelo e Nobre · Esmeralda saíram da Aparência e da loja (ficaram parecidas com o Rei). Continuam só nos NPCs da cidade.
 
