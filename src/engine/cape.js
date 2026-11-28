@@ -186,6 +186,7 @@ export class RoyalCape {
     let top = 0;
     for (let i = 0; i < NX - 1; i++) { const a = i * 3, b = a + 3; top += Math.hypot(this.anc[b] - this.anc[a], this.anc[b + 1] - this.anc[a + 1], this.anc[b + 2] - this.anc[a + 2]); }
     const TH = Math.PI * 0.82, r0 = top / TH, r1 = r0 * (1 + this.flare);
+    this.r0 = r0;
     const Cn = this.canon = new Float32Array(N * 3);
     for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) {
       const k = (j * NX + i) * 3, f = this.yOf[j] / this.len, r = r0 + (r1 - r0) * f, ph = TH * (i / (NX - 1) - 0.5);
@@ -245,7 +246,7 @@ export class RoyalCape {
     // vento suave que muda de direção e rajadas (o manto nunca fica parado demais)
     const ew = this.extraWind; // (testes) vento extra = correr parado no lugar
     const wx = Math.sin(t * 0.31) * 0.9 + Math.sin(t * 1.7) * 0.35 + (ew ? ew.x : 0), wz = Math.cos(t * 0.23) * 0.9 + Math.sin(t * 1.3 + 1) * 0.35 + (ew ? ew.z : 0);
-    const damp = Math.exp(-0.9 * h), kn = Math.min(1, 2.2 * h), kt = Math.min(1, 0.35 * h);
+    const damp = Math.exp(-1.7 * h), kn = Math.min(1, 2.2 * h), kt = Math.min(1, 0.35 * h);
     const bx = F.rb.x, bz = F.rb.z, L = this.len;
     for (let j = 1; j < NY; j++) for (let i = 0; i < NX; i++) {
       const k = (j * NX + i) * 3;
@@ -260,6 +261,21 @@ export class RoyalCape {
       vx *= damp; vy *= damp; vz *= damp;
       V[k] = vx; V[k + 1] = vy; V[k + 2] = vz;
       P[k] = X[k] + vx * h; P[k + 1] = X[k + 1] + vy * h; P[k + 2] = X[k + 2] + vz * h;
+    }
+    // peso do pano: cada ponto é puxado de leve para o formato do manto (meio cone preso nas costas).
+    // Assim, ao virar rápido, o manto balança e acompanha, mas não se dobra todo nem enrola no corpo.
+    if (this.canon) {
+      const Cn = this.canon, R = F.right, U = F.up, B = F.back, c = (NX >> 1) * 3;
+      const ox = this.anc[c] - B.x * this.r0, oy = this.anc[c + 1] - B.y * this.r0, oz = this.anc[c + 2] - B.z * this.r0;
+      for (let j = 1; j < NY; j++) {
+        const ks = Math.min(1, (3.4 - 1.6 * this.yOf[j] / this.len) * h);
+        for (let i = 0; i < NX; i++) {
+          const k = (j * NX + i) * 3, X = Cn[k], Y = Cn[k + 1], Z = Cn[k + 2];
+          P[k] += (ox + R.x * X + U.x * Y + B.x * Z - P[k]) * ks;
+          P[k + 1] += (oy + R.y * X + U.y * Y + B.y * Z - P[k + 1]) * ks;
+          P[k + 2] += (oz + R.z * X + U.z * Y + B.z * Z - P[k + 2]) * ks;
+        }
+      }
     }
     // linha de cima presa nos ombros (posição entre o quadro anterior e o atual)
     for (let i = 0; i < NX; i++) {
@@ -296,8 +312,8 @@ export class RoyalCape {
           add(a, a + R, this.vR[q], 1, top);
           if (i < NX - 1) { add(a, a + R + 3, this.d1R[q], 0.7, top); add(a + 3, a + R, this.d2R[q], 0.7, top); }
         }
-        if (i < NX - 2 && !top) add(a, a + 6, this.bhR[q], 0.22, false); // dobra lateral: segura a curva do manto
-        if (j < NY - 2) add(a, a + 2 * R, this.bvR[q], 0.35, top);       // dobra vertical: tecido encorpado
+        if (i < NX - 2 && !top) add(a, a + 6, this.bhR[q], 0.5, false); // dobra lateral: segura a curva do manto (tecido grosso)
+        if (j < NY - 2) add(a, a + 2 * R, this.bvR[q], 0.65, top);       // dobra vertical: tecido encorpado, não vinca
       }
     }
     const n = L.length / 5;

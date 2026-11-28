@@ -14,23 +14,44 @@ export class MapRenderer {
     this.res = 256;
   }
 
+  // fundos do mapa guardados na memória: no Android o canvas fora da tela pode ser APAGADO quando o app
+  // vai para segundo plano (perda do contexto da GPU) e o mapa ficava preto. Agora o canvas é de CPU
+  // (willReadFrequently) e, se mesmo assim sumir, é repintado a partir da cópia guardada.
+  keep(c) {
+    const ctx = c.getContext('2d', { willReadFrequently: true });
+    try { c._img = ctx.getImageData(0, 0, c.width, c.height); } catch { c._img = null; }
+    c.addEventListener?.('contextrestored', () => { if (c._img) ctx.putImageData(c._img, 0, 0); });
+    return c;
+  }
+  fix(c) {
+    if (!c?._img) return c;
+    const now = performance.now(); if (now - (c._chk || 0) < 1500) return c;
+    c._chk = now;
+    try {
+      const ctx = c.getContext('2d', { willReadFrequently: true });
+      const px = ctx.getImageData(c.width >> 1, Math.floor(c.height * 0.75), 1, 1).data;
+      if (ctx.isContextLost?.() || px[3] === 0) ctx.putImageData(c._img, 0, 0);
+    } catch {}
+    return c;
+  }
+
   buildBackground() {
     this.bg = this.bgFor('world');
     this.bgG = this.bgFor('guardiao');
     // fundo da cripta
     const d = document.createElement('canvas'); d.width = d.height = 256;
-    const dc = d.getContext('2d');
+    const dc = d.getContext('2d', { willReadFrequently: true });
     dc.fillStyle = '#0d0b14'; dc.fillRect(0, 0, 256, 256);
     dc.fillStyle = '#4a4458';
     for (const r of DUNGEON.rects) { const s = 1.05; dc.fillRect(128 + r.x0 * s, 8 + (r.z0 + 222) * s, (r.x1 - r.x0) * s, (r.z1 - r.z0) * s); }
-    this.dbg = d;
+    this.dbg = this.keep(d);
   }
   // imagem x −200..200, z −450..200: mapa 1 (Vale) ou mapa 2 (Planície do Guardião), cada um só com o seu terreno
   bgFor(area) {
     const W = this.G.world, T = W.terrain, X = W.plain, N = this.res, NH = Math.round(N * 650 / 400);
     const c = document.createElement('canvas');
     c.width = N; c.height = NH;
-    const ctx = c.getContext('2d');
+    const ctx = c.getContext('2d', { willReadFrequently: true });
     const img = ctx.createImageData(N, NH);
     const col = new THREE.Color();
     for (let j = 0; j < NH; j++) for (let i = 0; i < N; i++) {
@@ -49,7 +70,7 @@ export class MapRenderer {
     ctx.putImageData(img, 0, 0);
     ctx.strokeStyle = 'rgba(120,90,50,.55)'; ctx.lineWidth = 1.4;
     if (area === 'world') for (const r of ROADS) { ctx.beginPath(); r.forEach(([x, z], i) => { const px = ((x + 200) / 400) * N, pz = ((z + 450) / 400) * N; i ? ctx.lineTo(px, pz) : ctx.moveTo(px, pz); }); ctx.stroke(); }
-    return c;
+    return this.keep(c);
   }
 
   // cor do terreno nos mapas novos (coordenadas do mundo)
@@ -68,7 +89,7 @@ export class MapRenderer {
   // fundo local do minimapa nos mapas novos: refeito aos poucos (algumas linhas por quadro) quando o jogador anda
   localBg(area, x, z) {
     const N = 80, span = 230;
-    const mk = (cx, cz) => { const c = document.createElement('canvas'); c.width = c.height = N; const ctx = c.getContext('2d'); return { area, cx, cz, span, canvas: c, ctx, img: ctx.createImageData(N, N), row: 0 }; };
+    const mk = (cx, cz) => { const c = document.createElement('canvas'); c.width = c.height = N; const ctx = c.getContext('2d', { willReadFrequently: true }); return { area, cx, cz, span, canvas: c, ctx, img: ctx.createImageData(N, N), row: 0 }; };
     const fill = (J, rows) => {
       const col = this._c1 || (this._c1 = new THREE.Color()), tmp = this._c2 || (this._c2 = new THREE.Color());
       for (let r = 0; r < rows && J.row < N; r++, J.row++) {
@@ -91,11 +112,11 @@ export class MapRenderer {
 
   wildFull(area) {
     this.full = this.full || {};
-    if (this.full[area]) return this.full[area];
+    if (this.full[area]) return this.fix(this.full[area]);
     const N = area === 'ermos' ? 160 : 192;
     const cfg = area === 'ermos' ? ERMOS : CONFINS;
     const c = document.createElement('canvas'); c.width = c.height = N;
-    const ctx = c.getContext('2d'), img = ctx.createImageData(N, N), col = new THREE.Color(), tmp = new THREE.Color();
+    const ctx = c.getContext('2d', { willReadFrequently: true }), img = ctx.createImageData(N, N), col = new THREE.Color(), tmp = new THREE.Color();
     for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
       this.wildColor(area, cfg.offset.x - cfg.half + ((i + 0.5) / N) * cfg.size, cfg.offset.z - cfg.half + ((j + 0.5) / N) * cfg.size, col, tmp);
       col.convertLinearToSRGB();
@@ -103,7 +124,7 @@ export class MapRenderer {
       img.data[k] = col.r * 255; img.data[k + 1] = col.g * 255; img.data[k + 2] = col.b * 255; img.data[k + 3] = 255;
     }
     ctx.putImageData(img, 0, 0);
-    return (this.full[area] = c);
+    return (this.full[area] = this.keep(c));
   }
 
   // Objetivo rastreado atual {x,z} no mundo
@@ -168,7 +189,7 @@ export class MapRenderer {
       const N = this.res, k = N / 400;
       const sx = (P.pos.x - radius + 200) * k, sz = (P.pos.z - radius + 450) * k;
       ctx.imageSmoothingEnabled = true;
-      ctx.drawImage(P.area === 'guardiao' ? this.bgG : this.bg, sx, sz, radius * 2 * k, radius * 2 * k, 0, 0, size, size);
+      ctx.drawImage(this.fix(P.area === 'guardiao' ? this.bgG : this.bg), sx, sz, radius * 2 * k, radius * 2 * k, 0, 0, size, size);
       ctx.translate(size / 2, size / 2);
     }
     const toS = (x, z) => [(x - P.pos.x) * scale, (z - P.pos.z) * scale];
@@ -274,7 +295,7 @@ export class MapRenderer {
     const k = this.res / 400;
     ctx.fillStyle = '#0d0b14'; ctx.fillRect(ox, oy, S, S);
     ctx.imageSmoothingEnabled = Z < 1.8; // perto: pixels nítidos (sem borrão)
-    ctx.drawImage(north ? this.bgG : this.bg, (cx0 - view / 2 + 200) * k, (cz0 - view / 2 + 450) * k, view * k, view * k, ox, oy, S, S);
+    ctx.drawImage(this.fix(north ? this.bgG : this.bg), (cx0 - view / 2 + 200) * k, (cz0 - view / 2 + 450) * k, view * k, view * k, ox, oy, S, S);
     ctx.imageSmoothingEnabled = true;
     ctx.fillStyle = 'rgba(10,10,20,.12)'; ctx.fillRect(ox, oy, S, S);
     ctx.textAlign = 'center';

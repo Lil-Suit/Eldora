@@ -115,6 +115,7 @@ const ANIM_OF_EMOTE = { sit: 'Sitting_Idle_Loop', dance: 'Dance_Loop', cheer: 'Y
 export const HERO_SCALE = 1.38;
 
 class SkinHero {
+  static trailOn = false;
   constructor(cls, look = {}) {
     this.kind = 'skinhero';
     this.cls = cls.id; this.clsDef = cls;
@@ -306,9 +307,9 @@ class SkinHero {
     if (w > 0.06) {
       // atacando/mirando enquanto se move: ANDA (não corre) — o passo acompanha a velocidade
       if (st.action || (this.aimW || 0) > 0.3) return ['Walk_Loop', Math.min(1.7, Math.max(0.7, w / 0.45)), true];
-      if (w < 0.5) return ['Walk_Loop', Math.max(0.6, w / 0.32), true];
-      if (w < 1.1) return ['Jog_Fwd_Loop', Math.max(0.75, w / 0.85), true];
-      return ['Sprint_Loop', w / 1.25, true];
+      // andar normal (sem o botão de correr) = ANDANDO; só o botão de correr usa a corrida
+      if (w <= 1.03) return ['Walk_Loop', Math.min(1.95, Math.max(0.6, w / 0.5)), true];
+      return ['Sprint_Loop', w / 1.3, true];
     }
     if ((st.combat || 0) > 0.5) {
       if (cls === 'mago') return ['Spell_Simple_Idle_Loop', 1, true];
@@ -403,7 +404,7 @@ class SkinHero {
     // manto do Rei: depois da pose final do quadro (ossos já no lugar)
     if (this.cape || this.trail) this.root.updateMatrixWorld(true);
     if (this.cape) this.cape.step(dt);
-    if (this.trail) this.trail.update(dt, this.root, ['slash', 'whirl', 'slam'].includes(st.action) && !(st.dead > 0));
+    if (this.trail) this.trail.update(dt, this.root, SkinHero.trailOn && ['slash', 'whirl', 'slam'].includes(st.action) && !(st.dead > 0));
   }
 
   // Andando para o lado ou para trás enquanto mira/ataca (o corpo fica virado para o alvo):

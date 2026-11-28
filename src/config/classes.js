@@ -23,7 +23,7 @@ export const CLASSES = {
     weaponKinds: ['espada', 'machado', 'montante'],
     startWeapon: 'espada_curta',
     colors: { tunic: 0x9c3b2e, pants: 0x4a3a2c, trim: 0xd9b25f, skin: 0xe8b98f, hair: 0x5a3a22 },
-    dodge: { name: 'Rolamento', dist: 4.6, dur: 0.32, cd: 1.4, iframes: 0.34, anim: 'roll' },
+    dodge: { name: 'Rolamento', dist: 6.4, dur: 0.62, cd: 1.5, iframes: 0.42, anim: 'roll' },
     basic: {
       name: 'Corte', type: 'melee', range: 2.9, arc: 115, mult: 1.0, cd: 0.62, maxTargets: 4,
       comboEvery: 3, comboMult: 1.35, desc: 'Golpe em arco. Todo 3º golpe é reforçado.',
@@ -56,7 +56,7 @@ export const CLASSES = {
     weaponKinds: ['arco', 'arco_longo'],
     startWeapon: 'arco_curto',
     colors: { tunic: 0x3f6b3a, pants: 0x4c3f2f, trim: 0x8fd0ff, skin: 0xd9a77e, hair: 0x2b2420 },
-    dodge: { name: 'Cambalhota', dist: 5.6, dur: 0.3, cd: 1.1, iframes: 0.32, anim: 'roll' },
+    dodge: { name: 'Cambalhota', dist: 7, dur: 0.58, cd: 1.2, iframes: 0.4, anim: 'roll' },
     basic: {
       name: 'Flecha', type: 'projectile', proj: 'flecha', range: 18, speed: 44, mult: 0.8, cd: 0.56, radius: 0.55,
       desc: 'Dispara uma flecha rápida.' },

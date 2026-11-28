@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { smoothstep, clamp, lerp } from './noise.js';
-import { PLATEAU } from '../config/world.js';
+import { PLATEAU, inVillage, villageEdgeDist } from '../config/world.js';
 import { sunTrans, skyAverages, skyRadiance } from './ultra/skyfn.js';
 import { buildUltraDome } from './ultra/skydome.js';
 
@@ -511,11 +511,62 @@ export class Sky {
     this.stars.position.copy(camera.position);
     const cs = this.cloudScale ?? 1;
     if (cs < 1 || this.clouds.scale.x !== 1) { this.clouds.scale.setScalar(cs); this.clouds.position.copy(camera.position).multiplyScalar(1 - cs); }
+    // dentro da cidade (e um pouco em volta) a chuva vira NEVE
+    this._ckT = (this._ckT || 0) - dt;
+    if (this._ckT <= 0) {
+      this._ckT = 0.25;
+      const x = camera.position.x, z = camera.position.z;
+      this._ckWant = inVillage(x, z) ? 1 : 1 - smoothstep(4, 26, villageEdgeDist(x, z));
+    }
+    this.cityK = (this.cityK ?? this._ckWant) + ((this._ckWant || 0) - (this.cityK ?? 0)) * Math.min(1, dt * 1.5);
+    const ck = this.cityK || 0, rr = rk * (1 - ck), sk = rk * ck;
     // chuva ao redor da câmera
-    this.rain.material.opacity = rk * (this.ultra ? 0.8 : 0.7);
-    this.rain.visible = rk > 0.02 && !this.indoor; // sem chuva: nem desenha
-    if (rk > 0.02 && !this.indoor) this.updateRainUltra(dt, camera, rk);
+    this.rain.material.opacity = rr * (this.ultra ? 0.8 : 0.7);
+    this.rain.visible = rr > 0.02 && !this.indoor; // sem chuva: nem desenha
+    if (rr > 0.02 && !this.indoor) this.updateRainUltra(dt, camera, rr);
+    this.updateSnow(dt, camera, sk);
     this.updateRipples(dt);
-    return { night, rain: rk, corrupt };
+    return { night, rain: rr, snow: sk, corrupt };
+  }
+
+  // neve: flocos redondos e macios que caem devagar balançando com o vento (feita só quando precisa)
+  updateSnow(dt, camera, sk) {
+    if (!this.snow) {
+      if (sk <= 0.02 || this.indoor) return;
+      const n = Math.max(300, Math.min(2200, Math.round((this.rainN || 1200) * 0.8)));
+      const c = document.createElement('canvas'); c.width = c.height = 32; const g = c.getContext('2d');
+      const r = g.createRadialGradient(16, 16, 0, 16, 16, 16); r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(0.45, 'rgba(255,255,255,.8)'); r.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = r; g.fillRect(0, 0, 32, 32);
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n * 3), 3).setUsage(THREE.DynamicDrawUsage));
+      const mat = new THREE.PointsMaterial({ map: new THREE.CanvasTexture(c), size: 0.2, sizeAttenuation: true, transparent: true, opacity: 0, depthWrite: false, color: 0xffffff, fog: true });
+      this.snow = new THREE.Points(geo, mat); this.snow.frustumCulled = false;
+      this.snowN = n; this.snowData = new Float32Array(n * 4); // velocidade, fase, chão, tamanho do balanço
+      for (let i = 0; i < n; i++) this.snowData[i * 4 + 2] = 1e9; // nasce no 1º quadro
+      this.scene.add(this.snow);
+    }
+    const S = this.snow;
+    S.material.opacity = Math.min(1, sk * 1.1);
+    S.visible = sk > 0.02 && !this.indoor;
+    if (!S.visible) return;
+    const pa = S.geometry.attributes.position.array, sd = this.snowData, n = this.snowN;
+    const cx = camera.position.x, cy = camera.position.y, cz = camera.position.z, wx = this.wind.x * 0.25, wz = this.wind.z * 0.25;
+    const t = (this._snowT = (this._snowT || 0) + dt);
+    for (let i = 0; i < n; i++) {
+      const p = i * 3, o = i * 4;
+      let x = pa[p], y = pa[p + 1], z = pa[p + 2];
+      const ph = sd[o + 1], sw = sd[o + 3];
+      y -= sd[o] * dt;
+      x += (wx + Math.sin(t * 1.1 + ph) * sw) * dt; z += (wz + Math.cos(t * 0.9 + ph * 1.3) * sw) * dt;
+      const dx = x - cx, dz = z - cz;
+      if (y <= sd[o + 2] || dx > 16 || dx < -16 || dz > 16 || dz < -16 || sd[o + 2] > 1e8) {
+        x = cx + Math.random() * 32 - 16; z = cz + Math.random() * 32 - 16;
+        const gh = this.ground ? this.ground(x, z) : cy - 8;
+        y = sd[o + 2] > 1e8 ? Math.max(gh, cy - 8) + Math.random() * 16 : Math.max(gh, cy - 5) + 9 + Math.random() * 6;
+        sd[o] = 0.9 + Math.random() * 1.1; sd[o + 1] = Math.random() * 6.283; sd[o + 2] = gh; sd[o + 3] = 0.25 + Math.random() * 0.5;
+      }
+      pa[p] = x; pa[p + 1] = y; pa[p + 2] = z;
+    }
+    S.geometry.attributes.position.needsUpdate = true;
   }
 }

@@ -1,5 +1,18 @@
 # Histórico de versões
 
+## 0.12.26 — Neve na cidade, estátua nova e ajustes
+
+- **Gráfico salvo de verdade**: a qualidade escolhida (ex.: Alta) continua a mesma quando você fecha e abre o jogo.
+- **Tela inicial**: com conta, sem opções de salvamento (salva sozinho); botão **Trocar de conta** / **Já tem conta? Entrar**.
+- **Andar** usa a animação de andar; a de correr fica só para o botão de correr.
+- **Rolamento** mais longo e menos corrido (Guerreiro e Arqueiro).
+- **Golpe da espada**: fora do Ultra realismo voltou o corte clássico; o rastro saindo da lâmina fica no Ultra.
+- **Manto do Rei** mais pesado: não dobra todo quando o personagem vira.
+- **Estátua da praça** refeita: cavaleiro de pedra com espada e escudo, olhos brilhando, em pedestal novo.
+- **Mural de Procurados** novo: telhadinho, placa entalhada, cartazes de recompensa e lampião.
+- **Neve na cidade**: quando chove, dentro da vila cai neve em vez de chuva.
+- **Mapa preto** corrigido: o fundo do mapa/minimapa não some mais quando o celular volta do segundo plano.
+
 ## 0.12.25
 - Golpe da espada/machado/montante: o efeito agora sai de DENTRO da lâmina e segue o fio enquanto ela corta o ar (aparece junto com o golpe, não depois). Cor puxada da raridade da arma. Vale também para outros jogadores.
 

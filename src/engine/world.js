@@ -13,6 +13,7 @@ import {
   inVillage, villageEdgeDist, CAMP, inCamp,
 } from '../config/world.js';
 import { natalAtivo } from '../config/seasonal.js';
+import { buildWantedBoard } from './wantedboard.js';
 import * as UltraGround from './ultra/ground.js';
 import * as UltraTrees from './ultra/trees.js';
 import * as UltraStructures from './ultra/structures.js';
@@ -390,21 +391,18 @@ export class World {
         for (const lx of [-1.0, 1.0]) { const [px, pz] = at(lx, 1.6); b.box(px, y + 0.35, pz, 0.7, 0.7, 0.7, wood, rot + lx * 0.3); }
       } });
     }
-    // Estátua do Primeiro Guardião
+    // Estátua do Primeiro Guardião: pedestal de três degraus com placa de bronze; a figura (modelo novo
+    // dos heróis, em pedra) entra por cima quando os modelos carregam (engine/statue.js)
     {
       const x = 0, z = 71.5, y = this.h(x, z);
-      b.box(x, y + 0.6, z, 2.6, 1.2, 2.6, stoneD);
-      b.box(x, y + 1.35, z, 2.0, 0.3, 2.0, stone);
-      const s = 0xc9c4b8;
-      b.box(x - 0.25, y + 2.2, z, 0.35, 1.4, 0.4, s); b.box(x + 0.25, y + 2.2, z, 0.35, 1.4, 0.4, s);
-      b.box(x, y + 3.5, z, 1.1, 1.4, 0.6, s);
-      b.addGeo(GEO.sphere, x, y + 4.5, z, 0.6, 0.6, 0.6, 0, 0, 0, s);
-      b.box(x + 0.75, y + 4.2, z, 0.3, 1.2, 0.3, s, 0, 0, -0.5);
-      b.box(x + 1.15, y + 5.4, z, 0.16, 2.4, 0.08, 0xdedad0);
-      b.box(x + 1.15, y + 4.35, z, 0.7, 0.12, 0.12, s);
-      b.box(x, y + 3.6, z - 0.4, 1.5, 1.8, 0.1, 0x3d6aa0);
-      glow.box(x, y + 4.55, z + 0.31, 0.4, 0.08, 0.02, 0x5ef0ff);
-      this.col.addCircle(x, z, 1.5);
+      b.box(x, y + 0.35, z, 3.4, 0.7, 3.4, stoneD);
+      b.box(x, y + 0.95, z, 2.8, 0.5, 2.8, stone);
+      b.box(x, y + 1.35, z, 2.3, 0.3, 2.3, stoneD);
+      for (const [dx, dz] of [[-1.55, -1.55], [1.55, -1.55], [-1.55, 1.55], [1.55, 1.55]]) b.box(x + dx, y + 0.9, z + dz, 0.4, 1.8, 0.4, stone); // colunas nos cantos
+      b.box(x, y + 0.95, z - 1.41, 1.3, 0.34, 0.04, 0x9a7a42); // placa de bronze
+      glow.box(x, y + 0.95, z - 1.44, 1.0, 0.05, 0.02, 0x5ef0ff);
+      this.statueAt = { x, y: y + 1.5, z };
+      this.col.addCircle(x, z, 1.9);
     }
     // Poço
     {
@@ -421,11 +419,8 @@ export class World {
     // Mural de Procurados (PvP): quadro com cartazes, ao norte da praça
     {
       const x = 7, z = 96, y = this.h(x, z);
-      for (const s of [-1, 1]) b.box(x + s * 1.6, y + 1.4, z, 0.22, 2.8, 0.22, wood);
-      b.box(x, y + 1.9, z, 3.6, 1.8, 0.16, woodL);
-      b.addGeo(ROOF, x, y + 3.05, z, 4.2, 0.6, 0.9, 0, 0, 0, 0x6b3a22);
-      for (const [ox, oy] of [[-1.05, 0.25], [0, 0.35], [1.05, 0.2]]) { b.box(x + ox, y + 1.9 + oy, z + 0.1, 0.8, 1.0, 0.03, 0xe6d3a3); b.box(x + ox, y + 2.0 + oy, z + 0.12, 0.34, 0.34, 0.02, 0x161616); }
-      this.col.addBox(x, z, 1.9, 0.3, 0);
+      try { buildWantedBoard(this.group, x, y, z, 0); } catch (e) { console.warn('mural', e); }
+      this.col.addBox(x, z, 2.1, 0.3, 0);
       this.addInteract({ id: 'procurados', kind: 'wanted', x, z: z + 1.4, r: 3, name: 'Mural de Procurados' });
     }
     // Lampiões da praça

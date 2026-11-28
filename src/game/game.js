@@ -1,3 +1,4 @@
+import { buildGuardianStatue } from '../engine/statue.js';
 import { ultraMob } from '../engine/ultra/mobs.js';
 import { RoyalCape } from '../engine/cape.js';
 import { Teleports, safeSpot } from './teleport.js';
@@ -22,7 +23,7 @@ import { LootSystem } from './loot.js';
 import { Interactions } from './interact.js';
 import { WorldEvents } from './events.js';
 import { Natal } from './natal.js';
-import { HERO3D } from '../engine/hero3d.js';
+import { HERO3D, SkinHero } from '../engine/hero3d.js';
 import { Tutorial } from './tutorial.js';
 import { SaveManager } from './save.js';
 import { Market } from './market.js';
@@ -79,7 +80,7 @@ export class Game {
       rain: true, camSens: 1, invertY: false, damageNumbers: true, hurtFx: 'auto', hurtIntensity: 0.7, pauseMenus: this.isTouch, showFps: false, autoRes: true, showPeers: true, cleanScreen: false, touchScale: 1, joyFloat: false, crosshair: false, camFollow: false,
     }, saved || {});
     // modelos 3D dos heróis: começam a carregar já na tela de título; quando chegam, trocam os bonecos antigos
-    HERO3D.preload().then((ok) => { if (ok) this.interact?.rebuildNpcRigs?.(); if (ok && this.mode === 'play' && this.player) { this.player.rebuildRig(); this.net?.rebuildRigs?.(); } });
+    HERO3D.preload().then((ok) => { if (ok && this.world?.statueAt && !this.statue) { const S = this.world.statueAt; this.statue = buildGuardianStatue(this.world.group, S.x, S.y, S.z, Math.PI); } if (ok) this.interact?.rebuildNpcRigs?.(); if (ok && this.mode === 'play' && this.player) { this.player.rebuildRig(); this.net?.rebuildRigs?.(); } });
     const q = QUALITY[this.settings.quality] || QUALITY.media;
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: !this.isTouch, powerPreference: 'high-performance' });
     this.renderer.shadowMap.enabled = q.shadows;
@@ -153,6 +154,10 @@ export class Game {
         setTimeout(() => this.ui?.toastSmall?.(`Da última vez o jogo travou no gráfico ${QUALITY[g]?.label || g}: voltamos para o Baixo. Dá para mudar em Gráficos.`, 7, true), 2500);
       }
       if (heavy.includes(this.settings.quality)) { localStorage.setItem(GK, this.settings.quality); this._gfxGuard = 0; } else localStorage.removeItem(GK);
+      // saiu do app (trocou de app, fechou) com o jogo rodando: não foi travamento — mantém o gráfico escolhido
+      const ok = () => { if (this._gfxGuard !== undefined && this._gfxGuard >= 1) { try { localStorage.removeItem(GK); } catch {} this._gfxGuard = undefined; } };
+      document.addEventListener('visibilitychange', () => { if (document.hidden) ok(); });
+      window.addEventListener('pagehide', ok);
     } catch {}
     this.applyQuality(); // liga os extras da qualidade salva (Ultra realismo) já na abertura
     this.lastFrame = performance.now();
@@ -224,7 +229,7 @@ export class Game {
     this.enemyViewDist = Math.min(this.isTouch ? 48 : 130, this.sky.fogFar * 0.55); // celular: monstro longe custava 11–16 desenhos cada // monstros além disso estão dentro da neblina
     if (this.sky) this.sky.rainOff = this.settings.rain === false; // opção de chuva (gráficos)
     const ultra = !!q.ultra, type = THREE.PCFShadowMap; // (o three novo faz a sombra suave pelo raio do PCF)
-    this.ultra = ultra; this.fx.ultra = ultra;
+    this.ultra = ultra; this.fx.ultra = ultra; SkinHero.trailOn = ultra; // rastro saindo da lâmina só no ultra; nos outros, o corte clássico
     this.enemyShadowDist = q.enemyShadow || 26;
     this.sky.setUltra?.(ultra, q);
     if (this.world?.uniforms?.uUltra) this.world.uniforms.uUltra.value = ultra ? 1 : 0;
@@ -1139,8 +1144,8 @@ export class Game {
     this.fpsAcc += rdt; this.fpsN++;
     if (this.fpsAcc > 0.5) {
       this.fps = this.fpsN / this.fpsAcc; this.fpsAcc = 0; this.fpsN = 0;
-      // rodou bem por ~15 s: o gráfico escolhido aguenta (tira a proteção de travamento)
-      if (this._gfxGuard !== undefined) { if (this.fps >= 8) this._gfxGuard += 0.5; if (this._gfxGuard >= 15) { try { localStorage.removeItem('rift.gfxguard'); } catch {} this._gfxGuard = undefined; } }
+      // rodou bem por ~6 s: o gráfico escolhido aguenta (tira a proteção de travamento)
+      if (this._gfxGuard !== undefined) { if (this.fps >= 8) this._gfxGuard += 0.5; if (this._gfxGuard >= 6) { try { localStorage.removeItem('rift.gfxguard'); } catch {} this._gfxGuard = undefined; } }
       if (this.settings.autoRes && this.mode === 'play') this.autoQuality(); // também no Ultra leve: só cai se travar e volta sozinha
     }
     let dt = rdt;

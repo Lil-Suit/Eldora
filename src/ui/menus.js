@@ -75,8 +75,8 @@ export function renderTitle(ui) {
       ${installBtn()}
       <button class="btn" data-a="m:settings" data-tab="gfx">🖥️ Gráficos: ${esc(QUALITY[G.settings.quality]?.label || 'Média')}</button>
       <button class="btn" data-a="m:settings">${ICONS.engrenagem} Configurações</button>
-      <button class="btn" data-a="m:importview">${ICONS.chave} Importar código</button>
-      ${G.saver.serverUser ? `<button class="btn" data-a="m:logout">Sair da conta (${esc(G.saver.serverUser)})</button>` : ''}</div>
+      ${G.saver.serverUser ? '' : `<button class="btn" data-a="m:importview">${ICONS.chave} Importar código</button>`}
+      ${G.saver.serverUser ? `<button class="btn" data-a="m:logout">👤 Trocar de conta <small class="muted">(${esc(G.saver.serverUser)})</small></button>` : G.saver.accountsAvail ? `<button class="btn primary" data-a="m:login">👤 Já tem conta? Entrar</button>` : ''}</div>
     </div>
     <div class="tfoot"><span data-cloud>${esc(cloudLine(G))}</span><span>RPG de ação em 3D · v${VERSION}</span></div>
   </div>`;
@@ -140,14 +140,14 @@ export function renderPause(ui) {
     <div class="col">
       <button class="btn primary" data-a="m:resume">Continuar</button>
       <button class="btn" data-a="m:settings">Configurações</button>
-      <button class="btn" data-a="m:savenow">Salvar agora</button>
-      <button class="btn" data-a="m:settings" data-tab="save">Código de salvamento</button>
+      ${G.saver.serverUser ? '' : `<button class="btn" data-a="m:savenow">Salvar agora</button>
+      <button class="btn" data-a="m:settings" data-tab="save">Código de salvamento</button>`}
       ${tut ? '<button class="btn" data-a="m:skiptut">Pular tutorial</button>' : ''}
       <button class="btn" data-a="m:title">Sair para o título</button>
       <button class="btn" data-a="m:title" data-sv="trocar">Trocar de servidor <small class="muted">(agora: ${esc(serverName(G.net.server || getServer()))})</small></button>
     </div>
     <div class="pinfo">
-      <div>${ICONS.nuvem} Salvamento: <b>${esc(G.saver.localOk ? 'navegador ✓' : 'navegador indisponível')}</b> · nuvem: <b>${esc(G.saver.cloudState)}</b></div>
+      <div>${ICONS.nuvem} Salvamento: <b>${G.saver.serverUser ? 'automático na sua conta ✓' : esc(G.saver.localOk ? 'navegador ✓' : 'navegador indisponível')}</b>${G.saver.serverUser ? '' : ` · nuvem: <b>${esc(G.saver.cloudState)}</b>`}</div>
       <div>${ICONS.globo} Multiplayer: <b>${esc(G.net.status)}</b> · <b>${esc(serverName(G.net.server || getServer()))}</b>${G.net.status === 'conectado' ? ` · ${G.net.count() + 1} jogador(es) no vale` : ''}</div>
       <div class="muted">Outros jogadores aparecem em tempo real com nome, classe e gestos. Inimigos, saque e eventos são locais em cada aparelho nesta versão.</div>
     </div></div>`;
@@ -156,7 +156,7 @@ export function renderPause(ui) {
 export function renderSettings(ui, tab = 'gfx') {
   const G = ui.G, s = G.settings;
   ui.settingsTab = tab;
-  const tabs = [['gfx', 'Gráficos'], ['audio', 'Áudio'], ['ctrl', 'Controles'], ['ui', 'Interface'], ['save', 'Salvamento']]
+  const tabs = [['gfx', 'Gráficos'], ['audio', 'Áudio'], ['ctrl', 'Controles'], ['ui', 'Interface'], ...(G.saver.serverUser ? [] : [['save', 'Salvamento']])]
     .map(([id, n]) => `<button class="stab ${tab === id ? 'on' : ''}" data-a="m:stab" data-tab="${id}">${n}</button>`).join('');
   const range = (k, label, min = 0, max = 1, step = 0.05) => `<label class="srow"><span>${label}</span><input type="range" min="${min}" max="${max}" step="${step}" value="${s[k]}" data-set="${k}"><b>${Math.round((s[k] / max) * 100)}%</b></label>`;
   const check = (k, label, hint = '') => `<label class="srow chk"><input type="checkbox" ${s[k] ? 'checked' : ''} data-set="${k}"><span>${label}${hint ? `<small>${hint}</small>` : ''}</span></label>`;
@@ -192,7 +192,7 @@ export function renderSettings(ui, tab = 'gfx') {
     body = `<label class="srow"><span>Tela de dano (brilho vermelho ao apanhar)</span><select data-set="hurtFx">${[['auto', 'Automática — ajusta ao tamanho da tela'], ['suave', 'Suave — só nas bordas finas'], ['off', 'Desligada']].map(([v, n]) => `<option value="${v}" ${s.hurtFx === v ? 'selected' : ''}>${n}</option>`).join('')}</select></label>`
       + range('hurtIntensity', 'Intensidade da tela de dano') + check('damageNumbers', 'Números de dano') + check('showPeers', 'Mostrar nomes de outros jogadores')
       + check('cleanScreen', 'Tela limpa: esconder nomes e mensagens (fica só o aviso e a vida dos chefes)');
-  } else if (tab === 'save') {
+  } else if (tab === 'save' && !G.saver.serverUser) {
     const inGame = G.mode === 'play';
     body = `${inGame ? `<div><h3>Exportar personagem</h3><p class="muted">Leve este personagem para outro aparelho.</p>
       <textarea class="code" readonly data-el2="exportcode">${esc(G.saver.exportCode())}</textarea><div class="row"><button class="btn sm" data-a="m:copy">Copiar código</button></div></div>` : ''}
@@ -307,6 +307,7 @@ export function menuClick(ui, a, el) {
       break;
     }
     case 'importview':
+      if (G.saver.serverUser) break; // com conta o progresso fica no servidor (sem códigos de salvamento)
       ui.openModal('html', `<div class="card"><h2>Importar código</h2><textarea class="code" data-el2="importcode" placeholder="Cole aqui o código de salvamento…"></textarea><div class="row"><button class="btn" data-a="m:close">Cancelar</button><button class="btn primary" data-a="m:doimport">Importar</button></div></div>`);
       break;
     case 'settings': ui.openModal('settings', el.dataset.tab || 'gfx'); afterModal(ui, 'settings'); break;
@@ -321,6 +322,17 @@ export function menuClick(ui, a, el) {
       SaveManager.clearOwner(SaveManager.OWNER);
       SA.logoutServer(); location.reload();
     }); break;
+    case 'login': // entrar numa conta (ou criar) sem precisar recarregar o jogo
+      import('../game/serverauth.js').then(async (SA) => {
+        if (!SA.serverApiBase()) { ui.toastSmall('Entrar na conta só no jogo online.'); return; }
+        const has = await SA.serverHasAccounts();
+        if (!has) { ui.toastSmall('Servidor sem resposta agora. Tente de novo em instantes.', 4); return; }
+        G.saver.cloudLoading = true; G.saver.cloudState = 'entrando…'; ui.showTitle();
+        const acc = await SA.ensureLogin();
+        if (acc) { try { await G.saver.connectServer(acc); } catch { G.saver.cloudState = 'conta indisponível'; } }
+        G.saver.cloudLoading = false; ui.showTitle();
+      });
+      break;
     case 'closesettings': G.input.rebinding = null; if (G.mode === 'play') ui.openModal('pause'); else ui.closeModal(); break;
     case 'close': ui.closeModal(); break;
     case 'hudedit': ui.closeModal(); ui.mobile.startEdit(); break;
@@ -338,6 +350,7 @@ export function menuClick(ui, a, el) {
       break;
     }
     case 'doimport': {
+      if (G.saver.serverUser) break;
       const ta = ui.el.modal.querySelector('[data-el2="importcode"]');
       try {
         const s = SaveManager.importCode(ta.value);

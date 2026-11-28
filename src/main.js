@@ -107,6 +107,7 @@ async function boot() {
       // servidor dormindo: a tela inicial mostra "acordando o servidor" e espera (sem esconder os personagens da conta)
       const onWait = (i, ms) => { G.saver.cloudLoading = true; G.saver.cloudState = 'acordando o servidor…'; if (i === 0 && G.mode === 'title') { G.ui.showTitle(); G.ui.toastSmall?.('Acordando o servidor do jogo… (até 1 min e meio)', 6); } void ms; };
       const has = await SA.serverHasAccounts(onWait);
+      G.saver.accountsAvail = has !== false; // jogo online: a tela inicial mostra "Entrar / Trocar de conta"
       if (has === null) {
         // não acordou a tempo: os personagens da conta continuam na lista ("aguardando servidor") + botão Tentar de novo
         let u = null; try { u = localStorage.getItem('eldoria_user'); } catch { /* ok */ }

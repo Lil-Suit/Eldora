@@ -69,7 +69,7 @@ export function doBasic(G, P, aim) {
       if (tg && tg.alive()) { y = Math.atan2(tg.pos.x - P.pos.x, tg.pos.z - P.pos.z); }
       P.faceTo(y);
       const n = meleeArc(G, P.pos.x, P.pos.z, y, b.range, b.arc, mult, { maxTargets: b.maxTargets, heavy, shake: heavy ? 0.18 : 0, basic: true, fromY: P.pos.y });
-      if (!P.rig?.trail) G.fx.slash(P.pos.x, P.pos.y, P.pos.z, y, b.range, b.arc, heavy ? 0xffd36b : 0xfff0c8, 0.22, G.world.groundHeight(P.pos.x + Math.sin(y) * b.range * 0.8, P.pos.z + Math.cos(y) * b.range * 0.8, P.area) - P.pos.y, heavy);
+      if (!(G.ultra && P.rig?.trail)) G.fx.slash(P.pos.x, P.pos.y, P.pos.z, y, b.range, b.arc, heavy ? 0xffd36b : 0xfff0c8, 0.22, G.world.groundHeight(P.pos.x + Math.sin(y) * b.range * 0.8, P.pos.z + Math.cos(y) * b.range * 0.8, P.area) - P.pos.y, heavy);
       G.audio.play('swing');
       if (heavy) {
         // golpe pesado: a lâmina bate no chão, racha e levanta poeira
