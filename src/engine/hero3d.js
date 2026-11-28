@@ -6,6 +6,7 @@
 // =============================================================
 import * as THREE from 'three';
 import { RoyalCape } from './cape.js';
+import { BladeTrail, bladeSegment } from './bladetrail.js';
 import { GLTFLoader } from '../../vendor/three/addons/loaders/GLTFLoader.js';
 import { clone as skClone } from '../../vendor/three/addons/utils/SkeletonUtils.js';
 import { buildHero, buildWeapon, mergeRigColors } from './models.js';
@@ -254,6 +255,15 @@ class SkinHero {
       if (TILT[kind]) { weapon.rotation.x = TILT[kind][0]; weapon.rotation.z = TILT[kind][1]; }
     }
     this.weapon = weapon; this.weaponKind = kind; this.aimW = 0;
+    // rastro do golpe saindo da própria lâmina (armas de corpo a corpo); cor puxada da raridade
+    if (this.trail) { this.trail.dispose(); this.trail = null; }
+    if (['espada', 'montante', 'machado', 'clava', 'adaga'].includes(kind)) {
+      const seg = bladeSegment(weapon, kind);
+      if (seg) {
+        const rc = new THREE.Color(RARITIES[RARITY_INDEX[w?.rarity || 'comum'] ?? 0].color).lerp(new THREE.Color(0xfff0c8), 0.55);
+        this.trail = new BladeTrail(weapon, seg[0], seg[1], rc);
+      }
+    }
     this.setLeftGrip(bow || (!!eq.shield && kind !== 'montante'));
     if (eq.shield && kind !== 'montante') {
       const sh = buildWeapon('escudo', eq.shield.rarity || 'comum', { theme: gearTheme(eq.shield) });
@@ -391,7 +401,9 @@ class SkinHero {
     this.legTurn(st, dt);
     if (this.weapon?.userData?.bow && this.bowHold) this.archerPose(an && an.startsWith('Pistol_Shoot') && !(st.dead > 0) ? st.p || 0 : -1, dt);
     // manto do Rei: depois da pose final do quadro (ossos já no lugar)
-    if (this.cape) { this.root.updateMatrixWorld(true); this.cape.step(dt); }
+    if (this.cape || this.trail) this.root.updateMatrixWorld(true);
+    if (this.cape) this.cape.step(dt);
+    if (this.trail) this.trail.update(dt, this.root, ['slash', 'whirl', 'slam'].includes(st.action) && !(st.dead > 0));
   }
 
   // Andando para o lado ou para trás enquanto mira/ataca (o corpo fica virado para o alvo):

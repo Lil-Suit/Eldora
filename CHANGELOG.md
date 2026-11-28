@@ -1,5 +1,8 @@
 # Histórico de versões
 
+## 0.12.25
+- Golpe da espada/machado/montante: o efeito agora sai de DENTRO da lâmina e segue o fio enquanto ela corta o ar (aparece junto com o golpe, não depois). Cor puxada da raridade da arma. Vale também para outros jogadores.
+
 ## 0.12.24
 - Ultra realismo nos monstros (todos): material físico com sombreado liso, detalhe de pele/pelo, pedra/osso e metal preso ao corpo, relevo, reflexo do céu e luz de borda; gosmas com aspecto de gelatina molhada. Liga e desliga junto com o Ultra.
 - Corte da espada novo: meia-lua com fio branco afiado, rastro macio da cor do golpe com riscos de velocidade, clarão na ponta e faíscas.
